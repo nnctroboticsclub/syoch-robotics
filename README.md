@@ -47,3 +47,7 @@
 			- このパケットを <300ms で送り続けることで接続が切れたことを検知できます
 		- [x] ステータス表示
 			- 現時点では `CANReady` `Ready` `InitializingGyro` `InitalizingBLDC0` `InitalizingBLDC1` の 5 状態のみサポートしてます
+- プラットフォーム差吸収
+	- Timer
+		- [x] MBed
+		- [ ] ESP-IDF
