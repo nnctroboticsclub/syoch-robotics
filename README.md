@@ -31,6 +31,8 @@
 	-	[x] コントローラー
 - マネージャー
 	- `robotics::registry::ikakoMDC` ikakoMDC の MDC 自体を表すクラス
+- その他
+	- `robotics::utils::NeoPixel` WS2812B(NeoPixel) を SPI で制御するクラス
 - 通信
 	- `robotics::network::SimpleCAN` 基礎的な CAN 通信をするクラス
 		- [x] メッセージ着のコールバック
