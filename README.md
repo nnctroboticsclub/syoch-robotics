@@ -29,7 +29,8 @@
 		- [x] `robotics::filter::Muxer<T>` 複数の入力を切り替えるクラス
 		- [x] `robotics::filter::PID<T>` PID
 	-	[x] コントローラー
-	-	[x] 
+- マネージャー
+	- `robotics::registry::ikakoMDC` ikakoMDC の MDC 自体を表すクラス
 - 通信
 	- `robotics::network::SimpleCAN` 基礎的な CAN 通信をするクラス
 		- [x] メッセージ着のコールバック
