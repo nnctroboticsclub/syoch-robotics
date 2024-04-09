@@ -5,7 +5,7 @@ STM32_ResolveMountpointFromTag = /mnt/st-$(1)
 # (project_dir)
 STM32_ResolvProjectName = $(shell basename $(1))
 
-# (project, board)
+# (project)
 ESP32_ResolvExebin = $(wildcard $(1)/build/*/.bin)
 
 # (tag, exe_bin, project_dir, skip_compile)
@@ -80,10 +80,15 @@ $(call ESP32_DefineRule_Addr2Line,$(1),$(2))
 endef
 
 # (tag, exe_bin, project_dir, skip_compile)
-define ESP32_DefineRules
+define ESP32_DefineRules_
 $(call ESP32_DefineRulesRemote,$(1))
 $(call ESP32_DefineRulesLocal,$(1),$(2),$(3),$(4))
 
 $(call AddDevice esp32-$(1))
+endef
+
+# (tag, project_dir, skip_compile)
+define ESP32_DefineRules
+$(eval $(call ESP32_DefineRules_,$(1),$(call ESP32_ResolvExebin,$(2)),$(2),$(3)))
 endef
 
