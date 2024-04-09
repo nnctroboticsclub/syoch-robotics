@@ -1,0 +1,26 @@
+{
+	"name": "ESP-IDF & MBedOS 6",
+	"image": "mcr.microsoft.com/devcontainers/base:jammy",
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	"features": {
+		"ghcr.io/syoch/devcontainers/device-forward:1.0.2": {},
+		"ghcr.io/syoch/devcontainers/mbed-cli:1.0.2": {},
+		"ghcr.io/syoch/devcontainers/esp-idf:1.0.3": {
+			"target": "release/v5.2"
+		}
+	},
+	"mounts": [],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-vscode.cpptools",
+				"GitHub.copilot",
+				"SonarSource.sonarlint-vscode",
+				"ms-vscode.cpptools-extension-pack",
+				"ms-python.python",
+				"ms-toolsai.jupyter",
+				"charliermarsh.ruff"
+			]
+		}
+	}
+}
