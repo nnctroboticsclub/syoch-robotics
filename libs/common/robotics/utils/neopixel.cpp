@@ -1,5 +1,7 @@
 #include "neopixel.hpp"
 
+#include <cstdio>
+
 namespace robotics::utils {
 Color::Color(float r, float g, float b) : r(r), g(g), b(b) {}
 
@@ -47,9 +49,8 @@ void NeoPixel::WriteByte(size_t index, uint8_t byte) {
       ((byte >> 1) & 1 ? 0xE : 0x8) << 4 | ((byte >> 0) & 1 ? 0xE : 0x8);
 }
 
-NeoPixel::NeoPixel(PinName pin, size_t kLEDs) : spi(pin, NC, NC), kLEDs(kLEDs) {
-  spi.frequency(6.4E6);
-
+NeoPixel::NeoPixel(std::shared_ptr<robotics::datalink::ISPI> spi, size_t kLEDs)
+    : spi_(spi), kLEDs(kLEDs) {
   data.resize(kResetSize + 4 * 3 * kLEDs);
   for (size_t i = 0; i < data.size(); i++) {
     data[i] = 0;
@@ -74,7 +75,8 @@ void NeoPixel::Clear() {
 
 void NeoPixel::Write() {
   // Debug();
-  spi.write((char *)data.data(), data.size(), nullptr, 0);
+  std::vector<uint8_t> rx(data.size());
+  spi_->Transfer(data, rx);
 }
 
 void NeoPixel::Debug() {

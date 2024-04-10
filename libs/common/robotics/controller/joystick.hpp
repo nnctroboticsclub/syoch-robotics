@@ -3,8 +3,8 @@
 #include <cstdio>
 
 #include "packet.hpp"
-#include "../robotics/node/node.hpp"
-#include "../robotics/types/joystick_2d.hpp"
+#include "../node/node.hpp"
+#include "../types/joystick_2d.hpp"
 #include "controller_base.hpp"
 
 namespace controller {

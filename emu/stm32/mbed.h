@@ -154,7 +154,7 @@ class SPI {
   int tracking_id_;
 
  public:
-  SPI(PinName mosi, PinName miso, PinName sclk);
+  SPI(PinName mosi, PinName miso, PinName sclk, PinName ssel = NC);
   void frequency(int hz);
   void write(const char* data, int length, char* receive, int receive_length);
 
@@ -189,6 +189,7 @@ class Timer {
   Timer();
   void start();
   void reset();
+  void stop();
   std::chrono::microseconds elapsed_time();
   int read_ms();
 };

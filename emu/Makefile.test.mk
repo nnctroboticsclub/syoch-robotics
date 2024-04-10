@@ -1,14 +1,14 @@
 # Parameters
 
-EMU_ROOT ?= emu/stm32
+EMU_ROOT ?= $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 SRCDIR ?= stm32-main
 
-STRICT_TARGET ?= src robotics distributed_can
+STRICT_TARGET ?= src syoch-robotics
 NONSTRICT_TARGET ?= ikakoMDC ikarashiCAN_mk2 bno055
 
 DEFINES += STM32F446xx
-INCDIR += $(EMU_ROOT) $(shell find $(SRCDIR) -type d -a -not -path *mbed-os* -a -not -path *BUILD* -not -path *.git*)
+INCDIR += $(EMU_ROOT) $(shell find $(SRCDIR) -type d -a -not -path *mbed-os* -a -not -path *BUILD* -not -path *.git*) $(SRCDIR)/syoch-robotics
 
 # General Functions
 
@@ -36,7 +36,7 @@ aObjects := $(foreach s, $(aAllSources), $(call SourceToObject, $(s)))
 CStrictFlags := -Wall -Wextra -Werror
 
 CCommonFlags = -O3 $(addprefix -I, $(INCDIR)) $(addprefix -D, $(DEFINES))
-CCommonFlags += -funsigned-char
+CCommonFlags += -funsigned-char -D __MBED__
 
 CFLAGS += $(CCommonFlags) -std=c11
 CXXFLAGS += $(CCommonFlags) -std=c++17

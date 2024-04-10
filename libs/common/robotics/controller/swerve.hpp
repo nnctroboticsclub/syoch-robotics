@@ -9,7 +9,7 @@
 #include "encoder.hpp"
 #include "action.hpp"
 
-#include "../robotics/component/swerve/swerve.hpp"
+#include "../component/swerve/swerve.hpp"
 
 namespace controller::swerve {
 struct SwerveController {

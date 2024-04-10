@@ -1,8 +1,9 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 
-#include <mbed.h>
+#include "../platform/spi.hpp"
 
 namespace robotics::utils {
 class Color {
@@ -26,14 +27,14 @@ class Color {
 class NeoPixel {
   static constexpr int kResetSize = 48 * 2;
   static std::vector<uint8_t> reset;
-  mbed::SPI spi;
+  std::shared_ptr<robotics::datalink::ISPI> spi_;
   const size_t kLEDs;
   std::vector<uint8_t> data;
 
   void WriteByte(size_t index, uint8_t byte);
 
  public:
-  NeoPixel(PinName pin, size_t kLEDs);
+  NeoPixel(std::shared_ptr<robotics::datalink::ISPI> pin, size_t kLEDs);
 
   void PutPixel(size_t index, uint32_t rgb);
 

@@ -3,8 +3,8 @@
 #include <cstdio>
 
 #include "packet.hpp"
-#include "../robotics/filter/pid.hpp"
-#include "../robotics/types/pid_gains.hpp"
+#include "../filter/pid.hpp"
+#include "../types/pid_gains.hpp"
 #include "controller_base.hpp"
 
 namespace controller {

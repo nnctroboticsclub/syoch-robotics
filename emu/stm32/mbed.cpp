@@ -118,14 +118,16 @@ void I2C::frequency(int /* hz */) {
 }
 
 int SPI::last_tracking_id = 0;
-SPI::SPI(PinName mosi, PinName miso, PinName sclk) {
+SPI::SPI(PinName mosi, PinName miso, PinName sclk, PinName ssel) {
   tracking_id_ = last_tracking_id;
 
   simulation::Message msg{
       "OSp",
       tracking_id_,
       "init",
-      {std::to_string(mosi), std::to_string(miso), std::to_string(sclk)}};
+      {std::to_string(mosi), std::to_string(miso), std::to_string(sclk),
+       std::to_string(ssel)},
+  };
   driver->Send(msg);
 }
 void SPI::frequency(int hz) {
@@ -163,6 +165,7 @@ void SPI::format(int bits, int mode) {
 Timer::Timer() {}
 void Timer::start() {}
 void Timer::reset() { throw simulation::NotImplemenetedError("Timer Reset"); }
+void Timer::stop() {}
 std::chrono::microseconds Timer::elapsed_time() {
   throw simulation::NotImplemenetedError("Timer Elapsed Time");
 }

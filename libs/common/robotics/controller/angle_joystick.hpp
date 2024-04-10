@@ -2,7 +2,7 @@
 
 #include <cstdio>
 #include "controller_base.hpp"
-#include "../robotics/types/angle_joystick_2d.hpp"
+#include "../types/angle_joystick_2d.hpp"
 
 namespace controller {
 

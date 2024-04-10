@@ -1,7 +1,7 @@
 #pragma once
 
 #include "packet.hpp"
-#include "../robotics/node/node.hpp"
+#include "../node/node.hpp"
 
 namespace controller {
 

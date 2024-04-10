@@ -15,6 +15,6 @@ class TimerBase {
 
 #ifdef __MBED__
 #include "timer.mbed.hpp"
-#elif defined(ESP)
-#include "esp_timer.hpp"
+#elif defined(ESP_PLATFORM)
+#include "timer.espidf.hpp"
 #endif
