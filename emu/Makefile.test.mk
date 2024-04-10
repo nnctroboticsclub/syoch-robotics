@@ -1,14 +1,17 @@
 # Parameters
 
-EMU_ROOT ?= $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+EMU_ROOT ?= $(dir $(lastword $(MAKEFILE_LIST)))
+
+$(info EMU_ROOT: $(EMU_ROOT))
+$(info s: $(EMU_ROOT)/stm32)
 
 SRCDIR ?= stm32-main
 
-STRICT_TARGET ?= src syoch-robotics
-NONSTRICT_TARGET ?= ikakoMDC ikarashiCAN_mk2 bno055
+STRICT_TARGET ?= src syoch-robotics/robotics
+NONSTRICT_TARGET ?= ikakoMDC ikarashiCAN_mk2 bno055 ikako_c620
 
 DEFINES += STM32F446xx
-INCDIR += $(EMU_ROOT) $(shell find $(SRCDIR) -type d -a -not -path *mbed-os* -a -not -path *BUILD* -not -path *.git*) $(SRCDIR)/syoch-robotics
+INCDIR += $(EMU_ROOT)/stm32 $(shell find $(SRCDIR) -type d -a -not -path *mbed-os* -a -not -path *BUILD* -not -path *.git*) $(SRCDIR)/syoch-robotics
 
 # General Functions
 
@@ -25,9 +28,9 @@ GetExtension = $(GetExtension_$(strip $(1)))
 
 # Sub parametes
 
-aAllSources := $(foreach t, $(STRICT_TARGET), $(call FindSourceCode, $(SRCDIR)/$t))
-aAllSources += $(foreach t, $(NONSTRICT_TARGET), $(call FindSourceCode, $(SRCDIR)/$t))
-aAllSources += $(call FindSourceCode, $(EMU_ROOT))
+aAllSources := $(foreach t, $(STRICT_TARGET), $(call FindSourceCode, $(SRCDIR)/$t/))
+aAllSources += $(foreach t, $(NONSTRICT_TARGET), $(call FindSourceCode, $(SRCDIR)/$t/))
+aAllSources += $(call FindSourceCode, $(EMU_ROOT)/stm32)
 
 aObjects := $(foreach s, $(aAllSources), $(call SourceToObject, $(s)))
 
@@ -108,8 +111,8 @@ $(foreach t, $(STRICT_TARGET), $(eval $(call DefineRule, $(SRCDIR)/$t, 0, CXX)))
 $(foreach t, $(NONSTRICT_TARGET), $(eval $(call DefineRule, $(SRCDIR)/$t, 1, C)))
 $(foreach t, $(NONSTRICT_TARGET), $(eval $(call DefineRule, $(SRCDIR)/$t, 1, CXX)))
 -include $(aObjects:.o=.o.d)
-$(foreach t, $(EMU_ROOT), $(eval $(call DefineRule, $(t), 0, C)))
-$(foreach t, $(EMU_ROOT), $(eval $(call DefineRule, $(t), 0, CXX)))
+$(eval $(call DefineRule, $(EMU_ROOT)/stm32, 0, C))
+$(eval $(call DefineRule, $(EMU_ROOT)/stm32, 0, CXX))
 
 build/stm32-main.elf: $(aObjects)
 	@echo "[$(sHeaderLD)] Linking $@"; tput sgr0

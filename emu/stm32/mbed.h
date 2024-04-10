@@ -221,3 +221,4 @@ using namespace pseudo;
 }  // namespace mbed
 
 using namespace mbed;
+using namespace std;

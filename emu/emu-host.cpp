@@ -40,15 +40,19 @@ class Host {
       });
       driver->OnReceive("OPw", "init", [](const simulation::Message& msg) {
         // Args: ()
+        printf("OPw init\n");
       });
 
       driver->OnReceive("OPw", "period", [](const simulation::Message& msg) {
         // Args: (time_us)
+        printf("OPw period -> %d: %d\n", msg.id, std::stoi(msg.args[0]));
       });
 
       driver->OnReceive("OPw", "pulsewidth",
                         [](const simulation::Message& msg) {
                           // Args: (value)
+                          printf("OPw pulsewidth -> %d: %d\n", msg.id,
+                                 std::stoi(msg.args[0]));
                         });
       driver->OnReceive("ODi", "init", [](const simulation::Message& msg) {
         // Args: ()

@@ -21,7 +21,7 @@ class ikakoC620Group {
   void ReportEncoder(robotics::network::DistributedCAN &can, uint8_t id);
 
  public:
-  ikakoC620Group(ikarashiCAN_mk2 *can, int mdc_id);
+  ikakoC620Group(ikarashiCAN_mk2 *can);
 
   void Tick();
 

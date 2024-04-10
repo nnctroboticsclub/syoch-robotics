@@ -56,7 +56,7 @@ void ikakoC620Group::ReportEncoder(robotics::network::DistributedCAN &can,
   }
 }
 
-ikakoC620Group::ikakoC620Group(ikarashiCAN_mk2 *can, int mdc_id)
+ikakoC620Group::ikakoC620Group(ikarashiCAN_mk2 *can)
     : motors_{::ikako_c620(1), ::ikako_c620(2), ::ikako_c620(3),
               ::ikako_c620(4), ::ikako_c620(5), ::ikako_c620(6),
               ::ikako_c620(7), ::ikako_c620(8)},
