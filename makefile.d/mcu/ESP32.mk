@@ -84,7 +84,7 @@ define ESP32_DefineRules_
 $(call ESP32_DefineRulesRemote,$(1))
 $(call ESP32_DefineRulesLocal,$(1),$(2),$(3),$(4))
 
-$(call AddDevice esp32-$(1))
+$(call AddDevice,esp32-$(1))
 endef
 
 # (tag, project_dir, skip_compile)
