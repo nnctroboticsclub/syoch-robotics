@@ -1,17 +1,17 @@
 #pragma once
 
-#include <mbed.h>
+#include "../platform/dout.hpp"
 
 #include "../node/node.hpp"
 
 namespace robotics::node {
 class DigitalOut : public Node<bool> {
  public:
-  DigitalOut(PinName output) : output(output) {
-    this->SetChangeCallback([this](bool value) { this->output = value; });
+  DigitalOut(std::shared_ptr<robotics::driver::IDout> out) : out_(out) {
+    this->SetChangeCallback([this](bool value) { out_->Write(value); });
   }
 
  private:
-  mbed::DigitalOut output;
+  std::shared_ptr<robotics::driver::IDout>out_;
 };
 }  // namespace robotics::node
