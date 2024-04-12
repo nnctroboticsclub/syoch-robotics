@@ -22,6 +22,8 @@ class Color {
   Color operator/(int const &other);
 
   uint32_t ToRGB();
+
+  static Color FromHSV(float h, float s, float v);
 };
 
 class NeoPixel {
