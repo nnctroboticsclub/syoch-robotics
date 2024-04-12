@@ -29,6 +29,15 @@ void DistributedCAN::Init() {
   OnMessage(0x80,
             [this](std::vector<uint8_t>) { can_->Send(0x81 + can_id, {}); });
 
+  for (uint8_t device = 0; device < 15; device++) {
+    OnMessage(0x81 + device, [this, device](std::vector<uint8_t> const &data) {
+      for (auto &cb : pong_listeners_) {
+        cb(device);
+      }
+    });
+  }
+
+  //* Keep alive
   OnMessage(0xfc, [this](std::vector<uint8_t>) {
     // printf("Keepalive!\n");
     keep_alive_timer.Reset();
@@ -50,6 +59,7 @@ void DistributedCAN::Init() {
     }
   });
 
+  //* Set status to CANReady
   SetStatus(Statuses::kCANReady);
 }
 
@@ -58,9 +68,17 @@ void DistributedCAN::OnMessage(uint8_t element_id,
   callbacks_.emplace_back(EventCallback{element_id, cb});
 }
 
+CANBase::Capability DistributedCAN::GetCapability() {
+  return can_->GetCapability();
+}
+
+float DistributedCAN::GetBusLoad() { return can_->GetBusLoad(); }
+
 void DistributedCAN::OnRx(CANBase::RxCallback cb) { can_->OnRx(cb); }
 void DistributedCAN::OnTx(CANBase::TxCallback cb) { can_->OnTx(cb); }
 void DistributedCAN::OnIdle(CANBase::IdleCallback cb) { can_->OnIdle(cb); }
+
+void DistributedCAN::SendKeepAlive() { can_->Send(0xfc, {}); }
 void DistributedCAN::OnKeepAliveLost(KeepAliveLostCallback cb) {
   this->keep_alive_lost_callbacks_.emplace_back(cb);
 }
@@ -80,6 +98,11 @@ void DistributedCAN::SetStatus(Statuses status) {
   payload[3] = static_cast<uint8_t>(status);
 
   can_->Send(0xa0, payload);
+}
+
+void DistributedCAN::Ping() { can_->Send(0x80, {}); }
+void DistributedCAN::OnPong(PongListener cb) {
+  pong_listeners_.emplace_back(cb);
 }
 
 }  // namespace robotics::network

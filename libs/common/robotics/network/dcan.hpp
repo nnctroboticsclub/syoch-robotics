@@ -29,6 +29,8 @@ class DistributedCAN {
   using KeepAliveLostCallback = std::function<void()>;
   using KeepAliveRecoverdCallback = std::function<void()>;
 
+  using PongListener = std::function<void(uint8_t device)>;
+
  private:
   int can_id = 0x7;
   std::shared_ptr<CANBase> can_;
@@ -41,23 +43,32 @@ class DistributedCAN {
   std::vector<KeepAliveLostCallback> keep_alive_lost_callbacks_;
   std::vector<KeepAliveRecoverdCallback> keep_alive_recovered_callbacks_;
 
+  std::vector<PongListener> pong_listeners_;
+
   inline void HandleMessage(std::uint32_t id, std::vector<uint8_t> const &data);
 
  public:
   DistributedCAN(int can_id, std::shared_ptr<CANBase> can);
-
   void Init();
 
   void OnMessage(uint8_t element_id,
                  std::function<void(std::vector<uint8_t>)> cb);
 
+  CANBase::Capability GetCapability();
+  float GetBusLoad();
+
   void OnRx(CANBase::RxCallback cb);
   void OnTx(CANBase::TxCallback cb);
   void OnIdle(CANBase::IdleCallback cb);
+
+  void SendKeepAlive();
   void OnKeepAliveLost(KeepAliveLostCallback cb);
   void OnKeepAliveRecovered(KeepAliveRecoverdCallback cb);
 
   int Send(uint8_t element_id, std::vector<uint8_t> const &data);
   void SetStatus(Statuses status);
+
+  void Ping();
+  void OnPong(PongListener cb);
 };
 }  // namespace robotics::network
