@@ -26,7 +26,7 @@ bool BNO055::Init() {
   }
 
   thread = new rtos::Thread(osPriorityNormal, 1024 * 4);
-  thread->start(callback(this, &BNO055::ThreadMain));
+  thread->start([this]() { ThreadMain(); });
   return true;
 }
 }  // namespace robotics::sensor::gyro

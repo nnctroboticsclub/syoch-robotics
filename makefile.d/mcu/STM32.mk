@@ -58,7 +58,7 @@ endef
 # (tag, esp32_ip, exe_bin)
 define STM32_DefineRule_RemoteFlash
 f$(1)w: $(3)
-	./upload_flash.sh $(2) $(3)
+	$(SELF)/../utils/upload_flash.sh $(2) $(3)
 
 endef
 

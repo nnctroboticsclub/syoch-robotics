@@ -13,5 +13,5 @@ class PWMBase {
 #if defined(__MBED__)
 #include "pwm.mbed.hpp"
 #elif defined(ESP_PLATFORM)
-#include "pwm.espidf.hpp"
+#include "pwm.idf.hpp"
 #endif

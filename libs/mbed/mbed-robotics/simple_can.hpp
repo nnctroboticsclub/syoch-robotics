@@ -6,7 +6,7 @@
 #include <mbed.h>
 #include <rtos.h>
 
-#include "./can_base.hpp"
+#include <robotics/network/can_base.hpp>
 
 namespace robotics::network {
 class SimpleCAN : public CANBase {

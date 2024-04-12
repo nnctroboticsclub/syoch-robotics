@@ -11,7 +11,7 @@ class SPI : public ISPI {
   std::shared_ptr<idf::SPIDevice> spi_;
 
  public:
-  ESP32SPI(std::shared_ptr<idf::SPIDevice> spi) : spi_(spi) {}
+  SPI(std::shared_ptr<idf::SPIDevice> spi) : spi_(spi) {}
 
   int Transfer(std::vector<uint8_t> const &tx,
                std::vector<uint8_t> &rx) override {
