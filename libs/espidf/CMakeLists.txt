@@ -3,7 +3,6 @@ idf_component_register(
     robotics
     robotics/sensor
     robotics/sensor/gyro
-    robotics/registry
     robotics/types
     robotics/assembly
     robotics/node
