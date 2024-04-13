@@ -14,6 +14,7 @@ idf_component_register(
     robotics/filter
     robotics/network
     robotics/controller
+    idf-robotics
   INCLUDE_DIRS "."
   REQUIRES driver esp-idf-cxx
 )
