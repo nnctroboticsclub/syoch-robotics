@@ -72,7 +72,7 @@ endef
 # (tag, esp32_ip, log_tag)
 define STM32_DefineRule_RemoteMonitor
 m$(1)w:
-	ESP32_IP=$(2) python3 ws-relay/log-reader.py $(3)
+	ESP32_IP=$(2) python3 $(SELF)/../utils/log-reader.py "$(3)"
 
 endef
 
