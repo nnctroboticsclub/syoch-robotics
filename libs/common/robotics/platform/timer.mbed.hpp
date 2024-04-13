@@ -7,7 +7,7 @@
 namespace robotics::system {
 class Timer : public TimerBase {
  private:
-  mbed::Timer timer_;
+  ::mbed::Timer timer_;
 
  public:
   void Start() override { timer_.start(); }
