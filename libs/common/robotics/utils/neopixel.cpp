@@ -72,25 +72,9 @@ Color Color::FromHSV(float h, float s, float v) {
   return Color((r + m) * 255, (g + m) * 255, (b + m) * 255);
 }
 
-void NeoPixel::WriteByte(size_t index, uint8_t byte) {
-  int byte_index = kResetSize + 4 * index;
-
-  data[byte_index + 0] =
-      ((byte >> 7) & 1 ? 0xE : 0x8) << 4 | ((byte >> 6) & 1 ? 0xE : 0x8);
-  data[byte_index + 1] =
-      ((byte >> 5) & 1 ? 0xE : 0x8) << 4 | ((byte >> 4) & 1 ? 0xE : 0x8);
-  data[byte_index + 2] =
-      ((byte >> 3) & 1 ? 0xE : 0x8) << 4 | ((byte >> 2) & 1 ? 0xE : 0x8);
-  data[byte_index + 3] =
-      ((byte >> 1) & 1 ? 0xE : 0x8) << 4 | ((byte >> 0) & 1 ? 0xE : 0x8);
-}
-
-NeoPixel::NeoPixel(std::shared_ptr<robotics::datalink::ISPI> spi, size_t kLEDs)
-    : spi_(spi), kLEDs(kLEDs) {
-  data.resize(kResetSize + 4 * 3 * kLEDs);
-  for (size_t i = 0; i < data.size(); i++) {
-    data[i] = 0;
-  }
+NeoPixel::NeoPixel(std::shared_ptr<NeoPixelDriver> driver, size_t kLEDs)
+    : driver_(driver), kLEDs(kLEDs) {
+  driver_->SetMaxBytes(3 * kLEDs);
 }
 
 void NeoPixel::PutPixel(size_t index, uint32_t rgb) {
@@ -98,9 +82,9 @@ void NeoPixel::PutPixel(size_t index, uint32_t rgb) {
   uint8_t r = (rgb >> 8) & 0xFF;
   uint8_t b = rgb & 0xFF;
 
-  WriteByte(index * 3 + 0, r);
-  WriteByte(index * 3 + 1, g);
-  WriteByte(index * 3 + 2, b);
+  driver_->SetByte(index * 3 + 0, r);
+  driver_->SetByte(index * 3 + 1, g);
+  driver_->SetByte(index * 3 + 2, b);
 }
 
 void NeoPixel::Clear() {
@@ -109,20 +93,6 @@ void NeoPixel::Clear() {
   }
 }
 
-void NeoPixel::Write() {
-  // Debug();
-  std::vector<uint8_t> rx(data.size());
-  spi_->Transfer(data, rx);
-}
+void NeoPixel::Write() { driver_->Flush(); }
 
-void NeoPixel::Debug() {
-  for (size_t i = 0; i < data.size(); i++) {
-    printf("%02x ", data[i]);
-    if (i % 12 == 11) putchar(' ');
-    if (i % 24 == 23) {
-      printf("\n");
-    }
-  }
-  printf("\n");
-}
 }  // namespace robotics::utils
