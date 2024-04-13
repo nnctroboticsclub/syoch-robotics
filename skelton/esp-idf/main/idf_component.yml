@@ -4,8 +4,5 @@ dependencies:
   idf:
     version: ">=4.1.0"
 
-  nnctroboticsclub/libstm-ota:
-    path: /workspaces/libstm-ota
-
   # nnctroboticsclub/data-proxy:
   #   git: ssh://git@github.com/nnctroboticsclub/data-proxy.git
