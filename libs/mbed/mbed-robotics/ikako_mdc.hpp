@@ -1,5 +1,11 @@
 #pragma once
 
+#ifndef IKAKO_MDC
+#define IKAKO_MDC 0
+#endif
+
+#if IKAKO_MDC
+
 #include <array>
 #include <ikarashiCAN_mk2.h>
 
@@ -32,3 +38,5 @@ class ikakoMDC {
   robotics::assembly::MotorPair<float> &GetNode(int index);
 };
 }  // namespace robotics::registry
+
+#endif
