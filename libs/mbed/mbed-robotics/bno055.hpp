@@ -3,8 +3,8 @@
 #include <bno055.h>
 #include <rtos.h>
 
-#include "base.hpp"
-#include "../../types/vector.hpp"
+#include <robotics/sensor/gyro/base.hpp>
+#include <robotics/types/vector.hpp>
 
 #ifndef PI
 #define PI 3.14159265358979323846

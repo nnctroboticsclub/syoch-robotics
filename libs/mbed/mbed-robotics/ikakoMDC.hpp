@@ -1,7 +1,7 @@
 #pragma once
 
 #include <ikakoMDC.h>
-#include "motor_pair.hpp"
+#include <robotics/assembly/motor_pair.hpp>
 
 namespace robotics::node {
 
