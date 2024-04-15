@@ -30,7 +30,7 @@ void DistributedCAN::Init() {
             [this](std::vector<uint8_t>) { can_->Send(0x81 + can_id, {}); });
 
   for (uint8_t device = 0; device < 15; device++) {
-    OnMessage(0x81 + device, [this, device](std::vector<uint8_t> const &data) {
+    OnMessage(0x81 + device, [this, device](std::vector<uint8_t> const &) {
       for (auto &cb : pong_listeners_) {
         cb(device);
       }

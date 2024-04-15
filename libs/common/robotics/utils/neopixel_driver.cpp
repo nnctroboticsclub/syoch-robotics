@@ -4,7 +4,7 @@ namespace robotics::utils {
 void NeoPixelSPIDriver::SetMaxBytes(int bytes) {
   buffer_.resize(kResetSize + bytes * 8 / 2);
 
-  for (int i = 0; i < buffer_.size(); i++) {
+  for (size_t i = 0; i < buffer_.size(); i++) {
     buffer_[i] = 0;
   }
 }
