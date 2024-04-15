@@ -1,7 +1,5 @@
 #include "ikako_c620.hpp"
 
-#if IKAKO_C620
-
 #include <algorithm>
 
 namespace robotics::registry {
@@ -95,5 +93,3 @@ robotics::assembly::MotorPair<float> &ikakoC620Group::GetNode(int index) {
   return motor_nodes_[index];
 }
 }  // namespace robotics::registry
-
-#endif

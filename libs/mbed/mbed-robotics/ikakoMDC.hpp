@@ -1,11 +1,5 @@
 #pragma once
 
-#ifndef IKAKO_MDC_NODE
-#define IKAKO_MDC_NODE 0
-#endif
-
-#if IKAKO_MDC_NODE
-
 #include <ikakoMDC.h>
 #include "motor_pair.hpp"
 
@@ -60,5 +54,3 @@ class ikakoMDCPair : public MotorPair<T> {
   node::Motor<T> &GetMotor() override { return *motor_; }
 };
 }  // namespace robotics::assembly
-
-#endif

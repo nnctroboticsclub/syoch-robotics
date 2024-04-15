@@ -1,7 +1,5 @@
 #include "ikako_mdc.hpp"
 
-#if IKAKO_MDC
-
 #include <algorithm>
 
 namespace robotics::registry {
@@ -96,5 +94,3 @@ robotics::assembly::MotorPair<float> &ikakoMDC::GetNode(int index) {
   return motor_nodes_[index];
 }
 }  // namespace robotics::registry
-
-#endif
