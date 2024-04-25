@@ -17,4 +17,6 @@ class TimerBase {
 #include "timer.mbed.hpp"
 #elif defined(ESP_PLATFORM)
 #include "timer.idf.hpp"
+#else
+#include "timer.mock.hpp"
 #endif

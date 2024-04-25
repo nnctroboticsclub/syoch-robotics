@@ -8,8 +8,8 @@ namespace robotics::network {
 inline void DistributedCAN::HandleMessage(std::uint32_t id,
                                           std::vector<uint8_t> const &data) {
   for (auto const &cb : callbacks_) {
-    if (cb.element_id == id) {
-      cb.cb(data);
+    if (cb.Acceptable(id)) {
+      cb.cb(id, data);
     }
   }
 }
@@ -26,32 +26,30 @@ void DistributedCAN::Init() {
   });
 
   //* Ping
-  OnMessage(0x80,
-            [this](std::vector<uint8_t>) { can_->Send(0x81 + can_id, {}); });
+  OnMessage(0x7f0, 0x530, [this](std::uint32_t, std::vector<uint8_t>) {
+    can_->Send(0x81 + can_id, {});
+  });
 
-  for (uint8_t device = 0; device < 15; device++) {
-    OnMessage(0x81 + device, [this, device](std::vector<uint8_t> const &) {
-      for (auto &cb : pong_listeners_) {
-        cb(device);
-      }
-    });
-  }
+  OnMessage(0x7f0, 0x520, [this](std::uint32_t id, std::vector<uint8_t>) {
+    auto device = id & 0x00f;
+    for (auto &cb : pong_listeners_) {
+      cb(device);
+    }
+  });
 
   //* Keep alive
-  OnMessage(0xfc, [this](std::vector<uint8_t>) {
-    // printf("Keepalive!\n");
+  OnMessage(0x7ff, 0x540, [this](std::uint32_t, std::vector<uint8_t>) {
     keep_alive_timer.Reset();
   });
+
   can_->OnIdle([this]() {
     auto timer = keep_alive_timer.ElapsedTime();
     if (keep_alive_available && 300ms < timer) {
-      printf("Keepalive Lost!\n");
       keep_alive_available = false;
       for (auto &&cb : this->keep_alive_lost_callbacks_) {
         cb();
       }
     } else if (!keep_alive_available && timer < 300ms) {
-      printf("Keepalive Get!\n");
       keep_alive_available = true;
       for (auto &&cb : this->keep_alive_recovered_callbacks_) {
         cb();
@@ -63,9 +61,10 @@ void DistributedCAN::Init() {
   SetStatus(Statuses::kCANReady);
 }
 
-void DistributedCAN::OnMessage(uint8_t element_id,
-                               std::function<void(std::vector<uint8_t>)> cb) {
-  callbacks_.emplace_back(EventCallback{element_id, cb});
+void DistributedCAN::OnMessage(std::uint32_t mask, std::uint32_t id,
+                               EventCallback::Callback cb) {
+  EventCallback event_cb = {mask, id, cb};
+  callbacks_.emplace_back(event_cb);
 }
 
 CANBase::Capability DistributedCAN::GetCapability() {

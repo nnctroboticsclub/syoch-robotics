@@ -22,8 +22,17 @@ class DistributedCAN {
   };
 
   struct EventCallback {
-    uint8_t element_id;
-    std::function<void(std::vector<uint8_t>)> cb;
+    using Callback =
+        std::function<void(std::uint32_t id, std::vector<uint8_t> const &data)>;
+
+    // accepted when can.id & mask == id
+    const std::uint32_t mask;
+    const std::uint32_t id;
+    Callback cb;
+
+    inline bool Acceptable(std::uint32_t cid) const {
+      return (cid & mask) == id;
+    }
   };
 
   using KeepAliveLostCallback = std::function<void()>;
@@ -51,8 +60,8 @@ class DistributedCAN {
   DistributedCAN(int can_id, std::shared_ptr<CANBase> can);
   void Init();
 
-  void OnMessage(uint8_t element_id,
-                 std::function<void(std::vector<uint8_t>)> cb);
+  void OnMessage(std::uint32_t mask, std::uint32_t id,
+                 EventCallback::Callback cb);
 
   CANBase::Capability GetCapability();
   float GetBusLoad();

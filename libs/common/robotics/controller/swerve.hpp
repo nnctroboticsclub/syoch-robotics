@@ -58,13 +58,11 @@ struct SwerveController {
     rot_left_45.OnFire([this] {
       auto angle = angle_out.GetValue();
       angle.angle -= 45;
-      printf("-> %lf;\n", angle.angle);
       angle_out.SetValue(angle);
     });
     rot_right_45.OnFire([this] {
       auto angle = angle_out.GetValue();
       angle.angle += 45;
-      printf("-> %lf;\n", angle.angle);
       angle_out.SetValue(angle);
     });
   }
