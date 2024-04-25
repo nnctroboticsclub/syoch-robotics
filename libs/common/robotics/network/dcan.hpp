@@ -79,5 +79,7 @@ class DistributedCAN {
 
   void Ping();
   void OnPong(PongListener cb);
+
+  int GetCanId() { return can_id; }
 };
 }  // namespace robotics::network
