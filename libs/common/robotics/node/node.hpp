@@ -9,20 +9,25 @@ namespace robotics {
 namespace node {
 
 template <typename T>
-class NodeEncoder {
+class NodeEncoder {};
+
+template <>
+class NodeEncoder<void> {
+ protected:
   NodeInspector inspector;
 
-public:
-NodeEncoder(): inspector(0) {}
-  void Update(std::array<uint8_t, 4> value) { inspector.Update(value); }
+ public:
+  NodeEncoder() : inspector(0) {}
+
+  void Link(NodeEncoder<void>& other_encoder) {
+    inspector.Link(other_encoder.inspector);
+  }
 };
 
 template <>
-class NodeEncoder<int> {
-  NodeInspector inspector;
-
-public:
-NodeEncoder(): inspector(0) {}
+class NodeEncoder<int> : public NodeEncoder<void> {
+ public:
+  NodeEncoder() : NodeEncoder<void>() {}
   void Update(int value) {
     std::array<uint8_t, 4> data;
     data[0] = value >> 24;
@@ -34,11 +39,9 @@ NodeEncoder(): inspector(0) {}
 };
 
 template <>
-class NodeEncoder<float> {
-  NodeInspector inspector;
-
-public:
-NodeEncoder(): inspector(0) {}
+class NodeEncoder<float> : public NodeEncoder<void> {
+ public:
+  NodeEncoder() : NodeEncoder<void>() {}
   void Update(float value) {
     union {
       float value;
@@ -56,11 +59,9 @@ NodeEncoder(): inspector(0) {}
 };
 
 template <>
-class NodeEncoder<double> {
-  NodeInspector inspector;
-
-public:
-NodeEncoder(): inspector(0) {}
+class NodeEncoder<double> : public NodeEncoder<void> {
+ public:
+  NodeEncoder() : NodeEncoder<void>() {}
   void Update(double value) {
     union {
       float value;
@@ -78,11 +79,9 @@ NodeEncoder(): inspector(0) {}
 };
 
 template <>
-class NodeEncoder<bool> {
-  NodeInspector inspector;
-
-public:
-NodeEncoder(): inspector(0) {}
+class NodeEncoder<bool> : public NodeEncoder<void> {
+ public:
+  NodeEncoder() : NodeEncoder<void>() {}
   void Update(bool value) {
     std::array<uint8_t, 4> data;
     data[0] = 0;
@@ -132,7 +131,11 @@ class Node {
   T GetValue() { return value_; }
 
   void SetChangeCallback(Callback callback) { callbacks_.push_back(callback); }
-  void Link(Node<T>& input) { linked_inputs_.push_back(&input); }
+  void Link(Node<T>& input) {
+    linked_inputs_.push_back(&input);
+
+    inspector.Link(input.inspector);
+  }
 
   Node<T>& operator>>(Node<T>& next) {
     Link(next);
