@@ -11,20 +11,20 @@
 namespace robotics::node {
 
 namespace {
-  class NodeInfo {
-    static uint16_t latest_id_;
+class NodeInfo {
+  static uint16_t latest_id_;
 
-   public:
-    uint16_t type;
-    uint16_t id;
+ public:
+  uint16_t type;
+  uint16_t id;
 
-    std::vector<std::shared_ptr<NodeInfo>> links;
+  std::vector<std::shared_ptr<NodeInfo>> links;
 
-    NodeInfo(uint16_t type): type(type), id(latest_id_++) {}
-  };
+  NodeInfo(uint16_t type) : type(type), id(latest_id_++) {}
+};
 
-  uint16_t NodeInfo::latest_id_ = 0;
-}
+uint16_t NodeInfo::latest_id_ = 0;
+}  // namespace
 
 class NodeInspector::Impl {
   NodeInfo node_info;
@@ -61,9 +61,7 @@ class NodeInspector::Impl {
                   (unsigned char)(node_info.links[index]->id & 0xFF)});
   }
 
-  void SendData() {
-    Send(node_info.type, data_payload);
-    }
+  void SendData() { Send(node_info.type, data_payload); }
 
   void SendLinks() {
     if (can_.can_ == nullptr) {
@@ -124,10 +122,10 @@ class NodeInspector::Impl {
         break;
       }
 
-default: {
-  printf("Unknown command: %d\n", (int)command);
-  break;
-}
+      default: {
+        printf("Unknown command: %d\n", (int)command);
+        break;
+      }
     }
   }
 
@@ -151,27 +149,25 @@ default: {
 
   static void RegisterCAN(std::shared_ptr<network::DistributedCAN> can) {
     can_.can_ = can;
-    can_.message_id = 0x4d0 + can->GetCanId();
+    can_.message_id = 0x4d0 + can->GetDeviceId();
 
     can_.can_->OnMessage(0x7f8, 0x4d8, HandleCanMessage);
   }
 };
 
-NodeInspector::NodeInspector(uint16_t type) : impl_(std::make_shared<Impl>(type)) {}
+NodeInspector::NodeInspector(uint16_t type)
+    : impl_(std::make_shared<Impl>(type)) {}
 
-NodeInspector::~NodeInspector() {}
+NodeInspector::~NodeInspector() = default;
 
 void NodeInspector::Link(NodeInspector &other_inspector) {
   impl_->Link(other_inspector.impl_);
 }
 
-void NodeInspector::Update(std::array<uint8_t, 4> data) {
-  impl_->Update(data);
-}
+void NodeInspector::Update(std::array<uint8_t, 4> data) { impl_->Update(data); }
 
 void NodeInspector::RegisterCAN(std::shared_ptr<network::DistributedCAN> can) {
   Impl::RegisterCAN(can);
 }
-
 
 }  // namespace robotics::node
