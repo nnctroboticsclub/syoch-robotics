@@ -82,10 +82,7 @@ class Status : public CANModule {
 
   ~Status() override = default;
 
-  void OnRegister(std::shared_ptr<CANEngine> engine) override {
-    printf("Status::OnRegister\n");
-    can_ = engine;
-  }
+  void OnRegister(std::shared_ptr<CANEngine> engine) override { can_ = engine; }
 
   void SetStatus(Statuses status) {
     if (!can_) {
@@ -120,7 +117,6 @@ class KeepAlive : public CANModule {
   ~KeepAlive() override = default;
 
   void OnRegister(std::shared_ptr<CANEngine> engine) override {
-    printf("KeepAlive::OnRegister\n");
     can_ = engine;
     engine->OnMessage(0x7ff, 0x540,
                       [this](std::uint32_t, std::vector<uint8_t> const &) {
@@ -164,20 +160,19 @@ class PingPong : public CANModule {
   ~PingPong() override = default;
 
   void OnRegister(std::shared_ptr<CANEngine> engine) override {
-    printf("PingPong::OnRegister\n");
     can_ = engine;
     engine->OnMessage(0x7f0, 0x530,
-                    [this](std::uint32_t, std::vector<uint8_t> const &) {
-                      can_->Send(0x81 + can_->GetDeviceId(), {});
-                    });
+                      [this](std::uint32_t, std::vector<uint8_t> const &) {
+                        can_->Send(0x81 + can_->GetDeviceId(), {});
+                      });
 
     engine->OnMessage(0x7f0, 0x520,
-                    [this](std::uint32_t id, std::vector<uint8_t> const &) {
-                      uint8_t device = id & 0x00f;
-                      for (auto const &cb : pong_listeners_) {
-                        cb(device);
-                      }
-                    });
+                      [this](std::uint32_t id, std::vector<uint8_t> const &) {
+                        uint8_t device = id & 0x00f;
+                        for (auto const &cb : pong_listeners_) {
+                          cb(device);
+                        }
+                      });
   }
 
   void Ping() { can_->Send(0x80, {}); }
