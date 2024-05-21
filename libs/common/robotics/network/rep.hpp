@@ -7,6 +7,8 @@
 #include "fep_tx_state.hpp"
 
 #include "../utils/no_mutex_lifo.hpp"
+#include "../platform/timer.hpp"
+#include "../platform/random.hpp"
 #include "../logger/logger.hpp"
 
 namespace robotics::network {
@@ -18,6 +20,54 @@ struct REPTxPacket {
   uint32_t length;
 };
 
+using namespace std::chrono_literals;
+class CachedKey {
+  static inline system::Timer key_request_timer;
+
+  enum class State : uint8_t {
+    kUnknown,
+    kInitialized,
+    kWaiting
+  } state = State::kUnknown;
+  std::chrono::microseconds request_queued_at;  // runtime timestamp
+  uint8_t key = 0;
+
+ public:
+  void ResetState() {
+    state = State::kUnknown;
+    request_queued_at = 0s;
+    key = 0;
+  }
+
+  void InitializedState(uint8_t key) {
+    this->key = key;
+    this->state = State::kInitialized;
+  }
+
+  void RequestState() {
+    this->state = State::kWaiting;
+    this->request_queued_at = key_request_timer.ElapsedTime();
+    this->key = 0;
+  }
+
+  bool IsNeedRequest() const {
+    if (state == State::kUnknown) return true;
+    if (state == State::kInitialized) return false;
+
+    if (key_request_timer.ElapsedTime() > request_queued_at + 1s) return true;
+  }
+
+  bool IsReady() { return state == State::kInitialized; }
+
+  uint8_t GetKey() const { return key; }
+
+  const char* c_str() const {
+    static char buffer[32];
+    snprintf(buffer, sizeof(buffer), "%d(%d)", key, (uint8_t)state);
+    return buffer;
+  }
+};
+
 class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
   Stream<uint8_t, uint8_t, fep::TxState>& driver_;
 
@@ -27,14 +77,7 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
   Checksum tx_cs_calculator;
 
   uint8_t tx_buffer_[32] = {};
-  struct CachedKey {
-    enum class State : uint8_t {
-      kUnknown,
-      kInitialized,
-      kWaiting
-    } state = State::kUnknown;
-    uint8_t key = 0;
-  } cached_keys[256] = {};  // Using array for ISR context
+  CachedKey cached_keys[256] = {};  // Using array for ISR context
 
   robotics::utils::NoMutexLIFO<REPTxPacket, 4> tx_queue;
 
@@ -48,14 +91,14 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
 
     delete packet;
 
-    cached_keys[remote].state = CachedKey::State::kWaiting;
+    cached_keys[remote].RequestState();
   }
   void ExchangeKey_Request(uint8_t remote) {
     logger::Log(logger::Level::kVerbose, "[REP] Key Request: to %d", remote);
 
     this->tx_queue.Push({true, remote, {system::Random::GetByte()}, 1});
 
-    cached_keys[remote].state = CachedKey::State::kWaiting;
+    cached_keys[remote].RequestState();
   }
 
   void ExchangeKey_Responce(uint8_t remote, uint8_t random) {
@@ -63,19 +106,18 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
         {true, remote, {random, (uint8_t)(random ^ random_key_)}, 2});
 
     logger::Log(logger::Level::kVerbose,
-                "[REP] Key Responce: for %d, random=%#02x", remote, random);
+                "[REP] Key Responcing: for %d, random=%#02x", remote, random);
   }
 
   void ExchangeKey_Update(uint8_t remote, uint8_t key) {
-    cached_keys[remote] = {CachedKey::State::kInitialized, key};
+    cached_keys[remote].InitializedState(key);
 
     logger::Log(logger::Level::kVerbose, "[REP] Key Updated: for %d, key=%#02x",
                 remote, key);
   }
 
   void _Send(REPTxPacket& packet) {
-    if (!packet.no_key_check &&
-        cached_keys[packet.addr].state == CachedKey::State::kUnknown) {
+    if (!packet.no_key_check && cached_keys[packet.addr].IsNeedRequest()) {
       logger::Log(logger::Level::kDebug,
                   "[REP] Packet marked as key_check, but the cached key is not "
                   "initialized for %d, Queueing exchanging...",
@@ -86,15 +128,14 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
     }
 
     if (0) {
-      logger::Log(
-          logger::Level::kDebug,
-          "[REP] \x1b[31mSend\x1b[m key = %d(%d), data = %p (%d B) -> %d",
-          cached_keys[packet.addr].key, (uint8_t)cached_keys[packet.addr].state,
-          packet.buffer, packet.length, packet.addr);
+      logger::Log(logger::Level::kDebug,
+                  "[REP] \x1b[31mSend\x1b[m key = %s, data = %p (%d B) -> %d",
+                  cached_keys[packet.addr].c_str(), packet.buffer,
+                  packet.length, packet.addr);
       logger::LogHex(logger::Level::kDebug, packet.buffer, packet.length);
     }
 
-    auto key = cached_keys[packet.addr].key;
+    auto key = cached_keys[packet.addr].GetKey();
 
     tx_cs_calculator.Reset();
     tx_cs_calculator << (uint8_t)key;
@@ -119,10 +160,20 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
     auto tx_state = driver_.Send(packet.addr, tx_buffer_, ptr - tx_buffer_);
 
     if (tx_state != fep::TxState::kNoError) {
-      logger::Log(logger::Level::kError,
+      /* logger::Log(logger::Level::kError,
                   "[REP] Failed to send packet to %d: %d, Pushing queue",
-                  packet.addr, (int)tx_state);
+                  packet.addr, (int)tx_state); */
       tx_queue.Push(packet);
+    }
+
+    if (tx_state == fep::TxState::kTimeout) {
+      auto duration_ms = int(system::Random::GetByte() / 255.0 * 50);
+      logger::Log(logger::Level::kError,
+                  "[REP] Random Backoff: %d ms",
+                  duration_ms);
+      ThisThread::sleep_for(
+         duration_ms* 1ms);  // random backoff
+
     }
   }
 
@@ -215,11 +266,17 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
 
         auto packet = tx_queue.Pop();
 
-        if (!packet.no_key_check &&
-            cached_keys[packet.addr].state != CachedKey::State::kInitialized) {
-          if (cached_keys[packet.addr].state == CachedKey::State::kUnknown) {
+        if (!packet.no_key_check && !cached_keys[packet.addr].IsReady()) {
+          if (cached_keys[packet.addr].IsNeedRequest()) {
             ExchangeKey_Request(packet.addr);
           }
+
+          if (0)
+            logger::Log(
+                logger::Level::kVerbose,
+                "[REP] \x1b[35mSend\x1b[m key = %s, data = %p (%d B) -> %d",
+                cached_keys[packet.addr].c_str(), packet.buffer, packet.length,
+                packet.addr);
           tx_queue.Push(packet);
 
           continue;
@@ -228,10 +285,9 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
         if (0)
           logger::Log(
               logger::Level::kDebug,
-              "[REP] \x1b[33mSend\x1b[m key = %d(%d), data = %p (%d B) -> %d",
-              cached_keys[packet.addr].key,
-              (uint8_t)cached_keys[packet.addr].state, packet.buffer,
-              packet.length, packet.addr);
+              "[REP] \x1b[33mSend\x1b[m key = %s, data = %p (%d B) -> %d",
+              cached_keys[packet.addr].c_str(), packet.buffer, packet.length,
+              packet.addr);
         _Send(packet);
       }
     });

@@ -47,7 +47,7 @@ class SerialServiceProtocol {
         [this](uint8_t from_addr, uint8_t* data, uint32_t length) {
           if (length < 4) {
             robotics::logger::Log(logger::Level::kError,
-                                  "[SSP] E: Invalid Length: %d", length);
+                                  "[SSP] Invalid Length: %d", length);
             return;
           }
 
@@ -55,7 +55,7 @@ class SerialServiceProtocol {
 
           if (services_.find(service_id) == services_.end()) {
             robotics::logger::Log(logger::Level::kError,
-                                  "[SSP] E: Invalid Service: %d", service_id);
+                                  "[SSP] Invalid Service: %d", service_id);
             return;
           }
           auto service = services_[service_id];

@@ -28,10 +28,20 @@ class DriverError : public std::string {
   DriverError(std::string const& message) : std::string(message) {}
 };
 
+struct DriverResult {
+  enum class Type { kOk, kError };
+
+  Type type;
+  int value;
+
+  bool Failed() const { return type == Type::kError; }
+};
+
 class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
   Stream<uint8_t>& upper_stream;
 
   robotics::utils::NoMutexLIFO<char, 64> rx_queue_;
+  robotics::utils::NoMutexLIFO<DriverResult, 4> result_queue_;
 
   enum class Flags {
     kRxOverflow = 1 << 0,
@@ -43,6 +53,7 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
     kIdle,
     kProcessing,
     kRxData,
+    kRxResult,
   };
 
   State state_ = State::kIdle;
@@ -53,6 +64,10 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
 
   void Send(std::string const& data) {
     upper_stream.Send((uint8_t*)data.data(), (uint32_t)data.size());
+
+    for (auto ch : data) {
+      // logger::LogCh("FEP-TX", ch);
+    }
   }
 
   void ISR_ParseBinary() {
@@ -93,6 +108,41 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
     state_ = State::kIdle;
   }
 
+  void ISR_ParseResult() {
+    if (rx_queue_.Size() < 4) {
+      return;
+    }
+
+    char stat = rx_queue_[0];
+    char code = rx_queue_[1];
+
+    if (rx_queue_[2] != '\r') {
+      return;
+    }
+    if (rx_queue_[3] != '\n') {
+      return;
+    }
+
+    rx_queue_.Pop();
+    rx_queue_.Pop();
+    rx_queue_.Pop();
+    rx_queue_.Pop();
+
+    int value = code - '0';
+
+    DriverResult value_result{
+        .type =
+            stat == 'P' ? DriverResult::Type::kOk : DriverResult::Type::kError,
+        .value = value,
+    };
+
+    // logger::Log(logger::Level::kInfo, "[FEP] Recv: Result: %c%d", stat, value);
+
+    result_queue_.Push(value_result);
+
+    state_ = State::kIdle;
+  }
+
   void ISR_OnUARTData(uint8_t* buffer, uint32_t length) {
     // logger::LogCh("FEP-RX", buffer[0]);
 
@@ -102,9 +152,21 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
       }
     }
 
-    if (rx_queue_[0] == 'R' && rx_queue_[1] == 'B' && rx_queue_[2] == 'N') {
-      state_ = State::kRxData;
-      ISR_ParseBinary();
+    switch (state_) {
+      case State::kRxData:
+        ISR_ParseBinary();
+        break;
+
+      case State::kRxResult:
+        ISR_ParseResult();
+        break;
+
+      default:
+        if (rx_queue_[0] == 'R' && rx_queue_[1] == 'B' && rx_queue_[2] == 'N') {
+          state_ = State::kRxData;
+        } else if (rx_queue_[0] == 'N' || rx_queue_[0] == 'P') {
+          state_ = State::kRxResult;
+        }
     }
   }
 
@@ -154,29 +216,18 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
   }
 
   [[nodiscard]]
-  types::Result<int, DriverError> ReadResult(
+  types::Result<DriverResult, DriverError> ReadResult(
       std::chrono::milliseconds timeout = 1000ms) {
-    auto line_res = ReadLine(timeout);
-    if (!line_res.IsOk()) {
-      return line_res.UnwrapError();
-    }
+    auto start = timer_.ElapsedTime();
 
-    auto line = line_res.Unwrap();
-    int value;
-    char c;
-    std::stringstream ss;
-    ss << line;
-    ss >> c >> value;
+    while (1) {
+      if (!result_queue_.Empty()) {
+        return result_queue_.Pop();
+      }
 
-    if (c == 'N') {
-      if (value == 0) return -10;
-      return -value;
-    } else if (c == 'P') {
-      return value;
-    } else {
-      ss.str("");
-      ss << "Invalid response: " << line;
-      return DriverError(ss.str());
+      if (timer_.ElapsedTime() > start + timeout) {
+        return DriverError("Timeout");
+      }
     }
   }
 
@@ -219,7 +270,8 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
   }
 
   [[nodiscard]]
-  types::Result<int, DriverError> SetRegister(uint8_t address, uint8_t value) {
+  types::Result<DriverResult, DriverError> SetRegister(uint8_t address,
+                                                       uint8_t value) {
     auto wait_for_state = WaitForState(State::kIdle);
     if (!wait_for_state.IsOk()) {
       return wait_for_state.UnwrapError();
@@ -236,7 +288,7 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
   }
 
   [[nodiscard]]
-  types::Result<int, DriverError> Reset() {
+  types::Result<DriverResult, DriverError> Reset() {
     auto wait_for_state = WaitForState(State::kIdle);
     if (!wait_for_state.IsOk()) {
       return wait_for_state.UnwrapError();
@@ -250,7 +302,7 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
   }
 
   [[nodiscard]]
-  types::Result<int, DriverError> InitAllRegister() {
+  types::Result<DriverResult, DriverError> InitAllRegister() {
     auto wait_for_state = WaitForState(State::kIdle);
     if (!wait_for_state.IsOk()) {
       return wait_for_state.UnwrapError();
@@ -285,14 +337,19 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
 
     auto result1 = ReadResult();
     if (!result1.IsOk()) {
+      logger::Log(logger::Level::kError,
+                  "[FEP] \x1b[31mSend\x1b[m Read1 failed: %s",
+                  result1.UnwrapError().c_str());
       state_ = State::kIdle;
       return TxState::kInvalidResponse;
     }
 
-    if (result1.Unwrap() != +1) {
+    auto command_result = result1.Unwrap();
+
+    if (command_result.Failed()) {
       logger::Log(logger::Level::kError,
                   "[FEP] \x1b[31mSend\x1b[m Invalid Response: %d",
-                  result1.Unwrap());
+                  command_result);
       state_ = State::kIdle;
       return TxState::kInvalidResponse;
     }
@@ -306,39 +363,47 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
       return TxState::kInvalidResponse;
     }
 
-    if (result2.Unwrap() == -10) {
-      logger::Log(logger::Level::kError,
-                  "[FEP] \x1b[31mSend\x1b[m Invalid Command");
-      return TxState::kInvalidCommand;
+    auto send_result = result2.Unwrap();
+
+    if (!send_result.Failed()) {
       state_ = State::kIdle;
-      auto result = this->Reset();
-      if (!result.IsOk()) {
+      return TxState::kNoError;
+    }
+
+    switch (send_result.value) {
+      case 1: {
         logger::Log(logger::Level::kError,
-                    "[FEP] \x1b[31mSend\x1b[m Failed to reset: %s",
-                    result.UnwrapError().c_str());
-        return TxState::kInvalidResponse;
-
-      } else {
-        logger::Log(logger::Level::kInfo,
-                    "[FEP] \x1b[31mSend\x1b[m Resetted FEP");
+                    "[FEP] \x1b[31mSend\x1b[m Failed due to no responce or CS");
+        state_ = State::kIdle;
+        return TxState::kTimeout;
+      } break;
+      case 2: {
+        logger::Log(logger::Level::kError,
+                    "[FEP] \x1b[31mSend\x1b[m Remote RX Overflow");
+        state_ = State::kIdle;
+        return TxState::kRxOverflow;
       }
-      return TxState::kInvalidCommand;
-    }
-    if (result2.Unwrap() == -1) {
-      logger::Log(logger::Level::kError,
-                  "[FEP] \x1b[31mSend\x1b[m Failed due to no responce or CS");
-      state_ = State::kIdle;
-      return TxState::kTimeout;
-    }
-    if (result2.Unwrap() == -2) {
-      logger::Log(logger::Level::kError,
-                  "[FEP] \x1b[31mSend\x1b[m Remote RX Overflow");
-      state_ = State::kIdle;
-      return TxState::kRxOverflow;
-    }
+      case 0: {
+        logger::Log(logger::Level::kError,
+                    "[FEP] \x1b[31mSend\x1b[m Invalid Command");
+      }
+      [[fallthrough]]
+      default: {
+        state_ = State::kIdle;
+        auto result = this->Reset();
+        if (!result.IsOk()) {
+          logger::Log(logger::Level::kError,
+                      "[FEP] \x1b[31mSend\x1b[m Failed to reset: %s",
+                      result.UnwrapError().c_str());
+          return TxState::kInvalidResponse;
 
-    state_ = State::kIdle;
-    return TxState::kNoError;
+        } else {
+          logger::Log(logger::Level::kInfo,
+                      "[FEP] \x1b[31mSend\x1b[m Resetted FEP");
+        }
+        return TxState::kInvalidCommand;
+      } break;
+    }
   }
 };
 }  // namespace fep
