@@ -204,7 +204,7 @@ function SSP.dissector(buffer, pinfo, tree)
     packet_length = buffer:len()
     local subtree = tree:add(SSP, buffer:range(0, packet_length))
 
-    local offset = 3
+    local offset = 0
 
     local service_id = buffer(offset, 2)
     subtree:add(ssp_field_svc,  service_id)
@@ -214,7 +214,9 @@ function SSP.dissector(buffer, pinfo, tree)
     subtree:add(ssp_field_reserved,  reserved)
     offset = offset + 2
 
-    pinfo.cols.info = service_id:bytes():tohex() .. " " .. reserved:bytes():tohex()
+    local payload = buffer(offset, packet_length - offset)
+
+    pinfo.cols.info = service_id:bytes():tohex() .. " " .. payload:bytes():tohex()
 
     local data_buffer = payload
     local data_tvb = data_buffer:tvb()
