@@ -10,6 +10,7 @@ using ThreadFunction = std::function<void()>;
 class ThreadBase {
  public:
   virtual void Start(const ThreadFunction& function) = 0;
+  virtual void SetStackSize(size_t size) = 0;
 };
 
 void SleepFor(std::chrono::milliseconds duration);
