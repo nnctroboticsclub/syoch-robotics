@@ -24,7 +24,7 @@ class FepServer:
         await self.fep.init()
 
         await self.fep.set_reg(18, await self.fep.get_reg(18) & 0xFC)
-        await self.fep.set_reg(0, 0x01)
+        await self.fep.set_reg(0, 0x80)
         await self.fep.set_reg(1, 0x02)
         await self.fep.reset()
 
@@ -55,6 +55,6 @@ class FepServer:
 
 
 if __name__ == "__main__":
-    fep = UsbFep("/dev/ttyUSB0")
+    fep = UsbFep("/dev/ttyUSB1")
     fep_server = FepServer(fep)
     asyncio.run(fep_server.run(31337))
