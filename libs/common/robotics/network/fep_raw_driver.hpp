@@ -136,7 +136,8 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
         .value = value,
     };
 
-    // logger::Log(logger::Level::kInfo, "[FEP] Recv: Result: %c%d", stat, value);
+    // logger::Log(logger::Level::kInfo, "[FEP] Recv: Result: %c%d", stat,
+    // value);
 
     result_queue_.Push(value_result);
 
