@@ -15,5 +15,7 @@ class Thread : public ThreadBase {
   void Start(const ThreadFunction& function) override {
     thread_ = std::thread(function);
   }
+
+  void SetStackSize(size_t size) override {}
 };
 }  // namespace robotics::system

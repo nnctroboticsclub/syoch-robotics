@@ -21,9 +21,11 @@ namespace robotics::network {
 namespace fep {
 using namespace std::chrono_literals;
 
-logger::Logger logger{"fep.nw","\x1b[1;35mFEP\x1b[m"};
-logger::CharLogger rx_logger{"sr.fep.nw","\x1b[1;35mFEP\x1b[m-\x1b[34mCmdRx\x1b[m"};
-logger::CharLogger tx_logger{"st.fep.nw","\x1b[1;35mFEP\x1b[m-\x1b[32mCmdTx\x1b[m"};
+logger::Logger logger{"fep.nw", "\x1b[1;35mFEP\x1b[m"};
+logger::CharLogger rx_logger{"sr.fep.nw",
+                             "\x1b[1;35mFEP\x1b[m-\x1b[34mCmdRx\x1b[m"};
+logger::CharLogger tx_logger{"st.fep.nw",
+                             "\x1b[1;35mFEP\x1b[m-\x1b[32mCmdTx\x1b[m"};
 
 class DriverError : public std::string {
  public:
@@ -98,7 +100,7 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
       rx_queue_.Pop();
     }
 
-    for (int i = 0; i < length; i++) {
+    for (size_t i = 0; i < length; i++) {
       on_binary_data_buffer[i] = rx_queue_.Pop();
     }
 
@@ -146,7 +148,7 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
   }
 
   void ISR_OnUARTData(uint8_t* buffer, uint32_t length) {
-    for (int i = 0; i < length; i++) {
+    for (size_t i = 0; i < length; i++) {
       rx_logger.Log(buffer[i]);
       if (!rx_queue_.Push(buffer[i])) {
         flags_ |= (uint32_t)Flags::kRxOverflow;
@@ -347,18 +349,16 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
     auto command_result = result1.Unwrap();
 
     if (command_result.Failed()) {
-      logger.Error(
-                  "[FEP] \x1b[31mSend\x1b[m Invalid Response: %d",
-                  command_result);
+      logger.Error("[FEP] \x1b[31mSend\x1b[m Invalid Response: %d",
+                   command_result);
       state_ = State::kIdle;
       return TxState::kInvalidResponse;
     }
 
     auto result2 = ReadResult();
     if (!result2.IsOk()) {
-      logger.Error(
-                  "[FEP] \x1b[31mSend\x1b[m Failed to read result: %s",
-                  result2.UnwrapError().c_str());
+      logger.Error("[FEP] \x1b[31mSend\x1b[m Failed to read result: %s",
+                   result2.UnwrapError().c_str());
       state_ = State::kIdle;
       return TxState::kInvalidResponse;
     }
@@ -373,33 +373,29 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
     switch (send_result.value) {
       case 1: {
         logger.Error(
-                    "[FEP] \x1b[31mSend\x1b[m Failed due to no responce or CS");
+            "[FEP] \x1b[31mSend\x1b[m Failed due to no responce or CS");
         state_ = State::kIdle;
         return TxState::kTimeout;
       } break;
       case 2: {
-        logger.Error(
-                    "[FEP] \x1b[31mSend\x1b[m Remote RX Overflow");
+        logger.Error("[FEP] \x1b[31mSend\x1b[m Remote RX Overflow");
         state_ = State::kIdle;
         return TxState::kRxOverflow;
       }
-      case 0: {
-        logger.Error(
-                    "[FEP] \x1b[31mSend\x1b[m Invalid Command");
-      }
-      [[fallthrough]]
+      case 0:
+        logger.Error("[FEP] \x1b[31mSend\x1b[m Invalid Command");
+
+      [[fallthrough]];
       default: {
         state_ = State::kIdle;
         auto result = this->Reset();
         if (!result.IsOk()) {
-          logger.Error(
-                      "[FEP] \x1b[31mSend\x1b[m Failed to reset: %s",
-                      result.UnwrapError().c_str());
+          logger.Error("[FEP] \x1b[31mSend\x1b[m Failed to reset: %s",
+                       result.UnwrapError().c_str());
           return TxState::kInvalidResponse;
 
         } else {
-          logger.Info(
-                      "[FEP] \x1b[31mSend\x1b[m Resetted FEP");
+          logger.Info("[FEP] \x1b[31mSend\x1b[m Resetted FEP");
         }
         return TxState::kInvalidCommand;
       } break;

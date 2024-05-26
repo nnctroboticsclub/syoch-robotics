@@ -36,10 +36,9 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
 
   void _Send(REPTxPacket& packet) {
     if (0) {
-      logger.Debug(
-                  "[REP] \x1b[31mSend\x1b[m data = %p (%d B) -> %d",
-                  packet.buffer, packet.length, packet.addr);
-      logger.Hex(logger::Level::kDebug, packet.buffer, packet.length);
+      logger.Debug("[REP] \x1b[31mSend\x1b[m data = %p (%d B) -> %d",
+                   packet.buffer, packet.length, packet.addr);
+      logger.Hex(logger::core::Level::kDebug, packet.buffer, packet.length);
     }
 
     tx_cs_calculator.Reset();
@@ -93,7 +92,7 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
       }
 
       uint8_t length = *(data++);
-      if (len != 6 + length) {
+      if (len != (size_t)(6 + length)) {
         logger.Error("[REP] Invalid Length (2): %d", addr);
         return;  // malformed packet
       }
@@ -119,10 +118,9 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
       }
 
       if (0) {
-        logger.Debug(
-                    "[REP] \x1b[32mRecv\x1b[m data = %p (%d B) -> %d", payload,
-                    payload_len, addr);
-        logger.Hex(logger::Level::kDebug, payload, payload_len);
+        logger.Debug("[REP] \x1b[32mRecv\x1b[m data = %p (%d B) -> %d", payload,
+                     payload_len, addr);
+        logger.Hex(logger::core::Level::kDebug, payload, payload_len);
       }
 
       DispatchOnReceive(addr, payload, payload_len);
@@ -138,9 +136,8 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
         auto packet = tx_queue.Pop();
 
         if (0)
-          logger.Debug(
-                      "[REP] \x1b[33mSend\x1b[m data = %p (%d B) -> %d",
-                      packet.buffer, packet.length, packet.addr);
+          logger.Debug("[REP] \x1b[33mSend\x1b[m data = %p (%d B) -> %d",
+                       packet.buffer, packet.length, packet.addr);
         _Send(packet);
       }
     });
@@ -156,7 +153,7 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
   }
 };
 
-logger::Logger ReliableFEPProtocol::logger{"rep.nw","\x1b[35mREP\x1b[m"};
+logger::Logger ReliableFEPProtocol::logger{"rep.nw", "\x1b[35mREP\x1b[m"};
 }  // namespace rep
 using ReliableFEPProtocol = rep::ReliableFEPProtocol;
 }  // namespace robotics::network

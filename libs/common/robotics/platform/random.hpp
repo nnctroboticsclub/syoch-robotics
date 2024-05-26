@@ -25,7 +25,7 @@ class Random {
     Thread* thread = new Thread();
     thread->Start([this]() { RandomThread(); });
   }
-  static inline Random* instance;
+  static Random* instance;
 
  public:
   static Random* GetInstance() {
@@ -37,6 +37,8 @@ class Random {
 
   static uint8_t GetByte() { return Random::GetInstance()->value_ * 255; }
 };
+
+Random* Random::instance = nullptr;
 }  // namespace robotics::system
 
 #ifdef __MBED__

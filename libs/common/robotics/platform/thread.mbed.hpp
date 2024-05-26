@@ -6,40 +6,19 @@
 
 namespace robotics::system {
 
-class ThreadImpl {
-  ::rtos::Thread thread_;
-
- public:
-  ThreadImpl(size_t stack_size) : thread_{osPriorityNormal, stack_size} {}
-
-  void Start(const ThreadFunction& function) {
-    struct A {
-      ThreadFunction function;
-    };
-    A* args = new A{function};
-
-    thread_.start([args]() { args->function(); });
-  }
-};
-
 class Thread : public ThreadBase {
- private:
-  ThreadImpl* impl = nullptr;
+  class Impl;
 
+  Impl* impl = nullptr;
   size_t stack_size_ = 4096;
 
  public:
-  Thread() {}
+  Thread();
 
-  void Start(const ThreadFunction& function) override {
-    impl = new ThreadImpl(stack_size_);
-    impl->Start(function);
-  }
+  void Start(const ThreadFunction& function) override;
 
-  void SetStackSize(size_t size) override { this->stack_size_ = size; }
+  void SetStackSize(size_t size) override;
 };
 
-void SleepFor(std::chrono::milliseconds duration) {
-  ThisThread::sleep_for(duration);
-}
+void SleepFor(std::chrono::milliseconds duration);
 }  // namespace robotics::system
