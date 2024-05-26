@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdio>
 #include <cstdint>
 #include <cstring>
 
@@ -46,20 +47,6 @@ LogQueue* log_queue = nullptr;
 
 robotics::system::Thread logger_thread;
 
-void Log(Level level, const char* fmt, ...) {
-  if (!log_queue) return;
-
-  va_list args;
-  va_start(args, fmt);
-
-  LogLine line{"", level};
-  line.length = vsnprintf(line.data, sizeof(line.data), fmt, args);
-
-  log_queue->Push(line);
-
-  va_end(args);
-}
-
 void LogHex(Level level, const uint8_t* data, size_t length) {
   if (!log_queue) return;
 
@@ -74,8 +61,119 @@ void LogHex(Level level, const uint8_t* data, size_t length) {
   log_queue->Push(line);
 }
 
-struct CharLogGroup {
-  char group_tag[16] = {};
+class Logger {
+  static Logger *loggers[64];
+
+  const char* id;
+  const char* tag;
+
+  bool supressed = false;
+
+ private:
+  void _Log(Level level, const char* fmt, va_list args) {
+    if (supressed) return;
+    if (!log_queue) return;
+
+    LogLine line{"", level};
+
+    char* ptr = line.data;
+    ptr += snprintf(ptr, sizeof(line.data), "[%s] ", tag);
+    ptr += vsnprintf(ptr, sizeof(line.data) - (ptr - line.data), fmt, args);
+
+    line.length = ptr - line.data;
+
+    log_queue->Push(line);
+  }
+
+ public:
+  Logger(const char* id, const char* tag) : id(id), tag(tag) {
+    for (int i = 0; i < 64; i++) {
+      if (!loggers[i]) {
+        Debug("Logger %s initialized as id = %d", id, i);
+        loggers[i] = this;
+        break;
+      }
+    }
+  }
+
+  void Supress() { supressed = true; }
+
+  void Resume() { supressed = false; }
+
+  void Log(Level level, const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    _Log(level, fmt, args);
+
+    va_end(args);
+  }
+
+  void Info(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    _Log(Level::kInfo, fmt, args);
+
+    va_end(args);
+  }
+
+  void Error(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    _Log(Level::kError, fmt, args);
+
+    va_end(args);
+  }
+
+  void Debug(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    _Log(Level::kDebug, fmt, args);
+
+    va_end(args);
+  }
+
+  void Trace(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    _Log(Level::kTrace, fmt, args);
+
+    va_end(args);
+  }
+
+  void Verbose(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    _Log(Level::kVerbose, fmt, args);
+
+    va_end(args);
+  }
+
+  void Hex(Level level, const uint8_t* data, size_t length) {
+    LogHex(level, data, length);
+  }
+
+  static Logger* GetLogger(const char* id) {
+    for (int i = 0; i < 64; i++) {
+      if (loggers[i] && strcmp(loggers[i]->id, id) == 0) {
+        return loggers[i];
+      }
+    }
+    return nullptr;
+  }
+};
+
+Logger* Logger::loggers[64] = {
+    nullptr,
+};
+
+struct CharLogger {
+  Logger logger;
   char data[512] = {};
 
   Level level = Level::kInfo;
@@ -84,19 +182,21 @@ struct CharLogGroup {
     kNone,
     kNewLine,
   } caching_mode = CachingMode::kNewLine;
+  public:
+  CharLogger(const char *id, const char* tag) : logger(id, tag) {}
 
   void SetLevel(Level level) { this->level = level; }
 
   void SetCachingMode(CachingMode mode) { caching_mode = mode; }
 
-  void AppendChar(char c) {
+  void Log(char c) {
     if (caching_mode == CachingMode::kNone) {
-      Log(level, "[Char#%s] %s", group_tag, data);
+      logger.Log(level, "%c", c);
     }
 
     if (caching_mode == CachingMode::kNewLine) {
       if (c == '\n' || strlen(data) >= sizeof(data) - 1) {
-        Log(level, "[Char#%s] %s", group_tag, data);
+        logger.Log(level, "%s", data);
         memset(data, 0, sizeof(data));
         return;
       } else if (c == '\r') {
@@ -113,36 +213,19 @@ struct CharLogGroup {
   }
 };
 
-CharLogGroup groups[16] = {};
+Logger system_logger{"system", "logger"};
 
-static CharLogGroup* GetCharLogGroup(const char* group_tag) {
-  for (auto&& group : groups) {
-    if (strcmp(group.group_tag, group_tag) == 0) {
-      return &group;
-    }
-  }
-
-  for (auto&& group : groups) {
-    if (strlen(group.group_tag) == 0) {
-      strcpy(group.group_tag, group_tag);
-      return &group;
-    }
-  }
-
-  return nullptr;
+void SuppressLogger(const char* id) {
+  auto logger = Logger::GetLogger(id);
+  logger->Supress();
 }
 
-void LogCh(const char* group_tag, char c) {
-  auto group = GetCharLogGroup(group_tag);
-  if (!group) {
-    return;
-  }
-
-  group->AppendChar(c);
+void ResumeLogger(const char* id) {
+  auto logger = Logger::GetLogger(id);
+  logger->Resume();
 }
 
 void Init() {
-  printf("# Init Logger\n");
   if (log_queue) {
     printf("- Logger already initialized\n");
     return;
@@ -192,7 +275,7 @@ void Init() {
             break;
         }
 
-        printf("[\x1b[33mLOG %2d -%2d]\x1b[m %s %s\n", i, log_queue->Size(),
+        printf("%s %s\n",
                level_header, line.data);
       }
     }
@@ -202,6 +285,6 @@ void Init() {
   printf("  - free cells: %d\n", log_queue->Size());
 
   log_queue->Push(LogLine("Logger Initialized"));
-  Log(Level::kInfo, "Logger Initialized (from Log)");
+  system_logger.Info("Logger Initialized (from Log)");
 }
 }  // namespace robotics::logger

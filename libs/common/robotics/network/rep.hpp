@@ -22,6 +22,7 @@ struct REPTxPacket {
 using namespace std::chrono_literals;
 
 class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
+  static logger::Logger logger;
   Stream<uint8_t, uint8_t, fep::TxState>& driver_;
 
   uint8_t random_key_;
@@ -35,10 +36,10 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
 
   void _Send(REPTxPacket& packet) {
     if (0) {
-      logger::Log(logger::Level::kDebug,
+      logger.Debug(
                   "[REP] \x1b[31mSend\x1b[m data = %p (%d B) -> %d",
                   packet.buffer, packet.length, packet.addr);
-      logger::LogHex(logger::Level::kDebug, packet.buffer, packet.length);
+      logger.Hex(logger::Level::kDebug, packet.buffer, packet.length);
     }
 
     tx_cs_calculator.Reset();
@@ -62,16 +63,14 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
     auto tx_state = driver_.Send(packet.addr, tx_buffer_, ptr - tx_buffer_);
 
     if (tx_state != fep::TxState::kNoError) {
-      logger::Log(logger::Level::kError,
-                  "[REP] Failed to send packet to %d: %d, Pushing queue",
-                  packet.addr, (int)tx_state);
+      logger.Error("[REP] Failed to send packet to %d: %d, Pushing queue",
+                   packet.addr, (int)tx_state);
       tx_queue.Push(packet);
     }
 
     if (tx_state == fep::TxState::kTimeout) {
       auto duration_ms = int(system::Random::GetByte() / 255.0 * 100);
-      logger::Log(logger::Level::kError, "[REP] Random Backoff: %d ms",
-                  duration_ms);
+      logger.Error("[REP] Random Backoff: %d ms", duration_ms);
       ThisThread::sleep_for(duration_ms * 1ms);  // random backoff
     }
   }
@@ -81,7 +80,7 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
     driver_.OnReceive([this](uint8_t addr, uint8_t* data, size_t len) {
       //* Validate magic
       if (data[0] != 0x55 || data[1] != 0xAA || data[2] != 0xCC) {
-        logger::Log(logger::Level::kError, "[REP] Invalid Magic: %d", addr);
+        logger.Error("[REP] Invalid Magic: %d", addr);
         return;  // invalid magic
       }
 
@@ -89,15 +88,13 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
 
       //* Load key/length
       if (len <= 4) {
-        logger::Log(logger::Level::kError, "[REP] Invalid Length (1): %d",
-                    addr);
+        logger.Error("[REP] Invalid Length (1): %d", addr);
         return;  // malformed packet
       }
 
       uint8_t length = *(data++);
       if (len != 6 + length) {
-        logger::Log(logger::Level::kError, "[REP] Invalid Length (2): %d",
-                    addr);
+        logger.Error("[REP] Invalid Length (2): %d", addr);
         return;  // malformed packet
       }
 
@@ -117,15 +114,15 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
       checksum |= *(data++) << 8;
       checksum |= *(data++);
       if (checksum != (uint16_t)rx_cs_calculator.Get()) {
-        logger::Log(logger::Level::kError, "[REP] Invalid Checksum: %d", addr);
+        logger.Error("[REP] Invalid Checksum: %d", addr);
         return;  // invalid checksum
       }
 
       if (0) {
-        logger::Log(logger::Level::kDebug,
+        logger.Debug(
                     "[REP] \x1b[32mRecv\x1b[m data = %p (%d B) -> %d", payload,
                     payload_len, addr);
-        logger::LogHex(logger::Level::kDebug, payload, payload_len);
+        logger.Hex(logger::Level::kDebug, payload, payload_len);
       }
 
       DispatchOnReceive(addr, payload, payload_len);
@@ -141,7 +138,7 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
         auto packet = tx_queue.Pop();
 
         if (0)
-          logger::Log(logger::Level::kDebug,
+          logger.Debug(
                       "[REP] \x1b[33mSend\x1b[m data = %p (%d B) -> %d",
                       packet.buffer, packet.length, packet.addr);
         _Send(packet);
@@ -158,6 +155,8 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
     tx_queue.Push(packet);
   }
 };
+
+logger::Logger ReliableFEPProtocol::logger{"rep.nw","\x1b[35mREP\x1b[m"};
 }  // namespace rep
 using ReliableFEPProtocol = rep::ReliableFEPProtocol;
 }  // namespace robotics::network

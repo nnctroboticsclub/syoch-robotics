@@ -38,6 +38,8 @@ class SSP_Service : public Stream<uint8_t, uint8_t> {
 };
 
 class SerialServiceProtocol {
+  static logger::Logger logger;
+
   Stream<uint8_t, uint8_t>& stream_;
   std::unordered_map<uint16_t, SSP_Service*> services_;
 
@@ -46,16 +48,14 @@ class SerialServiceProtocol {
     stream_.OnReceive(
         [this](uint8_t from_addr, uint8_t* data, uint32_t length) {
           if (length < 4) {
-            robotics::logger::Log(logger::Level::kError,
-                                  "[SSP] Invalid Length: %d", length);
+            logger.Error("[SSP] Invalid Length: %d", length);
             return;
           }
 
           uint16_t service_id = (data[0] << 8) | data[1];
 
           if (services_.find(service_id) == services_.end()) {
-            robotics::logger::Log(logger::Level::kError,
-                                  "[SSP] Invalid Service: %d", service_id);
+            logger.Error("[SSP] Invalid Service: %d", service_id);
             return;
           }
           auto service = services_[service_id];
@@ -70,6 +70,8 @@ class SerialServiceProtocol {
     services_[service->GetServiceId()] = service;
   }
 };
+
+logger::Logger SerialServiceProtocol::logger{"ssp.nw","\x1b[36mSSP\x1b[m"};
 }  // namespace ssp
 using ssp::SerialServiceProtocol;
 using ssp::SSP_Service;
