@@ -55,6 +55,6 @@ class FepServer:
 
 
 if __name__ == "__main__":
-    fep = UsbFep("/dev/ttyUSB1")
+    fep = UsbFep("/dev/ttyUSB0")
     fep_server = FepServer(fep)
     asyncio.run(fep_server.run(31337))

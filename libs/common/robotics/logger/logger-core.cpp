@@ -63,7 +63,8 @@ void Thread() {
 
   while (1) {
     if (!log_queue) {
-      ThisThread::sleep_for(1ms);
+      using namespace std::chrono_literals;
+      robotics::system::SleepFor(1ms);
       continue;
     }
 

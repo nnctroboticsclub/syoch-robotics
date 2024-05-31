@@ -3,11 +3,5 @@
 #include <cstdio>
 
 namespace robotics::system {
-[[noreturn]] void panic(const char* message) {
-  printf("Panic: %s\n", message);
-  *(volatile int*)0 = 0;
-
-  while (true) {
-  }
-}
+[[noreturn]] void panic(const char* message);
 }  // namespace robotics::system
