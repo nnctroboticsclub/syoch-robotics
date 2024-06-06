@@ -1,5 +1,3 @@
-#pragma once
-
 #include <mbed.h>
 
 #include "random.hpp"

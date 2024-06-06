@@ -7,20 +7,19 @@ namespace robotics::system {
 
 using ThreadFunction = std::function<void()>;
 
-class ThreadBase {
+class Thread {
+  class Impl;
+
+  Impl* impl = nullptr;
+
  public:
-  virtual void Start(const ThreadFunction& function) = 0;
-  virtual void SetStackSize(size_t size) = 0;
+  Thread();
+
+  void Start(const ThreadFunction& function);
+
+  void SetStackSize(size_t size);
 };
 
 void SleepFor(std::chrono::milliseconds duration);
 
 }  // namespace robotics::system
-
-#ifdef __MBED__
-#include "thread.mbed.hpp"
-#elif defined(ESP_PLATFORM)
-#include "thread.idf.hpp"
-#else
-#include "thread.mock.hpp"
-#endif

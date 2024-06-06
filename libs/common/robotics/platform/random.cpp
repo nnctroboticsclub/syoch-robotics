@@ -28,3 +28,11 @@ uint8_t Random::GetByte() { return Random::GetInstance()->value_ * 255; }
 
 Random* Random::instance = nullptr;
 }  // namespace robotics::system
+
+#ifdef __MBED__
+#include "random.mbed.hpp"
+#elif defined(ESP_PLATFORM)
+#error "Not implemented"
+#else
+#include "random.mock.hpp"
+#endif

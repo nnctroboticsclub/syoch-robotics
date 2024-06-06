@@ -1,5 +1,3 @@
-#pragma once
-
 #include "generic_logger.hpp"
 
 #include <cstdio>
