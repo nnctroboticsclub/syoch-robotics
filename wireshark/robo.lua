@@ -122,11 +122,6 @@ function REP.dissector(buffer, pinfo, tree)
 
     local offset = 3
 
-
-    key = buffer(offset, 1)
-    subtree:add(field_key,  key)
-    offset = offset + 1
-
     length = buffer(offset, 1):uint()
     subtree:add(field_length, length)
     offset = offset + 1
@@ -136,23 +131,7 @@ function REP.dissector(buffer, pinfo, tree)
 
     subtree:add(field_check_sum, buffer(offset, 2))
 
-    if key:uint() == 0x00 then
-        if payload:len() == 1 then -- key request
-            pinfo.cols.info = "[KeyExchange]" .. " random = " .. payload:tohex()
-            subtree:add(field_key_exchange, 1)
-        elseif payload:len() == 2 then -- key response
-            local payload1 = payload:get_index(0)
-            local payload2 = payload:get_index(1)
-
-            local key = bit.bxor(payload1, payload2)
-
-            pinfo.cols.info = "[KeyExchange]" .. " key = " .. key
-            subtree:add(field_key_exchange, 1)
-        end
-    else
-        pinfo.cols.info = key:bytes():tohex() .. " " .. payload:tohex()
-        subtree:add(field_payload, 1)
-    end
+    pinfo.cols.info = payload:tohex()
 
 
     local data_buffer = payload
