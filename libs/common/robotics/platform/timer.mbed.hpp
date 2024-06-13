@@ -5,19 +5,17 @@
 #include "timer.hpp"
 
 namespace robotics::system {
-class Timer : public TimerBase {
+class Timer::Impl {
  private:
   ::mbed::Timer timer_;
 
  public:
-  void Start() override { timer_.start(); }
+  void Start() { timer_.start(); }
 
-  void Stop() override { timer_.stop(); }
+  void Stop() { timer_.stop(); }
 
-  void Reset() override { timer_.reset(); }
+  void Reset() { timer_.reset(); }
 
-  std::chrono::microseconds ElapsedTime() override {
-    return timer_.elapsed_time();
-  }
+  std::chrono::microseconds ElapsedTime() { return timer_.elapsed_time(); }
 };
 }  // namespace robotics::system

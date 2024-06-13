@@ -13,6 +13,6 @@ bool AngleStick2D::operator==(AngleStick2D const& other) const {
 bool AngleStick2D::operator!=(AngleStick2D const& other) const {
   return !(*this == other);
 }
-};  // namespace types
+}  // namespace types
 
 }  // namespace robotics

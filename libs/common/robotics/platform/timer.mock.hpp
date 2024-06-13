@@ -2,17 +2,26 @@
 
 #include "timer.hpp"
 
+#include <chrono>
+
 namespace robotics::system {
-class Timer : public TimerBase {
+class Timer::Impl {
+  std::chrono::microseconds base_time_;
+
  public:
-  void Start() override {  }
+  void Start() {
+    base_time_ = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::high_resolution_clock::now().time_since_epoch());
+  }
 
-  void Stop() override {  }
+  void Stop() {}
 
-  void Reset() override {  }
+  void Reset() { Start(); }
 
-  std::chrono::microseconds ElapsedTime() override {
-    return {};
+  std::chrono::microseconds ElapsedTime() {
+    return std::chrono::duration_cast<std::chrono::microseconds>(
+               std::chrono::high_resolution_clock::now().time_since_epoch()) -
+           base_time_;
   }
 };
 }  // namespace robotics::system

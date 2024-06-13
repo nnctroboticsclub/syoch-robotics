@@ -3,17 +3,16 @@
 #include "timer.hpp"
 
 namespace robotics::system {
-class Timer : public TimerBase {
- private:
+/* class Timer::Impl {
  public:
-  void Start() override {}
+  void Start() {}
 
-  void Stop() override {}
+  void Stop() {}
 
-  void Reset() override {}
+  void Reset() {}
 
-  std::chrono::microseconds ElapsedTime() override {
+  std::chrono::microseconds ElapsedTime() {
     return std::chrono::microseconds(0);
   }
-};
+}; */
 }  // namespace robotics::system

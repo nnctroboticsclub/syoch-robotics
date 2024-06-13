@@ -24,7 +24,7 @@ class NodeInfo {
   NodeInfo(uint16_t type) : type(type), id(latest_id_++) {}
 
   void SendData();
-  void SendLink(int index);
+  void SendLink(size_t index);
   void SendLinks();
 
   void SetData(std::array<uint8_t, 4> data) { data_payload = data; }
@@ -121,7 +121,7 @@ GlobalNodeInspector g_inspector;
 
 void NodeInfo::SendData() { g_inspector.Send(type, id, data_payload); }
 
-void NodeInfo::SendLink(int index) {
+void NodeInfo::SendLink(size_t index) {
   if (0 < index || index >= links.size()) {
     return;
   }
@@ -135,7 +135,7 @@ void NodeInfo::SendLink(int index) {
 }
 
 void NodeInfo::SendLinks() {
-  for (int i = 0; i < links.size(); i++) {
+  for (size_t i = 0; i < links.size(); i++) {
     SendLink(i);
   }
 }

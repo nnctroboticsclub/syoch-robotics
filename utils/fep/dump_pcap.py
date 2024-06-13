@@ -8,7 +8,10 @@ BFEP_PROTOCOL = "! b b"
 
 
 async def dump_pcap(remote: str, pcap_path: str):
+    print("Connecting...")
     reader, writer = await asyncio.open_connection(remote, 31337)
+
+    print("...")
     pcap_output = Pcap(pcap_path)
 
     client = FepClient(writer, reader)
@@ -18,6 +21,8 @@ async def dump_pcap(remote: str, pcap_path: str):
         print(f"Received packet from {addr:02x} with {len(data)} bytes")
         bfep = struct.pack(BFEP_PROTOCOL, addr, len(data)) + data
         pcap_output.add_packet(bfep)
+
+    print("FEP Dump To Pcap Service Started")
 
     await client.recv_forever()
 

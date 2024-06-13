@@ -24,13 +24,8 @@ class Thread::Impl {
   void SetStackSize(size_t size) { this->stack_size_ = size; }
 };
 
-Thread::Thread() { impl = new Impl(); }
-
-void Thread::Start(const ThreadFunction& function) { impl->Start(function); }
-
-void Thread::SetStackSize(size_t size) { impl->SetStackSize(size); }
-
 void SleepFor(std::chrono::milliseconds duration) {
   ThisThread::sleep_for(duration);
 }
+
 }  // namespace robotics::system

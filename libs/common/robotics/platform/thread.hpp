@@ -10,7 +10,7 @@ using ThreadFunction = std::function<void()>;
 class Thread {
   class Impl;
 
-  Impl* impl = nullptr;
+  Impl* impl_ = nullptr;
 
  public:
   Thread();

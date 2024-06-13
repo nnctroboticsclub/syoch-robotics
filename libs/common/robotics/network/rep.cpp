@@ -3,6 +3,8 @@
 #include "../logger/logger.hpp"
 #include "../platform/random.hpp"
 
+#include <robotics/platform/thread.hpp>
+
 using namespace std::chrono_literals;
 
 namespace {
@@ -46,7 +48,7 @@ void ReliableFEPProtocol::_Send(REPTxPacket& packet) {
   if (tx_state == fep::TxState::kTimeout) {
     auto duration_ms = int(system::Random::GetByte() / 255.0 * 100);
     rep_logger.Error("[REP] Random Backoff: %d ms", duration_ms);
-    ThisThread::sleep_for(duration_ms * 1ms);  // random backoff
+    robotics::system::SleepFor(duration_ms * 1ms);  // random backoff
   }
 }
 
@@ -102,10 +104,13 @@ ReliableFEPProtocol::ReliableFEPProtocol(FEP_RawDriver& driver)
     DispatchOnReceive(addr, payload, payload_len);
   });
 
-  (new Thread(osPriorityNormal, 8192, nullptr, "REP"))->start([this]() {
+  robotics::system::Thread *thread = new robotics::system::Thread();
+
+  thread->SetStackSize(8192);
+  thread->Start([this]() {
     while (1) {
       if (tx_queue.Empty()) {
-        ThisThread::sleep_for(100ms);
+        robotics::system::SleepFor(100ms);
         continue;
       }
 
