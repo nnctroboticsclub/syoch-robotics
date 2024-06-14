@@ -165,7 +165,7 @@ FEP_register_my_heuristic(rep_check)
 
 
 -- ****************************************************
--- * FEP: Serial Service Protocol
+-- * SSP: Serial Service Protocol
 -- ****************************************************
 
 local SSP = Proto.new("robo.ssp", "Serial Service Protocol")
