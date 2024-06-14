@@ -14,8 +14,8 @@ robotics::logger::Logger rep_logger{"rep.nw", "\x1b[35mREP\x1b[m"};
 namespace robotics::network::rep {
 void ReliableFEPProtocol::_Send(REPTxPacket& packet) {
   if (0) {
-    rep_logger.Debug("[REP] \x1b[31mSend\x1b[m data = %p (%d B) -> %d",
-                     packet.buffer, packet.length, packet.addr);
+    rep_logger.Debug("\x1b[31mSend\x1b[m data = %p (%d B) -> %d", packet.buffer,
+                     packet.length, packet.addr);
     rep_logger.Hex(logger::core::Level::kDebug, packet.buffer, packet.length);
   }
 
@@ -40,14 +40,14 @@ void ReliableFEPProtocol::_Send(REPTxPacket& packet) {
   auto tx_state = driver_.Send(packet.addr, tx_buffer_, ptr - tx_buffer_);
 
   if (tx_state != fep::TxState::kNoError) {
-    rep_logger.Error("[REP] Failed to send packet to %d: %d, Pushing queue",
+    rep_logger.Error("Failed to send packet to %d: %d, Pushing queue",
                      packet.addr, (int)tx_state);
     tx_queue.Push(packet);
   }
 
   if (tx_state == fep::TxState::kTimeout) {
     auto duration_ms = int(system::Random::GetByte() / 255.0 * 100);
-    rep_logger.Error("[REP] Random Backoff: %d ms", duration_ms);
+    rep_logger.Error("Random Backoff: %d ms", duration_ms);
     robotics::system::SleepFor(duration_ms * 1ms);  // random backoff
   }
 }
@@ -57,7 +57,7 @@ ReliableFEPProtocol::ReliableFEPProtocol(FEP_RawDriver& driver)
   driver_.OnReceive([this](uint8_t addr, uint8_t* data, size_t len) {
     //* Validate magic
     if (data[0] != 0x55 || data[1] != 0xAA || data[2] != 0xCC) {
-      rep_logger.Error("[REP] Invalid Magic: %d", addr);
+      rep_logger.Error("Invalid Magic: %d", addr);
       return;  // invalid magic
     }
 
@@ -65,13 +65,13 @@ ReliableFEPProtocol::ReliableFEPProtocol(FEP_RawDriver& driver)
 
     //* Load key/length
     if (len <= 4) {
-      rep_logger.Error("[REP] Invalid Length (1): %d", addr);
+      rep_logger.Error("Invalid Length (1): %d", addr);
       return;  // malformed packet
     }
 
     uint8_t length = *(data++);
     if (len != (size_t)(6 + length)) {
-      rep_logger.Error("[REP] Invalid Length (2): %d", addr);
+      rep_logger.Error("Invalid Length (2): %d", addr);
       return;  // malformed packet
     }
 
@@ -91,20 +91,20 @@ ReliableFEPProtocol::ReliableFEPProtocol(FEP_RawDriver& driver)
     checksum |= *(data++) << 8;
     checksum |= *(data++);
     if (checksum != (uint16_t)rx_cs_calculator.Get()) {
-      rep_logger.Error("[REP] Invalid Checksum: %d", addr);
+      rep_logger.Error("Invalid Checksum: %d", addr);
       return;  // invalid checksum
     }
 
     if (0) {
-      rep_logger.Debug("[REP] \x1b[32mRecv\x1b[m data = %p (%d B) -> %d",
-                       payload, payload_len, addr);
+      rep_logger.Debug("\x1b[32mRecv\x1b[m data = %p (%d B) -> %d", payload,
+                       payload_len, addr);
       rep_logger.Hex(logger::core::Level::kDebug, payload, payload_len);
     }
 
     DispatchOnReceive(addr, payload, payload_len);
   });
 
-  robotics::system::Thread *thread = new robotics::system::Thread();
+  robotics::system::Thread* thread = new robotics::system::Thread();
 
   thread->SetStackSize(8192);
   thread->Start([this]() {
@@ -117,7 +117,7 @@ ReliableFEPProtocol::ReliableFEPProtocol(FEP_RawDriver& driver)
       auto packet = tx_queue.Pop();
 
       if (0)
-        rep_logger.Debug("[REP] \x1b[33mSend\x1b[m data = %p (%d B) -> %d",
+        rep_logger.Debug("\x1b[33mSend\x1b[m data = %p (%d B) -> %d",
                          packet.buffer, packet.length, packet.addr);
       _Send(packet);
     }

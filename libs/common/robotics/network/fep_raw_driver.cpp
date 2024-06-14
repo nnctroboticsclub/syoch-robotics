@@ -278,7 +278,7 @@ TxState FEP_RawDriver::Send(uint8_t address, uint8_t* data, uint32_t length) {
 
   auto result1 = ReadResult();
   if (!result1.IsOk()) {
-    fep_logger.Error("[FEP] \x1b[31mSend\x1b[m Read1 failed: %s",
+    fep_logger.Error("\x1b[31mSend\x1b[m Read1 failed: %s",
                      result1.UnwrapError().c_str());
     state_ = State::kIdle;
     return TxState::kInvalidResponse;
@@ -287,15 +287,14 @@ TxState FEP_RawDriver::Send(uint8_t address, uint8_t* data, uint32_t length) {
   auto command_result = result1.Unwrap();
 
   if (command_result.Failed()) {
-    fep_logger.Error("[FEP] \x1b[31mSend\x1b[m Invalid Response: %d",
-                     command_result);
+    fep_logger.Error("\x1b[31mSend\x1b[m Invalid Response: %d", command_result);
     state_ = State::kIdle;
     return TxState::kInvalidResponse;
   }
 
   auto result2 = ReadResult();
   if (!result2.IsOk()) {
-    fep_logger.Error("[FEP] \x1b[31mSend\x1b[m Failed to read result: %s",
+    fep_logger.Error("\x1b[31mSend\x1b[m Failed to read result: %s",
                      result2.UnwrapError().c_str());
     state_ = State::kIdle;
     return TxState::kInvalidResponse;
@@ -310,30 +309,29 @@ TxState FEP_RawDriver::Send(uint8_t address, uint8_t* data, uint32_t length) {
 
   switch (send_result.value) {
     case 1: {
-      fep_logger.Error(
-          "[FEP] \x1b[31mSend\x1b[m Failed due to no responce or CS");
+      fep_logger.Error("\x1b[31mSend\x1b[m Failed due to no responce or CS");
       state_ = State::kIdle;
       return TxState::kTimeout;
     } break;
     case 2: {
-      fep_logger.Error("[FEP] \x1b[31mSend\x1b[m Remote RX Overflow");
+      fep_logger.Error("\x1b[31mSend\x1b[m Remote RX Overflow");
       state_ = State::kIdle;
       return TxState::kRxOverflow;
     }
     case 0:
-      fep_logger.Error("[FEP] \x1b[31mSend\x1b[m Invalid Command");
+      fep_logger.Error("\x1b[31mSend\x1b[m Invalid Command");
 
       [[fallthrough]];
     default: {
       state_ = State::kIdle;
       auto result = this->Reset();
       if (!result.IsOk()) {
-        fep_logger.Error("[FEP] \x1b[31mSend\x1b[m Failed to reset: %s",
+        fep_logger.Error("\x1b[31mSend\x1b[m Failed to reset: %s",
                          result.UnwrapError().c_str());
         return TxState::kInvalidResponse;
 
       } else {
-        fep_logger.Info("[FEP] \x1b[31mSend\x1b[m Resetted FEP");
+        fep_logger.Info("\x1b[31mSend\x1b[m Resetted FEP");
       }
       return TxState::kInvalidCommand;
     } break;

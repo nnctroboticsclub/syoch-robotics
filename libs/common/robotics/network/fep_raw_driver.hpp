@@ -78,7 +78,7 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
 
   [[nodiscard]]
   types::Result<DriverResult, DriverError> ReadResult(
-      std::chrono::milliseconds timeout = 1000ms);
+      std::chrono::milliseconds timeout = 3000ms);
 
  public:
   FEP_RawDriver(Stream<uint8_t>& upper_stream);
@@ -99,7 +99,6 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
 
   [[nodiscard]]
   TxState Send(uint8_t address, uint8_t* data, uint32_t length) override;
-
 };
 }  // namespace fep
 
