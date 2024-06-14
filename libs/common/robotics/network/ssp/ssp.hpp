@@ -13,11 +13,15 @@ class SSP_Service : public Stream<uint8_t, uint8_t> {
 
   uint16_t service_id_;
 
+ protected:
+  logger::Logger logger;
+
  private:
   friend class SerialServiceProtocol;
 
  public:
-  SSP_Service(Stream<uint8_t, uint8_t>& stream, uint16_t service_id);
+  SSP_Service(Stream<uint8_t, uint8_t>& stream, uint16_t service_id,
+              const char* logger_tag, const char* logger_header);
 
   void Send(uint8_t address, uint8_t* data, uint32_t length) override;
 
@@ -31,10 +35,12 @@ class SerialServiceProtocol {
  public:
   SerialServiceProtocol(Stream<uint8_t, uint8_t>& stream);
 
-  template <typename T>
-  void RegisterService() {
-    auto service = new T(stream_);
+  template <typename T, typename... Args>
+  T* RegisterService(Args... args) {
+    auto service = new T(stream_, args...);
     services_[service->GetServiceId()] = service;
+
+    return service;
   }
 };
 

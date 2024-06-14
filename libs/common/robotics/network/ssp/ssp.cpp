@@ -5,8 +5,11 @@ robotics::logger::Logger ssp_logger{"ssp.nw", "\x1b[36mSSP\x1b[m"};
 }
 
 namespace robotics::network::ssp {
-SSP_Service::SSP_Service(Stream<uint8_t, uint8_t>& stream, uint16_t service_id)
-    : stream_(stream), service_id_(service_id) {}
+SSP_Service::SSP_Service(Stream<uint8_t, uint8_t>& stream, uint16_t service_id,
+                         const char* logger_tag, const char* logger_header)
+    : logger(logger_tag, logger_header),
+      stream_(stream),
+      service_id_(service_id) {}
 
 void SSP_Service::Send(uint8_t address, uint8_t* data, uint32_t length) {
   static uint8_t buffer[128] = {};
