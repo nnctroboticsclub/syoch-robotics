@@ -6,7 +6,7 @@ namespace robotics::system {
 
 class Thread::Impl {
   ::rtos::Thread* thread_ = nullptr;
-  size_t stack_size_ = 0;
+  size_t stack_size_ = 4096;
 
  public:
   Impl() {}
