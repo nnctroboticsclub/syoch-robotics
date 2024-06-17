@@ -13,6 +13,8 @@ class FepClient:
 
         self.on_packet_callbacks: list[OnPacketCallback] = []
 
+        asyncio.create_task(self.recv_forever())
+
     async def recv_forever(self):
         while True:
             addr = int.from_bytes(await self.reader.readexactly(1), "big")

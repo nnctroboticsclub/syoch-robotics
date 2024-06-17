@@ -15,6 +15,7 @@ class FepServer:
 
         @self.fep.on_packet
         def on_packet(addr: int, data: bytes):
+            print(addr, data)
             for writer in self.writers:
                 writer.write(addr.to_bytes(1, "big"))
                 writer.write(len(data).to_bytes(1, "big"))
@@ -23,7 +24,8 @@ class FepServer:
     async def init(self):
         await self.fep.init()
 
-        await self.fep.set_reg(18, await self.fep.get_reg(18) & 0xFC)
+        # await self.fep.set_reg(18, await self.fep.get_reg(18) & 0xFC)
+        await self.fep.set_reg(18, await self.fep.get_reg(18) | 3)
         await self.fep.set_reg(0, 0x80)
         await self.fep.set_reg(1, 0x02)
         await self.fep.reset()
@@ -37,6 +39,8 @@ class FepServer:
                 data = await reader.readexactly(length)
                 await self.fep.transmit(addr, data)
         except asyncio.IncompleteReadError:
+            pass
+        except BrokenPipeError:
             pass
 
         self.writers.remove(writer)
