@@ -58,6 +58,9 @@ class NoMutexLIFO {
 
  public:
   NoMutexLIFO() {
+    while (!Full()) {
+      Push({});
+    }
     while (!Empty()) {
       Pop();
     }
