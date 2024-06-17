@@ -5,8 +5,7 @@
 
 namespace controller {
 
-template <typename T>
-struct ControllerBase : public robotics::Node<T> {
+struct GenericController {
  public:
   virtual bool Filter(RawPacket const &packet) = 0;
   virtual void Parse(RawPacket const &packet) = 0;
@@ -14,7 +13,7 @@ struct ControllerBase : public robotics::Node<T> {
  public:
   int assigned_id_;
 
-  ControllerBase(int id) : assigned_id_(id) {}
+  GenericController(int id) : assigned_id_(id) {}
 
   bool Pass(RawPacket const &packet) {
     if (!this->Filter(packet)) {
@@ -25,6 +24,10 @@ struct ControllerBase : public robotics::Node<T> {
 
     return true;
   }
+};
+template <typename T>
+struct ControllerBase : public GenericController, public robotics::Node<T> {
+  using GenericController::GenericController;
 };
 
 }  // namespace controller

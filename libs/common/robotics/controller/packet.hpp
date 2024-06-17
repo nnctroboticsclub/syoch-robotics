@@ -5,25 +5,17 @@
 
 namespace controller {
 
-using RawPacketData = std::vector<uint8_t>;
-
 struct RawPacket {
   uint8_t element_id;
-  RawPacketData data;
+  uint8_t *data_;
+  size_t size_;
 
-  RawPacket(RawPacketData const& raw_data) : element_id(raw_data[0]), data{} {
-    if (raw_data.size() < 1) {
-      return;
-    }
-    data.reserve(raw_data.size() - 1);
-    for (std::size_t i = 1; i < raw_data.size(); i++) {
-      data.push_back(raw_data[i]);
-    }
-  }
+  RawPacket(uint8_t *data, size_t length)
+      : element_id(data[0]), data_(data + 1), size_(length - 1) {}
 
-  uint8_t operator[](int index) const { return data[index]; }
+  uint8_t operator[](int index) const { return data_[index]; }
 
-  std::size_t size() const { return data.size(); }
+  std::size_t size() const { return size_; }
 };
 
 }  // namespace controller
