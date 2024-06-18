@@ -49,6 +49,11 @@ def generate_packet_vs_test1():
     return encode_rep(encode_ssp(0x8000, payload))
 
 
+def generate_packet_ni_init():
+    payload = b"\x01"
+    return encode_rep(encode_ssp(0x0400, payload))
+
+
 async def main():
     fep = await FepClient.connect("localhost", 31337)
 
@@ -67,20 +72,24 @@ async def main():
     print("\x1b[1;32m[*]\x1b[m Sending the test command")
 
     """ await fep.transmit(DEV1_ADDR, encode_rep(encode_ssp(0x0000, b"\x00\x00")))
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0.5)
     await fep.transmit(DEV1_ADDR, encode_rep(encode_ssp(0x0000, b"\x00\x01")))
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0.5)
     await fep.transmit(DEV1_ADDR, encode_rep(encode_ssp(0x0000, b"\x00\x02")))
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0.5)
 
     await fep.transmit(DEV2_ADDR, encode_rep(encode_ssp(0x0000, b"\x00\x00")))
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0.5)
     await fep.transmit(DEV2_ADDR, encode_rep(encode_ssp(0x0000, b"\x00\x01")))
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0.5)
     await fep.transmit(DEV2_ADDR, encode_rep(encode_ssp(0x0000, b"\x00\x02")))
-    await asyncio.sleep(2.1) """
+    await asyncio.sleep(0.5) """
 
+    await fep.transmit(DEV1_ADDR, generate_packet_ni_init())
     await fep.transmit(DEV1_ADDR, generate_packet_vs_test1())
+    await asyncio.sleep(1)
+    await fep.transmit(DEV1_ADDR, generate_packet_vs_test1())
+    await asyncio.sleep(5)
 
     print("\x1b[1;32m[*]\x1b[m Done")
 

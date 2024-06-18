@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "../network/dcan.hpp"
+#include "../network/stream.hpp"
 
 namespace robotics::node {
 
@@ -20,6 +21,9 @@ class NodeInspector {
 
   static void RegisterCAN(
       std::shared_ptr<robotics::network::DistributedCAN> can);
+
+  static void RegisterStream(
+      std::shared_ptr<robotics::network::Stream<uint8_t, uint8_t>> stream);
 };
 
 }  // namespace robotics::node
