@@ -16,14 +16,12 @@ void SSP_Service::Send(uint8_t address, uint8_t* data, uint32_t length) {
 
   buffer[0] = (service_id_ >> 8) & 0xFF;
   buffer[1] = service_id_ & 0xFF;
-  buffer[2] = 0;
-  buffer[3] = 0;
 
   for (size_t i = 0; i < length; i++) {
-    buffer[4 + i] = data[i];
+    buffer[2 + i] = data[i];
   }
 
-  stream_.Send(address, buffer, length + 4);
+  stream_.Send(address, buffer, length + 2);
 }
 
 uint16_t SSP_Service::GetServiceId() const { return service_id_; }
@@ -31,7 +29,7 @@ uint16_t SSP_Service::GetServiceId() const { return service_id_; }
 SerialServiceProtocol::SerialServiceProtocol(Stream<uint8_t, uint8_t>& stream)
     : stream_(stream) {
   stream_.OnReceive([this](uint8_t from_addr, uint8_t* data, uint32_t length) {
-    if (length < 4) {
+    if (length < 2) {
       ssp_logger.Error("[SSP] Invalid Length: %d", length);
       return;
     }
@@ -44,7 +42,7 @@ SerialServiceProtocol::SerialServiceProtocol(Stream<uint8_t, uint8_t>& stream)
     }
     auto service = services_[service_id];
 
-    service->DispatchOnReceive(from_addr, data + 4, length - 4);
+    service->DispatchOnReceive(from_addr, data + 2, length - 2);
   });
 }
 
