@@ -95,6 +95,7 @@ void GenericLogger::Verbose(const char* fmt, ...) {
 }
 
 void GenericLogger::Hex(core::Level level, const uint8_t* data, size_t length) {
+  if (supressed) return;
   core::LogHex(level, data, length);
 }
 
