@@ -13,15 +13,30 @@ class FepServer:
 
         self.writers: list[StreamWriter] = []
 
+        self.need_to_drain = False
+        self.task = None
+
         @self.fep.on_packet
         def on_packet(addr: int, data: bytes):
             print(addr, data)
+            payload = addr.to_bytes(1, "big")
+            payload += len(data).to_bytes(1, "big")
+            payload += data
             for writer in self.writers:
-                writer.write(addr.to_bytes(1, "big"))
-                writer.write(len(data).to_bytes(1, "big"))
-                writer.write(data)
+                writer.write(payload)
+
+    async def drain_if_need(self):
+        while True:
+            if self.need_to_drain:
+                for writer in self.writers:
+                    await writer.drain()
+                self.need_to_drain = False
+
+            await asyncio.sleep(0.1)
 
     async def init(self):
+        self.task = asyncio.create_task(self.drain_if_need())
+
         await self.fep.init()
 
         # await self.fep.set_reg(18, await self.fep.get_reg(18) & 0xFC)
@@ -59,6 +74,6 @@ class FepServer:
 
 
 if __name__ == "__main__":
-    fep = UsbFep("/dev/ttyUSB0")
+    fep = UsbFep("/dev/ttyUSB5")
     fep_server = FepServer(fep)
     asyncio.run(fep_server.run(31337))
