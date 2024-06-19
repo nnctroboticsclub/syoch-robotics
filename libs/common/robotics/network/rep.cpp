@@ -9,15 +9,17 @@ using namespace std::chrono_literals;
 
 namespace {
 robotics::logger::Logger rep_logger{"rep.nw", "\x1b[35mREP\x1b[m"};
-}
+robotics::logger::Logger rep_tx_logger{"tx.rep.nw",
+                                       "\x1b[35mREP - \x1b[32mTX\x1b[m"};
+robotics::logger::Logger rep_rx_logger{"rx.rep.nw",
+                                       "\x1b[35mREP - \x1b[34mRX\x1b[m"};
+}  // namespace
 
 namespace robotics::network::rep {
 void ReliableFEPProtocol::_Send(REPTxPacket& packet) {
-  if (0) {
-    rep_logger.Debug("\x1b[31mSend\x1b[m data = %p (%d B) -> %d", packet.buffer,
-                     packet.length, packet.addr);
-    rep_logger.Hex(logger::core::Level::kDebug, packet.buffer, packet.length);
-  }
+  rep_tx_logger.Debug("\x1b[31mSend\x1b[m data = %p (%d B) -> %d",
+                      packet.buffer, packet.length, packet.addr);
+  rep_tx_logger.Hex(logger::core::Level::kDebug, packet.buffer, packet.length);
 
   tx_cs_calculator.Reset();
   tx_cs_calculator << (uint8_t)packet.length;
@@ -95,11 +97,9 @@ ReliableFEPProtocol::ReliableFEPProtocol(FEP_RawDriver& driver)
       return;  // invalid checksum
     }
 
-    if (0) {
-      rep_logger.Debug("\x1b[32mRecv\x1b[m data = %p (%d B) -> %d", payload,
-                       payload_len, addr);
-      rep_logger.Hex(logger::core::Level::kDebug, payload, payload_len);
-    }
+    rep_rx_logger.Debug("\x1b[32mRecv\x1b[m data = %p (%d B) -> %d", payload,
+                        payload_len, addr);
+    rep_rx_logger.Hex(logger::core::Level::kDebug, payload, payload_len);
 
     DispatchOnReceive(addr, payload, payload_len);
   });
