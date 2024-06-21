@@ -11,7 +11,7 @@ namespace robotics::logger::core {
 
 struct LogLine {
   size_t length = 0;
-  char data[512] = {};
+  char data[64] = {};
   Level level;
   LogLine(const char* data = nullptr, Level level = Level::kInfo)
       : level(level) {
@@ -30,7 +30,7 @@ struct LogLine {
   }
 };
 
-using LogQueue = robotics::utils::NoMutexLIFO<LogLine, 64>;
+using LogQueue = robotics::utils::NoMutexLIFO<LogLine, 200>;
 
 LogQueue* log_queue = nullptr;
 
@@ -93,7 +93,7 @@ void Thread() {
           break;
       }
 
-      printf("%s %s\n", level_header, line.data);
+      printf("%s\n", line.data);
     }
   }
 }
