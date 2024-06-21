@@ -51,11 +51,16 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
   enum class State {
     kIdle,
     kProcessing,
-    kRxData,
+    kRxDataAddress,
+    kRxDataLength,
+    kRxDataData,
     kRxResult,
   };
+  uint32_t rx_data_address;
+  uint32_t rx_data_length;
 
   State state_ = State::kIdle;
+  uint32_t rx_bytes_need_to_dispatch = 0;
 
   system::Timer timer_;
 
@@ -63,7 +68,9 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
 
   void Send(std::string const& data);
 
-  void ISR_ParseBinary();
+  void ISR_ParseBinaryAddress();
+  void ISR_ParseBinaryLength();
+  void ISR_ParseBinaryData();
   void ISR_ParseResult();
 
   void ISR_OnUARTData(uint8_t* buffer, uint32_t length);

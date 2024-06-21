@@ -24,42 +24,44 @@ void FEP_RawDriver::Send(std::string const& data) {
   }
 }
 
-void FEP_RawDriver::ISR_ParseBinary() {
-  if (rx_queue_.Size() < 9) {
-    return;
-  }
+void FEP_RawDriver::ISR_ParseBinaryAddress() {
+  int addr = (rx_queue_[0] - '0') * 100 + (rx_queue_[1] - '0') * 10 +
+             (rx_queue_[2] - '0');
 
-  uint8_t address;
-  uint32_t length;
+  rx_queue_.Pop();
+  rx_queue_.Pop();
+  rx_queue_.Pop();
 
-  address = (rx_queue_[3] - '0') * 100 + (rx_queue_[4] - '0') * 10 +
-            (rx_queue_[5] - '0');
+  this->rx_data_address = addr;
 
-  length = (rx_queue_[6] - '0') * 100 + (rx_queue_[7] - '0') * 10 +
-           (rx_queue_[8] - '0');
+  state_ = State::kRxDataLength;
+  rx_bytes_need_to_dispatch = 3;
+}
+void FEP_RawDriver::ISR_ParseBinaryLength() {
+  int length = (rx_queue_[0] - '0') * 100 + (rx_queue_[1] - '0') * 10 +
+               (rx_queue_[2] - '0');
 
-  // Checks if there is enough data in the queue
-  if (rx_queue_.Size() < 9 + length + 2) {
-    return;
-  }
+  rx_queue_.Pop();
+  rx_queue_.Pop();
+  rx_queue_.Pop();
 
-  // Skips "RBN" + AAA + LLL, where AAA is the address and LLL is the length
-  for (size_t i = 0; i < 9; i++) {
-    rx_queue_.Pop();
-  }
+  rx_data_length = length;
 
-  for (size_t i = 0; i < length; i++) {
+  state_ = State::kRxDataData;
+  rx_bytes_need_to_dispatch = length + 2;
+}
+void FEP_RawDriver::ISR_ParseBinaryData() {
+  for (size_t i = 0; i < rx_data_length; i++) {
     on_binary_data_buffer[i] = rx_queue_.Pop();
   }
 
-  // Skips the "\r\n" at the end of the binary data
-  for (size_t i = 0; i < 2; i++) {
-    rx_queue_.Pop();
-  }
+  rx_queue_.Pop();
+  rx_queue_.Pop();
 
-  DispatchOnReceive(address, on_binary_data_buffer, length);
+  DispatchOnReceive(rx_data_address, on_binary_data_buffer, rx_data_length);
 
   state_ = State::kIdle;
+  rx_bytes_need_to_dispatch = 0;
 }
 
 void FEP_RawDriver::ISR_ParseResult() {
@@ -93,6 +95,7 @@ void FEP_RawDriver::ISR_ParseResult() {
   result_queue_.Push(value_result);
 
   state_ = State::kIdle;
+  rx_bytes_need_to_dispatch = 0;
 }
 void FEP_RawDriver::ISR_OnUARTData(uint8_t* buffer, uint32_t length) {
   for (size_t i = 0; i < length; i++) {
@@ -102,9 +105,36 @@ void FEP_RawDriver::ISR_OnUARTData(uint8_t* buffer, uint32_t length) {
     }
   }
 
+  if (rx_bytes_need_to_dispatch == 0 && rx_queue_.Size()) {
+    if (rx_queue_[0] == 'R' && rx_queue_[1] == 'B' && rx_queue_[2] == 'N') {
+
+      rx_queue_.Pop();
+      rx_queue_.Pop();
+      rx_queue_.Pop();
+      state_ = State::kRxDataAddress;
+      rx_bytes_need_to_dispatch = 3;
+    } else if (rx_queue_[0] == 'N' || rx_queue_[0] == 'P') {
+
+      state_ = State::kRxResult;
+      rx_bytes_need_to_dispatch = 4;
+    } else {
+      return;
+    }
+  }
+
+  if (rx_bytes_need_to_dispatch > rx_queue_.Size()) {
+    return;
+  }
+
   switch (state_) {
-    case State::kRxData:
-      ISR_ParseBinary();
+    case State::kRxDataAddress:
+      ISR_ParseBinaryAddress();
+      break;
+    case State::kRxDataLength:
+      ISR_ParseBinaryLength();
+      break;
+    case State::kRxDataData:
+      ISR_ParseBinaryData();
       break;
 
     case State::kRxResult:
@@ -112,11 +142,7 @@ void FEP_RawDriver::ISR_OnUARTData(uint8_t* buffer, uint32_t length) {
       break;
 
     default:
-      if (rx_queue_[0] == 'R' && rx_queue_[1] == 'B' && rx_queue_[2] == 'N') {
-        state_ = State::kRxData;
-      } else if (rx_queue_[0] == 'N' || rx_queue_[0] == 'P') {
-        state_ = State::kRxResult;
-      }
+      break;
   }
 }
 types::Result<int, DriverError> FEP_RawDriver::WaitForState(
