@@ -11,7 +11,7 @@ namespace robotics::logger::core {
 
 struct LogLine {
   size_t length = 0;
-  char data[64] = {};
+  char data[128] = {};
   Level level;
   LogLine(const char* data = nullptr, Level level = Level::kInfo)
       : level(level) {
