@@ -13,6 +13,7 @@ class GenericLogger {
 
  private:
   void _Log(core::Level level, const char* fmt, va_list args);
+  void _LogHex(core::Level level, const uint8_t* buf, size_t size);
 
  public:
   GenericLogger(const char* id, const char* tag);

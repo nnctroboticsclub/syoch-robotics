@@ -25,6 +25,32 @@ void GenericLogger::_Log(core::Level level, const char* fmt, va_list args) {
   core::Log(level, line);
 }
 
+void GenericLogger::_LogHex(core::Level level, const uint8_t* buf,
+                            size_t size) {
+  if (supressed) return;
+  if (size == 0) return;
+
+  static char buffer[512] = {};
+
+  auto lines = size / 16;
+  for (size_t line = 0; line <= lines; line++) {
+    char* ptr = buffer;
+    ptr += snprintf(ptr, sizeof(buffer), "[%s] ___| ", tag);
+
+    for (int i = 0; i < 16 && line * 16 + i < size; i++) {
+      ptr += snprintf(ptr, sizeof(buffer) - (ptr - buffer), "%02X",
+                      buf[line * 16 + i]);
+      if (i % 4 == 3) {
+        ptr += snprintf(ptr, sizeof(buffer) - (ptr - buffer), " ");
+      }
+    }
+
+    *ptr = '\0';
+
+    core::Log(level, buffer);
+  }
+}
+
 GenericLogger::GenericLogger(const char* id, const char* tag)
     : id(id), tag(tag) {
   for (int i = 0; i < 64; i++) {
@@ -96,7 +122,7 @@ void GenericLogger::Verbose(const char* fmt, ...) {
 
 void GenericLogger::Hex(core::Level level, const uint8_t* data, size_t length) {
   if (supressed) return;
-  core::LogHex(level, data, length);
+  _LogHex(level, data, length);
 }
 
 GenericLogger* GenericLogger::GetLogger(const char* id) {
