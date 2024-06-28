@@ -27,60 +27,53 @@ class DriverError : public std::string {
   DriverError(std::string const& message);
 };
 
-struct DriverResult {
-  enum class Type { kOk, kError };
+enum class ResultType { kOk, kError };
 
-  Type type;
+struct DriverResult {
+  ResultType type;
   int value;
 
   bool Failed() const;
 };
 
+struct FEPPacket {
+  uint8_t from;
+  uint8_t length;
+  uint8_t data[64];
+};
+
+struct FEPRawLine {
+  char line[32];
+};
+
+enum class State {
+  kIdle,
+  kProcessing,
+};
+
+class RxProcessor;  // Defined in the .cpp file
+
 class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
   Stream<uint8_t>& upper_stream;
 
-  robotics::utils::NoMutexLIFO<char, 64> rx_queue_;
   robotics::utils::NoMutexLIFO<DriverResult, 4> result_queue_;
+  robotics::utils::NoMutexLIFO<FEPPacket, 4> rx_queue_;
+  robotics::utils::NoMutexLIFO<FEPRawLine, 4> line_queue_;
 
-  enum class Flags {
-    kRxOverflow = 1 << 0,
-  };
-
-  uint32_t flags_ = 0;
-
-  enum class State {
-    kIdle,
-    kProcessing,
-    kRxDataAddress,
-    kRxDataLength,
-    kRxDataData,
-    kRxResult,
-  };
-  uint32_t rx_data_address;
-  uint32_t rx_data_length;
+  RxProcessor* rx_processor_;
 
   State state_ = State::kIdle;
-  uint32_t rx_bytes_need_to_dispatch = 0;
 
   system::Timer timer_;
 
-  uint8_t on_binary_data_buffer[128];
-
   void Send(std::string const& data);
-
-  void ISR_ParseBinaryAddress();
-  void ISR_ParseBinaryLength();
-  void ISR_ParseBinaryData();
-  void ISR_ParseResult();
-
-  void ISR_OnUARTData(uint8_t* buffer, uint32_t length);
 
   [[nodiscard]]
   types::Result<int, DriverError> WaitForState(
       State state, std::chrono::milliseconds timeout = 1000ms);
 
   [[nodiscard]]
-  types::Result<std::string, DriverError> ReadLine(
+  types::Result<FEPRawLine, DriverError> ReadLine(
       std::chrono::milliseconds timeout = 1000ms);
 
   [[nodiscard]]
