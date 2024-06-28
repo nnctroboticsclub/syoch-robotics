@@ -93,7 +93,7 @@ void Thread() {
           break;
       }
 
-      printf("%s\n", line.data);
+      printf("%s %s\n", level_header, line.data);
     }
   }
 }
