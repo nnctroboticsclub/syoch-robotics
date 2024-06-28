@@ -25,14 +25,10 @@ robotics::logger::Logger tx_logger{"tx.frt.nw",
 class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
   const uint8_t kFlagsDetectDevices = 0x01;
   const uint8_t kFlagsNewDevice = 0x02;
-  const uint8_t kFlagsPacketDied = 0x03;
-
-  // queue
-  robotics::utils::NoMutexLIFO<Action, 4> remaining_actions_;
-  robotics::utils::NoMutexLIFO<Packet, 4> remaining_packets_;
 
   // avoid bidirectional loop
   AddrRecords incoming_data_from_;
+  AddrRecords hop_candicates;
 
   // thread
   robotics::system::Thread thread;
@@ -49,47 +45,49 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
     switch (action.type) {
       case Action::Type::kFindNewHopTo: {
         if (next_hop_ != 0) {
-          return;
+          break;
         }
 
-        SendEx(broadcast_addr_, nullptr, 0, kFlagsDetectDevices, self_addr_);
+        logger.Info("Find New Hop, Avoid list:");
+        logger.Hex(robotics::logger::core::Level::kInfo,
+                   incoming_data_from_.records, incoming_data_from_.recorded);
 
-        return;
-      }
-
-      case Action::Type::kReportDiedPacket: {
-        SendEx(action.report_to, &self_addr_, 1, kFlagsPacketDied, self_addr_);
-        return;
+        SendEx(broadcast_addr_, this->incoming_data_from_.records,
+               this->incoming_data_from_.recorded, kFlagsDetectDevices,
+               self_addr_);
+        break;
       }
 
       case Action::Type::kAdvertiseSelf: {
-        SendEx(action.report_to, nullptr, 0, kFlagsNewDevice, self_addr_);
-        return;
+        SendEx(broadcast_addr_, nullptr, 0, kFlagsNewDevice, self_addr_);
+        break;
       }
     }
   }
 
   void DoSend(Packet* packet) {
     static char buffer[32];
-    buffer[0] = packet->life;
-    buffer[1] = packet->from;
-    buffer[2] = packet->goal;
-    buffer[3] = packet->flags;
-    if (packet->data != nullptr) {
-      std::memcpy(buffer + 4, packet->data, packet->size);
+
+    auto send_to =
+        incoming_data_from_.Recorded(packet->goal) ? next_hop_ : packet->goal;
+
+    if (packet->goal == broadcast_addr_) {
+      packet->goal = 0;
     }
 
-    tx_logger.Info("Send Data = %p (%d B) --> %d (l%d %d --> %d f%#02x)",
-                   packet->data, packet->size, packet->goal, packet->life,
-                   packet->from, packet->goal, packet->flags);
+    buffer[0] = (packet->from << 4) | (packet->goal & 0xF);
+    buffer[1] = packet->flags;
+
+    if (packet->data != nullptr) {
+      std::memcpy(buffer + 2, packet->data, packet->size);
+    }
+
+    tx_logger.Info("Send %02d --> %02d f%#02x (%3d Bytes)", packet->from,
+                   packet->goal, packet->flags, packet->size);
     tx_logger.Hex(robotics::logger::core::Level::kInfo, packet->data,
                   packet->size);
 
-    if (packet->using_hop == 0 && next_hop_ != 0) {
-      packet->using_hop = next_hop_;
-    }
-
-    upper_stream_.Send(packet->using_hop, (uint8_t*)buffer, packet->size + 4);
+    upper_stream_.Send(send_to, (uint8_t*)buffer, packet->size + 2);
   }
 
   void Thread() {
@@ -99,24 +97,12 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
       ticks_no_hops = next_hop_ == 0 ? ticks_no_hops + 1 : 0;
       if (ticks_no_hops == 100) {
         logger.Debug("No Hop for 100 ticks, Find New Hop");
-        remaining_actions_.Push(Action::FindNewHopTo());
         ticks_no_hops = 0;
-      }
 
-      if (remaining_actions_.Empty() && remaining_packets_.Empty()) {
-        robotics::system::SleepFor(10ms);
-        continue;
-      }
-
-      while (!remaining_actions_.Empty()) {
-        auto action = remaining_actions_.Pop();
+        auto action = Action::FindNewHopTo();
         ProcessAction(action);
       }
-
-      for (size_t i = 0; i < remaining_packets_.Size(); i++) {
-        auto packet = remaining_packets_.Pop();
-        DoSend(&packet);
-      }
+      robotics::system::SleepFor(10ms);
     }
   }
 
@@ -126,17 +112,12 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
         if (data[i] == self_addr_) return true;
       }
 
-      remaining_actions_.Push(Action::AdvertiseSelf(from));
+      auto action = Action::AdvertiseSelf(from);
+      ProcessAction(action);
     } else if (flags == kFlagsNewDevice) {
       if (incoming_data_from_.Recorded(from)) return true;
       logger.Info("Using Hop: %d", from);
       next_hop_ = from;
-    } else if (flags == kFlagsPacketDied) {
-      logger.Info("Packet Died from %d", from);
-      if (from == next_hop_) {
-        next_hop_ = 0;
-        remaining_actions_.Push(Action::FindNewHopTo());
-      }
     } else {
       return false;
     }
@@ -151,68 +132,65 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
         broadcast_addr_(broadcast_addr),
         self_addr_(self_addr) {
     incoming_data_from_ = {0, 0};
-    remaining_actions_.Push(Action::FindNewHopTo());
 
     upper_stream_.OnReceive([this](uint8_t from, uint8_t* data, uint32_t size) {
       auto ptr = data;
 
-      auto life = *ptr++;
-      auto original_from = *ptr++;
-      auto goal = *ptr++;
-      auto flags = *ptr++;
+      auto address_pair = *ptr++;
+      auto flag = *ptr++;
+
+      auto original_from = address_pair >> 4;
+      auto goal = address_pair & 0x0F;
 
       auto payload = ptr;
-      auto payload_size = size - 4;
+      auto payload_size = size - 2;
 
-      rx_logger.Info("Recv Data = %p (%d B) (l%d %d --> %d f%#02x)", payload,
-                     payload_size, life, original_from, goal, flags);
+      rx_logger.Info("Recv %02d --> %02d f%#02x (%3d Bytes)", original_from,
+                     goal, flag, payload_size);
       rx_logger.Hex(robotics::logger::core::Level::kInfo, payload,
                     payload_size);
 
-      if (ProcessFlags(from, flags, payload, payload_size)) {
+      if (goal != 0) {
+        incoming_data_from_.Add(from);
+        if (from == next_hop_) {
+          next_hop_ = 0;
+          auto action = Action::FindNewHopTo();
+          ProcessAction(action);
+        }
+      }
+
+      if (goal != 0 && goal != self_addr_) {
+        SendEx(goal, payload, payload_size, flag, original_from);
         return;
       }
 
-      incoming_data_from_.Add(from);
-
-      if (life == 0) {
-        remaining_actions_.Push(Action::ReportDiedPacket(from));
+      if (ProcessFlags(from, flag, payload, payload_size)) {
         return;
       }
 
-      if (goal == self_addr_) {
-        DispatchOnReceive(original_from, payload, payload_size);
-      } else {
-        SendEx(goal, payload, payload_size, flags, original_from);
-      }
-
-      if (from == next_hop_) {
-        next_hop_ = 0;
-        remaining_actions_.Push({Action::Type::kFindNewHopTo, 0});
-      }
+      DispatchOnReceive(original_from, payload, payload_size);
     });
 
-    thread.SetStackSize(1024);
+    thread.SetStackSize(4096);
   }
 
   void Start() {
+    auto action = Action::FindNewHopTo();
+    ProcessAction(action);
+
     thread.Start([this]() { Thread(); });
   }
 
   void SendEx(uint8_t to, uint8_t* data, uint32_t length, uint8_t flags,
               uint8_t from) {
     Packet packet;
-    packet.using_hop = to == broadcast_addr_ ? broadcast_addr_
-                       : next_hop_ == 0      ? to
-                                             : next_hop_;
-    packet.life = 0x80;
     packet.from = from;
     packet.goal = to;
     packet.flags = flags;
     packet.size = length;
     std::memcpy(packet.data, data, length);
 
-    remaining_packets_.Push(packet);
+    DoSend(&packet);
   }
   void Send(uint8_t to, uint8_t* data, uint32_t length) override {
     SendEx(to, data, length, 0, self_addr_);
