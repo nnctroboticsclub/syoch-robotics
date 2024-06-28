@@ -22,26 +22,21 @@ void ReliableFEPProtocol::_Send(REPTxPacket& packet) {
   rep_tx_logger.Hex(logger::core::Level::kDebug, packet.buffer, packet.length);
 
   tx_cs_calculator.Reset();
-  tx_cs_calculator << (uint8_t)packet.length;
   for (size_t i = 0; i < packet.length; i++) {
     tx_cs_calculator << (uint8_t)packet.buffer[i];
   }
 
   auto ptr = tx_buffer_;
-  *(ptr++) = 0x55;
-  *(ptr++) = 0xAA;
-  *(ptr++) = 0xCC;
-  *(ptr++) = packet.length;
+  *(ptr++) = (uint8_t)(tx_cs_calculator.Get() >> 8);
+  *(ptr++) = (uint8_t)(tx_cs_calculator.Get() & 0xFF);
+
   for (size_t i = 0; i < packet.length; i++) {
     *(ptr++) = packet.buffer[i];
   }
 
-  *(ptr++) = (uint8_t)(tx_cs_calculator.Get() >> 8);
-  *(ptr++) = (uint8_t)(tx_cs_calculator.Get() & 0xFF);
-
   auto tx_state = driver_.Send(packet.addr, tx_buffer_, ptr - tx_buffer_);
 
-  if (tx_state != fep::TxState::kNoError) {
+  /* if (tx_state != fep::TxState::kNoError) {
     rep_logger.Error("Failed to send packet to %d: %d, Pushing queue",
                      packet.addr, (int)tx_state);
     tx_queue.Push(packet);
@@ -51,57 +46,37 @@ void ReliableFEPProtocol::_Send(REPTxPacket& packet) {
     auto duration_ms = int(system::Random::GetByte() / 255.0 * 100);
     rep_logger.Error("Random Backoff: %d ms", duration_ms);
     robotics::system::SleepFor(duration_ms * 1ms);  // random backoff
-  }
+  } */
 }
 
 ReliableFEPProtocol::ReliableFEPProtocol(FEP_RawDriver& driver)
     : driver_(driver) {
   driver_.OnReceive([this](uint8_t addr, uint8_t* data, size_t len) {
-    //* Validate magic
-    if (data[0] != 0x55 || data[1] != 0xAA || data[2] != 0xCC) {
-      rep_logger.Error("Invalid Magic: %d", addr);
-      return;  // invalid magic
-    }
+    in_isr = true;
+    //* Load Checksum
+    uint16_t remote_checksum = data[0] << 8 | data[1];
 
-    data += 3;
-
-    //* Load key/length
-    if (len <= 4) {
-      rep_logger.Error("Invalid Length (1): %d", addr);
-      return;  // malformed packet
-    }
-
-    uint8_t length = *(data++);
-    if (len != (size_t)(6 + length)) {
-      rep_logger.Error("Invalid Length (2): %d", addr);
-      return;  // malformed packet
-    }
-
-    //* Load payload/len
-    uint8_t* payload = data;
-    uint32_t payload_len = length;
-    data += payload_len;
+    auto payload_len = len - 2;
+    uint8_t* payload = data + 2;
 
     //* Validate Checksum
     rx_cs_calculator.Reset();
-    rx_cs_calculator << (uint8_t)length;
     for (size_t i = 0; i < payload_len; i++) {
       rx_cs_calculator << (uint8_t)payload[i];
     }
 
-    uint16_t checksum = 0;
-    checksum |= *(data++) << 8;
-    checksum |= *(data++);
-    if (checksum != (uint16_t)rx_cs_calculator.Get()) {
-      rep_logger.Error("Invalid Checksum: %d", addr);
-      return;  // invalid checksum
+    auto local_checksum = rx_cs_calculator.Get();
+
+    if (local_checksum != remote_checksum) {
+      rep_logger.Error("Checksum Mismatch: @%d local(%d)!=remote(%d)", addr,
+                       local_checksum, remote_checksum);
+      rep_logger.Hex(logger::core::Level::kError, payload, payload_len);
+      in_isr = false;
+      return;
     }
 
-    rep_rx_logger.Debug("\x1b[32mRecv\x1b[m data = %p (%d B) -> %d", payload,
-                        payload_len, addr);
-    rep_rx_logger.Hex(logger::core::Level::kDebug, payload, payload_len);
-
     DispatchOnReceive(addr, payload, payload_len);
+    in_isr = false;
   });
 
   robotics::system::Thread* thread = new robotics::system::Thread();
@@ -110,7 +85,7 @@ ReliableFEPProtocol::ReliableFEPProtocol(FEP_RawDriver& driver)
   thread->Start([this]() {
     while (1) {
       if (tx_queue.Empty()) {
-        robotics::system::SleepFor(100ms);
+        robotics::system::SleepFor(1ms);
         continue;
       }
 
@@ -131,7 +106,12 @@ void ReliableFEPProtocol::Send(uint8_t address, uint8_t* data,
   for (size_t i = 0; i < length; i++) {
     packet.buffer[i] = data[i];
   }
-  tx_queue.Push(packet);
+
+  if (!in_isr) {
+    _Send(packet);
+  } else {
+    tx_queue.Push(packet);
+  }
 }
 
 }  // namespace robotics::network::rep

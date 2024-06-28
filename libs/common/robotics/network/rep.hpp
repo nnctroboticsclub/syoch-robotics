@@ -24,6 +24,8 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
   Checksum rx_cs_calculator;
   Checksum tx_cs_calculator;
 
+  bool in_isr = false;
+
   uint8_t tx_buffer_[32] = {};
 
   robotics::utils::NoMutexLIFO<REPTxPacket, 4> tx_queue;
