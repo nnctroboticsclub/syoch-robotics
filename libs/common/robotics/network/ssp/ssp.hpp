@@ -11,7 +11,7 @@ namespace ssp {
 class SSP_Service : public Stream<uint8_t, uint8_t> {
   Stream<uint8_t, uint8_t>& stream_;
 
-  uint16_t service_id_;
+  uint8_t service_id_;
 
  protected:
   logger::Logger logger;
@@ -20,17 +20,17 @@ class SSP_Service : public Stream<uint8_t, uint8_t> {
   friend class SerialServiceProtocol;
 
  public:
-  SSP_Service(Stream<uint8_t, uint8_t>& stream, uint16_t service_id,
+  SSP_Service(Stream<uint8_t, uint8_t>& stream, uint8_t service_id,
               const char* logger_tag, const char* logger_header);
 
   void Send(uint8_t address, uint8_t* data, uint32_t length) override;
 
-  uint16_t GetServiceId() const;
+  uint8_t GetServiceId() const;
 };
 
 class SerialServiceProtocol {
   Stream<uint8_t, uint8_t>& stream_;
-  std::unordered_map<uint16_t, SSP_Service*> services_;
+  std::unordered_map<uint8_t, SSP_Service*> services_;
 
  public:
   SerialServiceProtocol(Stream<uint8_t, uint8_t>& stream);
