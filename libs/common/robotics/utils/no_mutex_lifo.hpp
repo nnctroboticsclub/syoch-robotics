@@ -70,6 +70,11 @@ class NoMutexLIFO {
 
   bool Full() const { return head_ == tail_; }
 
+  void Clear() {
+    head_ = 0;
+    tail_ = N - 1;
+  }
+
   bool Push(T const& data) {
     if (Full()) {
       return false;
@@ -80,6 +85,62 @@ class NoMutexLIFO {
 
     return true;
   }
+
+  bool PushN(T const* data, size_t n) {
+    if (Size() + n > Capacity()) {
+      return false;
+    }
+
+    auto start = head_;
+    auto end = (head_ + n) % N;
+
+    if (start < end) {
+      std::copy(data, data + n, buffer_.begin() + start);
+    } else {
+      auto first_range_lo = start;
+      auto first_range_hi = N;
+      auto first_range_size = first_range_hi - first_range_lo;
+
+      auto second_range_lo = 0;
+
+      std::copy(data, data + first_range_size,
+                buffer_.begin() + first_range_lo);
+      std::copy(data + first_range_size, data + n,
+                buffer_.begin() + second_range_lo);
+    }
+
+    head_ = end;
+
+    return true;
+  }
+
+  void PopNTo(size_t n, T* data) {
+    if (n > Size()) {
+      return;
+    }
+
+    auto start = tail_ + 1;
+    auto end = (tail_ + n + 1) % N;
+
+    if (start < end) {
+      std::copy(buffer_.begin() + start, buffer_.begin() + end, data);
+    } else {
+      auto first_range_lo = start;
+      auto first_range_hi = N;
+      auto first_range_size = first_range_hi - first_range_lo;
+
+      auto second_range_lo = 0;
+
+      std::copy(buffer_.begin() + first_range_lo,
+                buffer_.begin() + first_range_hi, data);
+      std::copy(buffer_.begin() + second_range_lo, buffer_.begin() + end,
+                data + first_range_size);
+    }
+
+    tail_ = (tail_ + n) % N;
+  }
+
+  void PopAllTo(T* data) { PopNTo(Size(), data); }
 
   T Pop() {
     if (Empty()) {
@@ -92,9 +153,19 @@ class NoMutexLIFO {
     return data;
   }
 
+  void ConsumeN(size_t n) {
+    if (n > Size()) {
+      return;
+    }
+
+    tail_ = (tail_ + n) % N;
+  }
+
   T& operator[](size_t index) { return buffer_[(1 + tail_ + index) % N]; }
 
   size_t Size() const { return (N - (tail_ - head_) - 1) % N; }
+
+  size_t Capacity() const { return N; }
 };
 
 }  // namespace robotics::utils
