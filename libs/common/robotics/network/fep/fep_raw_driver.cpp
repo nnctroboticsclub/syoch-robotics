@@ -2,16 +2,14 @@
 
 #include <cstring>
 
-#include "../platform/thread.hpp"
-#include "block_stream.hpp"
+#include "../../platform/thread.hpp"
+#include "../block_stream.hpp"
+
+#include "rx_processor.hpp"
 
 namespace {
-robotics::logger::Logger fep_rxp_logger{"rxp.fep.nw",
-                                        "\x1b[1;35mFEP RxPro\x1b[m"};
-
 robotics::logger::Logger fep_logger{"fep.nw", "\x1b[1;35mFEP\x1b[m Gener"};
-robotics::logger::CharLogger rx_logger{
-    "sr.fep.nw", "\x1b[1;35mFEP\x1b[m \x1b[34m<====\x1b[m"};
+
 robotics::logger::CharLogger tx_logger{
     "st.fep.nw", "\x1b[1;35mFEP\x1b[m \x1b[32m====>\x1b[m"};
 }  // namespace
@@ -23,264 +21,6 @@ DriverError::DriverError() : std::string() {}
 DriverError::DriverError(std::string const& message) : std::string(message) {}
 
 bool DriverResult::Failed() const { return type == ResultType::kError; }
-
-struct RxProcessorPacket {
-  enum class Type : uint8_t {
-    kData,
-    kResult,
-    kLine,
-    kEnterProcessing,
-    kExitProcessing,
-  };
-
-  Type type;
-
-  union {
-    FEPPacket data;
-    DriverResult result;
-    FEPRawLine line;
-  };
-
-  static RxProcessorPacket Data(FEPPacket fep_packet) {
-    RxProcessorPacket packet;
-    packet.type = Type::kData;
-    packet.data = fep_packet;
-    return packet;
-  }
-
-  static RxProcessorPacket Result(DriverResult result) {
-    RxProcessorPacket packet;
-    packet.type = Type::kResult;
-    packet.result = result;
-    return packet;
-  }
-
-  static RxProcessorPacket Line(char const* line) {
-    RxProcessorPacket packet;
-    packet.type = Type::kLine;
-    strncpy(packet.line.line, line, 64);
-    return packet;
-  }
-
-  static RxProcessorPacket EnterProcessing() {
-    RxProcessorPacket packet;
-    packet.type = Type::kEnterProcessing;
-    return packet;
-  }
-
-  static RxProcessorPacket ExitProcessing() {
-    RxProcessorPacket packet;
-    packet.type = Type::kExitProcessing;
-    return packet;
-  };
-};
-
-class RxProcessor : public BlockStream<RxProcessorPacket> {
-  enum class RxState {
-    kNone,
-    kDetecting,
-
-    kDataHeader,
-    kDataContent,
-
-    kRawLine,
-
-    kResult,
-  };
-
-  robotics::utils::NoMutexLIFO<char, 64> rx_queue_;
-
-  uint8_t rx_data_address_ = 0;
-  uint8_t rx_data_length_ = 0;
-
-  RxState state_ = RxState::kNone;
-  size_t need_to_dispatch_ = 0;
-
-  uint8_t on_binary_data_buffer_[128];
-
-  inline void EnterProcessing() {
-    fep_rxp_logger.Debug("<========");
-    auto message = RxProcessorPacket::EnterProcessing();
-
-    DispatchOnReceive(message);
-    UpdateState(RxState::kDetecting);
-  }
-
-  inline void ExitProcessing() {
-    fep_rxp_logger.Debug("========>");
-    auto message = RxProcessorPacket::ExitProcessing();
-    DispatchOnReceive(message);
-    UpdateState(RxState::kNone);
-  }
-
-  inline void UpdateState(RxState new_state) {
-    /* fep_rxp_logger.Debug("Entering state = %d\n", (int)new_state); */
-    state_ = new_state;
-
-    switch (state_) {
-      case RxState::kDataHeader:
-        need_to_dispatch_ = 6;
-        break;
-      case RxState::kDataContent:
-        need_to_dispatch_ = rx_data_length_ + 2;
-        break;
-      case RxState::kResult:
-        need_to_dispatch_ = 4;
-        break;
-      case RxState::kNone:
-      case RxState::kDetecting:
-        need_to_dispatch_ = 0;
-        break;
-    }
-
-    if (state_ != RxState::kNone && state_ != RxState::kDetecting) {
-      rx_logger.Flush();
-      rx_logger.ClearBuffer();
-    }
-  }
-
- public:
-  RxProcessor() {
-    rx_logger.SetCachingMode(robotics::logger::CharLogger::CachingMode::kUser);
-    rx_logger.SetHeader("    ||| ");
-  }
-  void Send(RxProcessorPacket&) override {
-    fep_rxp_logger.Error("Send is not supported");
-  }
-
-  inline void ISR_ParseBinaryHeader() {
-    int addr = (rx_queue_[0] - '0') * 100 + (rx_queue_[1] - '0') * 10 +
-               (rx_queue_[2] - '0');
-
-    int length = (rx_queue_[3] - '0') * 100 + (rx_queue_[4] - '0') * 10 +
-                 (rx_queue_[5] - '0');
-
-    fep_rxp_logger.Debug("Data: #%d+%d, from '%c%c%c%c%c%c'", addr, length,
-                         rx_queue_[0], rx_queue_[1], rx_queue_[2], rx_queue_[3],
-                         rx_queue_[4], rx_queue_[5]);
-
-    rx_queue_.ConsumeN(6);
-
-    rx_data_address_ = addr;
-    rx_data_length_ = length;
-
-    UpdateState(RxState::kDataContent);
-  }
-
-  inline void ISR_ParseBinaryData() {
-    rx_queue_.PopNTo(rx_data_length_, (char*)on_binary_data_buffer_);
-    rx_queue_.ConsumeN(2);
-
-    fep_rxp_logger.Debug("Dispatching %d bytes from %d", rx_data_length_,
-                         rx_data_address_);
-    fep_rxp_logger.Hex(robotics::logger::core::Level::kDebug,
-                       on_binary_data_buffer_, rx_data_length_);
-
-    auto data = FEPPacket{
-        .from = rx_data_address_,
-        .length = rx_data_length_,
-    };
-    memcpy(data.data, on_binary_data_buffer_, rx_data_length_);
-
-    auto message = RxProcessorPacket::Data(data);
-    DispatchOnReceive(message);
-
-    ExitProcessing();
-  }
-
-  inline void ISR_ParseResult() {
-    char stat = rx_queue_[0];
-    char code = rx_queue_[1];
-
-    if (rx_queue_[2] != '\r') {
-      return;
-    }
-    if (rx_queue_[3] != '\n') {
-      return;
-    }
-
-    rx_queue_.ConsumeN(4);
-
-    int value = code - '0';
-
-    DriverResult value_result{
-        .type = stat == 'P' ? ResultType::kOk : ResultType::kError,
-        .value = value,
-    };
-
-    fep_rxp_logger.Debug("Result: %c%d", stat, value);
-
-    auto message = RxProcessorPacket::Result(value_result);
-    DispatchOnReceive(message);
-
-    ExitProcessing();
-  }
-
-  inline void ISR_ParseRawLine() {
-    char line[64];
-    rx_queue_.PopAllTo(line);
-
-    auto message = RxProcessorPacket::Line(line);
-    DispatchOnReceive(message);
-
-    ExitProcessing();
-  }
-
-  inline void ISR_OnUARTData(uint8_t* buffer, uint32_t length) {
-    rx_logger.LogN((char*)buffer, length);
-    if (!rx_queue_.PushN((char*)buffer, length)) {
-      fep_rxp_logger.Error("RX Overflow");
-      return;
-    }
-
-    if (this->state_ == RxState::kNone) {
-      EnterProcessing();
-    }
-
-    if (this->state_ == RxState::kDetecting) {
-      if (rx_queue_.Size() >= 3 && rx_queue_[0] == 'R' && rx_queue_[1] == 'B' &&
-          rx_queue_[2] == 'N') {
-        rx_queue_.ConsumeN(3);
-        UpdateState(RxState::kDataHeader);
-      } else if (rx_queue_.Size() >= 2 && rx_queue_[0] == 'N' ||
-                 rx_queue_[0] == 'P') {
-        UpdateState(RxState::kResult);
-      } else if (rx_queue_.Size() >= 3) {
-        UpdateState(RxState::kRawLine);
-        return;
-      }
-    }
-
-    if (state_ == RxState::kRawLine) {
-      if (buffer[0] == '\n') {
-        ISR_ParseRawLine();
-        UpdateState(RxState::kNone);
-      }
-      return;
-    }
-
-    if (rx_queue_.Size() < need_to_dispatch_) {
-      return;
-    }
-
-    switch (state_) {
-      case RxState::kDataHeader:
-        ISR_ParseBinaryHeader();
-        break;
-
-      case RxState::kDataContent:
-        ISR_ParseBinaryData();
-        break;
-
-      case RxState::kResult:
-        ISR_ParseResult();
-        break;
-
-      default:
-        break;
-    }
-  }
-};
 
 void FEP_RawDriver::Send(std::string const& data) {
   upper_stream.Send((uint8_t*)data.data(), (uint32_t)data.size());
@@ -520,6 +260,28 @@ TxState FEP_RawDriver::Send(uint8_t address, uint8_t* data, uint32_t length) {
       return TxState::kInvalidCommand;
     } break;
   }
+}
+
+types::Result<FEPRawLine, DriverError> FEP_RawDriver::Version(
+    std::chrono::milliseconds timeout) {
+  auto wait_for_state = WaitForState(State::kIdle);
+  if (!wait_for_state.IsOk()) {
+    return wait_for_state.UnwrapError();
+  }
+  state_ = State::kProcessing;
+
+  Send("@VER\r\n");
+
+  auto line_res = ReadLine(timeout);
+
+  state_ = State::kIdle;
+  return line_res;
+}
+
+void FEP_RawDriver::FlushQueue() {
+  result_queue_.Clear();
+  rx_queue_.Clear();
+  line_queue_.Clear();
 }
 
 }  // namespace robotics::network::fep

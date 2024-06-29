@@ -15,6 +15,8 @@
 #include "../platform/timer.hpp"
 
 #include "fep_tx_state.hpp"
+#include "fep_packet.hpp"
+#include "result.hpp"
 
 namespace robotics::network {
 
@@ -25,21 +27,6 @@ class DriverError : public std::string {
  public:
   DriverError();
   DriverError(std::string const& message);
-};
-
-enum class ResultType { kOk, kError };
-
-struct DriverResult {
-  ResultType type;
-  int value;
-
-  bool Failed() const;
-};
-
-struct FEPPacket {
-  uint8_t from;
-  uint8_t length;
-  uint8_t data[64];
 };
 
 struct FEPRawLine {
@@ -98,7 +85,13 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
   types::Result<DriverResult, DriverError> InitAllRegister();
 
   [[nodiscard]]
+  types::Result<FEPRawLine, DriverError> Version(
+      std::chrono::milliseconds timeout = 1000ms);
+
+  [[nodiscard]]
   TxState Send(uint8_t address, uint8_t* data, uint32_t length) override;
+
+  void FlushQueue();
 };
 }  // namespace fep
 

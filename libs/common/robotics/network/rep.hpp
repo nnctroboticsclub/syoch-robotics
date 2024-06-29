@@ -4,11 +4,11 @@
 
 #include "checksum.hpp"
 #include "stream.hpp"
-#include "fep_tx_state.hpp"
 
 #include "../utils/no_mutex_lifo.hpp"
 
-#include "fep_raw_driver.hpp"
+#include "fep/fep_tx_state.hpp"
+#include "fep/fep_raw_driver.hpp"
 
 namespace robotics::network {
 namespace rep {
