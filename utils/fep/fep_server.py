@@ -41,8 +41,8 @@ class FepServer:
 
         # await self.fep.set_reg(18, await self.fep.get_reg(18) & 0xFC)
         await self.fep.set_reg(18, await self.fep.get_reg(18) | 3)
-        await self.fep.set_reg(0, 0x80)
-        await self.fep.set_reg(1, 0x02)
+        await self.fep.set_reg(0, 0x0F)
+        await self.fep.set_reg(1, 0xF0)
         await self.fep.reset()
 
     async def handle_client(self, reader: StreamReader, writer: StreamWriter):
@@ -62,8 +62,8 @@ class FepServer:
 
         writer.close()
 
-    async def run(self, port: int):
-        server = await asyncio.start_server(self.handle_client, "", port)
+    async def run(self, path: str):
+        server = await asyncio.start_unix_server(self.handle_client, path)
         await self.init()
         addr = [sock.getsockname() for sock in server.sockets]
 
@@ -74,6 +74,11 @@ class FepServer:
 
 
 if __name__ == "__main__":
-    fep = UsbFep("/dev/ttyUSB5")
+    import os
+
+    dev = os.environ.get("FEP_DEVICE", "/dev/ttyUSB0")
+    path = os.environ.get("FEP_SOCKET", "/tmp/fep.sock")
+
+    fep = UsbFep(dev)
     fep_server = FepServer(fep)
-    asyncio.run(fep_server.run(31337))
+    asyncio.run(fep_server.run(path))

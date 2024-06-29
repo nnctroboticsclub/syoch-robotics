@@ -7,11 +7,8 @@ from utils.network.pcap import Pcap
 BFEP_PROTOCOL = "! b b"
 
 
-async def dump_pcap(remote: str, pcap_path: str):
-    print("Connecting...")
-    reader, writer = await asyncio.open_connection(remote, 31337)
-
-    print("...")
+async def dump_pcap(socket: str, pcap_path: str):
+    reader, writer = await asyncio.open_unix_connection(socket)
     pcap_output = Pcap(pcap_path)
 
     client = FepClient(writer, reader)
@@ -24,14 +21,11 @@ async def dump_pcap(remote: str, pcap_path: str):
 
     print("FEP Dump To Pcap Service Started")
 
-    await client.recv_forever()
-
 
 if __name__ == "__main__":
-    import sys
+    import os
 
-    if len(sys.argv) != 3:
-        print(f"Usage: {sys.argv[0]} <remote> <pcap>")
-        sys.exit(1)
+    sock = os.environ.get("FEP_SOCKET", "/tmp/fep.sock")
+    pcap = os.environ.get("FEP_PCAP", "output.pcap")
 
-    asyncio.run(dump_pcap(sys.argv[1], sys.argv[2]))
+    asyncio.run(dump_pcap(sock, pcap))

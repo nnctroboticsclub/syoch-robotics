@@ -22,7 +22,9 @@ class FepClient:
             data = await self.reader.readexactly(length)
 
             for callback in self.on_packet_callbacks:
-                callback(addr, data)
+                ret = callback(addr, data)
+                if asyncio.iscoroutine(ret):
+                    await ret
 
     def on_packet(self, callback: OnPacketCallback):
         self.on_packet_callbacks.append(callback)
