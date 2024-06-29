@@ -51,6 +51,9 @@ void CharLogger::LogN(char* c, size_t n) {
 }
 
 void CharLogger::Flush() { logger.Log(level, "%s%s", header, data); }
+
+bool CharLogger::CacheAvailable() { return strlen(data) > 0; }
+
 void CharLogger::ClearBuffer() { memset(data, 0, sizeof(data)); }
 
 }  // namespace robotics::logger

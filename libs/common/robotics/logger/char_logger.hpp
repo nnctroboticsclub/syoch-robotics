@@ -32,6 +32,8 @@ struct CharLogger {
   void LogN(char* c, size_t n);
 
   void Flush();
+  bool CacheAvailable();
+
   void ClearBuffer();
 };
 }  // namespace robotics::logger
