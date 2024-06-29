@@ -140,7 +140,11 @@ class NoMutexLIFO {
     tail_ = (tail_ + n) % N;
   }
 
-  void PopAllTo(T* data) { PopNTo(Size(), data); }
+  size_t PopAllTo(T* data) {
+    auto n = Size();
+    PopNTo(n, data);
+    return n;
+  }
 
   T Pop() {
     if (Empty()) {
