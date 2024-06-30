@@ -27,8 +27,8 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
   const uint8_t kFlagsNewDevice = 0x02;
 
   // avoid bidirectional loop
-  AddrRecords incoming_data_from_;
-  AddrRecords hop_candicates;
+  AddrRecords addresses_imcoming_;
+  AddrRecords addresses_hop_candidate_;
 
   // thread
   robotics::system::Thread thread;
@@ -41,6 +41,33 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
   uint8_t broadcast_addr_;
   uint8_t self_addr_;
 
+  void FindHopTo() {
+    logger.Info("Find New Hop, Avoid list:");
+    logger.Hex(robotics::logger::core::Level::kInfo,
+               addresses_imcoming_.records, addresses_imcoming_.recorded);
+
+    SendEx(broadcast_addr_, this->addresses_imcoming_.records,
+           this->addresses_imcoming_.recorded, kFlagsDetectDevices, self_addr_);
+  }
+
+  void UpdateNextHop() {
+    if (addresses_imcoming_.Recorded(next_hop_)) {
+      next_hop_ = 0;
+    } else if (next_hop_ != 0) {
+      return;
+    }
+
+    if (addresses_hop_candidate_.recorded == 0) {
+      FindHopTo();
+      return;
+    }
+
+    next_hop_ = addresses_hop_candidate_.records[0];
+    addresses_hop_candidate_.Remove(next_hop_);
+
+    logger.Info("Using Hop: %d (from cache)", next_hop_);
+  }
+
   void ProcessAction(Action& action) {
     switch (action.type) {
       case Action::Type::kFindNewHopTo: {
@@ -50,11 +77,11 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
 
         logger.Info("Find New Hop, Avoid list:");
         logger.Hex(robotics::logger::core::Level::kInfo,
-                   incoming_data_from_.records, incoming_data_from_.recorded);
+                   addresses_imcoming_.records, addresses_imcoming_.recorded);
 
-        SendEx(broadcast_addr_, this->incoming_data_from_.records,
-               this->incoming_data_from_.recorded, kFlagsDetectDevices,
-               self_addr_);
+        SendEx(broadcast_addr_, addresses_imcoming_.records,
+               addresses_imcoming_.recorded, kFlagsDetectDevices, self_addr_);
+
         break;
       }
 
@@ -68,8 +95,11 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
   void DoSend(Packet* packet) {
     static char buffer[32];
 
+    if (packet->goal != broadcast_addr_)
+      addresses_hop_candidate_.Add(packet->goal);
+
     auto send_to =
-        incoming_data_from_.Recorded(packet->goal) ? next_hop_ : packet->goal;
+        addresses_imcoming_.Recorded(packet->goal) ? next_hop_ : packet->goal;
 
     if (packet->goal == broadcast_addr_) {
       packet->goal = 0;
@@ -82,8 +112,9 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
       std::memcpy(buffer + 2, packet->data, packet->size);
     }
 
-    tx_logger.Info("Send %02d --> %02d f%#02x (%3d Bytes)", packet->from,
-                   packet->goal, packet->flags, packet->size);
+    tx_logger.Info("Send %02d --> %02d ==> %02d f%#02x (%3d Bytes)",
+                   packet->from, send_to, packet->goal, packet->flags,
+                   packet->size);
     tx_logger.Hex(robotics::logger::core::Level::kInfo, packet->data,
                   packet->size);
 
@@ -95,14 +126,14 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
     int ticks_no_hops = 0;
     while (1) {
       ticks_no_hops = next_hop_ == 0 ? ticks_no_hops + 1 : 0;
-      if (ticks_no_hops == 100) {
-        logger.Debug("No Hop for 100 ticks, Find New Hop");
+      if (ticks_no_hops == 10) {
+        logger.Debug("No Hop for 10 ticks, Find New Hop");
         ticks_no_hops = 0;
 
         auto action = Action::FindNewHopTo();
         ProcessAction(action);
       }
-      robotics::system::SleepFor(10ms);
+      robotics::system::SleepFor(100ms);
     }
   }
 
@@ -115,9 +146,9 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
       auto action = Action::AdvertiseSelf(from);
       ProcessAction(action);
     } else if (flags == kFlagsNewDevice) {
-      if (incoming_data_from_.Recorded(from)) return true;
-      logger.Info("Using Hop: %d", from);
-      next_hop_ = from;
+      if (addresses_imcoming_.Recorded(from)) return true;
+      addresses_hop_candidate_.Add(from);
+      UpdateNextHop();
     } else {
       return false;
     }
@@ -131,7 +162,7 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
       : upper_stream_(upper_stream),
         broadcast_addr_(broadcast_addr),
         self_addr_(self_addr) {
-    incoming_data_from_ = {0, 0};
+    addresses_imcoming_ = {0, 0};
 
     upper_stream_.OnReceive([this](uint8_t from, uint8_t* data, uint32_t size) {
       auto ptr = data;
@@ -145,13 +176,13 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
       auto payload = ptr;
       auto payload_size = size - 2;
 
-      rx_logger.Info("Recv %02d --> %02d f%#02x (%3d Bytes)", original_from,
-                     goal, flag, payload_size);
+      rx_logger.Info("Recv %02d ==> %d --> %02d f%#02x (%3d Bytes)",
+                     original_from, self_addr_, goal, flag, payload_size);
       rx_logger.Hex(robotics::logger::core::Level::kInfo, payload,
                     payload_size);
 
       if (goal != 0) {
-        incoming_data_from_.Add(from);
+        addresses_imcoming_.Add(from);
         if (from == next_hop_) {
           next_hop_ = 0;
           auto action = Action::FindNewHopTo();
