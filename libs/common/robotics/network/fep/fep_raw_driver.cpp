@@ -168,6 +168,21 @@ types::Result<DriverResult, DriverError> FEP_RawDriver::Reset() {
   return ReadResult(1000ms);
 }
 
+void FEP_RawDriver::ResetNoResult() {
+  auto wait_for_state = WaitForState(State::kIdle);
+  if (!wait_for_state.IsOk()) {
+    return;
+  }
+  state_ = State::kProcessing;
+
+  Send("@RST\r\n");
+
+  state_ = State::kIdle;
+
+  robotics::system::SleepFor(500ms);
+  this->FlushQueue();
+}
+
 types::Result<DriverResult, DriverError> FEP_RawDriver::InitAllRegister() {
   auto wait_for_state = WaitForState(State::kIdle);
   if (!wait_for_state.IsOk()) {
@@ -270,7 +285,7 @@ types::Result<FEPRawLine, DriverError> FEP_RawDriver::Version(
   }
   state_ = State::kProcessing;
 
-  Send("@VER\r\n");
+  Send("\r\n\r\n@VER\r\n");
 
   auto line_res = ReadLine(timeout);
 

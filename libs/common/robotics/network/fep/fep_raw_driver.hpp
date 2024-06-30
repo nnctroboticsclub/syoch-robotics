@@ -57,22 +57,22 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
 
   [[nodiscard]]
   types::Result<int, DriverError> WaitForState(
-      State state, std::chrono::milliseconds timeout = 1000ms);
+      State state, std::chrono::milliseconds timeout = 30000ms);
 
   [[nodiscard]]
   types::Result<FEPRawLine, DriverError> ReadLine(
-      std::chrono::milliseconds timeout = 1000ms);
+      std::chrono::milliseconds timeout = 30000ms);
 
   [[nodiscard]]
   types::Result<DriverResult, DriverError> ReadResult(
-      std::chrono::milliseconds timeout = 3000ms);
+      std::chrono::milliseconds timeout = 30000ms);
 
  public:
   FEP_RawDriver(Stream<uint8_t>& upper_stream);
 
   [[nodiscard]]
   types::Result<uint8_t, DriverError> GetRegister(
-      uint8_t address, std::chrono::milliseconds timeout = 1000ms);
+      uint8_t address, std::chrono::milliseconds timeout = 30000ms);
 
   [[nodiscard]]
   types::Result<DriverResult, DriverError> SetRegister(uint8_t address,
@@ -81,12 +81,14 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
   [[nodiscard]]
   types::Result<DriverResult, DriverError> Reset();
 
+  void ResetNoResult();
+
   [[nodiscard]]
   types::Result<DriverResult, DriverError> InitAllRegister();
 
   [[nodiscard]]
   types::Result<FEPRawLine, DriverError> Version(
-      std::chrono::milliseconds timeout = 1000ms);
+      std::chrono::milliseconds timeout = 30000ms);
 
   [[nodiscard]]
   TxState Send(uint8_t address, uint8_t* data, uint32_t length) override;
