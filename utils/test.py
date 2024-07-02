@@ -1,9 +1,12 @@
 import asyncio
 import datetime
+import os
 import struct
 import time
 from utils.fep.fep_client import FepClient
 from random import randint
+
+from utils.fep.usb_fep import UsbFep
 
 
 def checksum(data: bytes) -> bytes:
@@ -92,7 +95,12 @@ class Timeline:
         spans = [self.datas[i + 1] - self.datas[i] for i in range(len(self.datas) - 1)]
         if not spans:
             return 0
-        return sum(spans) / len(spans)
+
+        ave_span = sum(spans) / len(spans)
+        if ave_span == 0:
+            return 0
+
+        return 1 / ave_span
 
 
 class RoboFEPClient:
@@ -109,17 +117,10 @@ class RoboFEPClient:
 
         frt_header = rep_data[:2]
         frt_from = frt_header[0] >> 4
-        frt_to = frt_header[0] & 0x0F
         frt_flags = frt_header[1] & 0x03
         frt_data = rep_data[2:]
 
-        svc_id = int.from_bytes(frt_data[:1], "big")
-
         payload = frt_data[1:]
-
-        print(
-            f"Received packet: #{addr:03} [{frt_from:03} --> {frt_to:03}] (f{frt_flags}) ${svc_id}: {payload.hex()}"
-        )
 
         self.tl.add_data()
         self.packets_received += 1
@@ -136,12 +137,30 @@ class RoboFEPClient:
         async def on_packet(addr, packet):
             await self.on_packet(addr, packet)
 
+    async def connect_unix(self, path: str) -> None:
+        self.fep = await FepClient.connect_unix(path)
+
+        @self.fep.on_packet
+        async def on_packet(addr, packet):
+            await self.on_packet(addr, packet)
+
+    async def open_serial(self) -> None:
+        dev = os.environ.get("FEP_DEVICE", "/dev/ttyUSB0")
+        fep = UsbFep(dev)
+
+        @fep.on_packet
+        async def on_packet(addr, packet):
+            await self.on_packet(addr, packet)
+
+        await fep.init()
+        self.fep = fep
+
     def get_packets_received(self) -> int:
         return self.packets_received
 
-    async def raw_transmit(self, dest: int, raw_packet: bytes) -> None:
+    async def raw_transmit(self, dest: int, raw_packet: bytes):
         print(f"Transmitting packet: {raw_packet.hex()}")
-        await self.fep.transmit(dest, raw_packet)
+        return await self.fep.transmit_withspans(dest, raw_packet)
 
     async def advertise_to(self, dest: int) -> None:
         await self.raw_transmit(dest, encode_rep(encode_froute_adv(self.self_addr)))
@@ -181,18 +200,25 @@ class App:
             await asyncio.sleep(1)
 
     async def send_benchmark(self):
-        delay = 0.1
+        delay = 1 / 5
         self.rx_should_come = 100
         print(f"----- Sending {self.rx_should_come} packets with {delay}s delay...")
         self.fep.tl.start_timer()
         for _ in range(self.rx_should_come):
-            await self.fep.raw_transmit(DEV2_ADDR, encode(0x01, 0x00, 2, b""))
-            await asyncio.sleep(delay)
+            spans = await self.fep.raw_transmit(DEV2_ADDR, encode(0x01, 0x00, 2, b""))
+
+            span = sum(spans)
+
+            if span < delay:
+                await asyncio.sleep(delay - span)
+
+        print("--------------------------------------------------")
 
     async def main(self):
-        await self.fep.connect("localhost", 31337)
+        # await self.fep.connect_unix("../.fep/fep.sock")
+        await self.fep.open_serial()
 
-        await self.send_bad_command()
+        # await self.send_bad_command()
 
         asyncio.create_task(self.send_benchmark())
         asyncio.create_task(self.status_task())

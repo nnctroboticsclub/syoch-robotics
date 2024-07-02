@@ -18,7 +18,6 @@ class FepServer:
 
         @self.fep.on_packet
         def on_packet(addr: int, data: bytes):
-            print(addr, data)
             payload = addr.to_bytes(1, "big")
             payload += len(data).to_bytes(1, "big")
             payload += data
@@ -40,7 +39,6 @@ class FepServer:
         await self.fep.init()
 
         # await self.fep.set_reg(18, await self.fep.get_reg(18) & 0xFC)
-        await self.fep.set_reg(18, await self.fep.get_reg(18) | 3)
         await self.fep.set_reg(0, 0x0F)
         await self.fep.set_reg(1, 0xF0)
         await self.fep.reset()

@@ -13,6 +13,7 @@
 #include "../utils/no_mutex_lifo.hpp"
 #include "../types/result.hpp"
 #include "../platform/timer.hpp"
+#include "../platform/thread.hpp"
 
 #include "fep_tx_state.hpp"
 #include "fep_packet.hpp"
@@ -44,14 +45,17 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
   Stream<uint8_t>& upper_stream;
 
   robotics::utils::NoMutexLIFO<DriverResult, 4> result_queue_;
-  robotics::utils::NoMutexLIFO<FEPPacket, 4> rx_queue_;
+  robotics::utils::NoMutexLIFO<FEPPacket, 16> rx_queue_;
   robotics::utils::NoMutexLIFO<FEPRawLine, 4> line_queue_;
+
+  bool rx_enabled = true;
 
   RxProcessor* rx_processor_;
 
   State state_ = State::kIdle;
 
   system::Timer timer_;
+  system::Thread fep_thread_;
 
   void Send(std::string const& data);
 
@@ -94,6 +98,8 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
   TxState Send(uint8_t address, uint8_t* data, uint32_t length) override;
 
   void FlushQueue();
+
+  void SetDispatchRX(bool enabled);
 };
 }  // namespace fep
 

@@ -112,9 +112,8 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
       std::memcpy(buffer + 2, packet->data, packet->size);
     }
 
-    tx_logger.Info("Send %02d --> %02d ==> %02d f%#02x (%3d Bytes)",
-                   packet->from, send_to, packet->goal, packet->flags,
-                   packet->size);
+    tx_logger.Info("Send %3d --> %3d ==> %3d f%#02x (%3d Bytes)", packet->from,
+                   send_to, packet->goal, packet->flags, packet->size);
     tx_logger.Hex(robotics::logger::core::Level::kInfo, packet->data,
                   packet->size);
 
@@ -176,7 +175,7 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
       auto payload = ptr;
       auto payload_size = size - 2;
 
-      rx_logger.Info("Recv %02d ==> %d --> %02d f%#02x (%3d Bytes)",
+      rx_logger.Info("Recv %3d ==> %3d --> %3d f%#02x (%3d Bytes)",
                      original_from, self_addr_, goal, flag, payload_size);
       rx_logger.Hex(robotics::logger::core::Level::kInfo, payload,
                     payload_size);

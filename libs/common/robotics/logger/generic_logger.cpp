@@ -55,7 +55,6 @@ GenericLogger::GenericLogger(const char* id, const char* tag)
     : id(id), tag(tag) {
   for (int i = 0; i < 64; i++) {
     if (!loggers[i]) {
-      Debug("Logger %s initialized as id = %d", id, i);
       loggers[i] = this;
       break;
     }

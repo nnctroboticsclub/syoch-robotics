@@ -92,8 +92,12 @@ FEP_RawDriver::FEP_RawDriver(Stream<uint8_t>& upper_stream)
   this->rx_processor_->OnReceive([this](RxProcessorPacket packet) {
     switch (packet.type) {
       case RxProcessorPacket::Type::kData:
-        this->DispatchOnReceive(packet.data.from, packet.data.data,
-                                packet.data.length);
+        if (rx_enabled)
+          this->DispatchOnReceive(packet.data.from, packet.data.data,
+                                  packet.data.length);
+        else {
+          rx_queue_.Push(packet.data);
+        }
         break;
       case RxProcessorPacket::Type::kResult:
         this->result_queue_.Push(packet.result);
@@ -107,6 +111,21 @@ FEP_RawDriver::FEP_RawDriver(Stream<uint8_t>& upper_stream)
       case RxProcessorPacket::Type::kExitProcessing:
         this->state_ = State::kIdle;
         break;
+    }
+  });
+  fep_thread_.Start([this]() {
+    while (1) {
+      if (!this->rx_enabled) {
+        system::SleepFor(10ms);
+        continue;
+      }
+      if (this->rx_queue_.Empty()) {
+        system::SleepFor(1ms);
+        continue;
+      }
+
+      auto packet = this->rx_queue_.Pop();
+      this->DispatchOnReceive(packet.from, packet.data, packet.length);
     }
   });
 }
@@ -298,5 +317,7 @@ void FEP_RawDriver::FlushQueue() {
   rx_queue_.Clear();
   line_queue_.Clear();
 }
+
+void FEP_RawDriver::SetDispatchRX(bool enabled) { rx_enabled = enabled; }
 
 }  // namespace robotics::network::fep
