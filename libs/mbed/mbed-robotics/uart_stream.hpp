@@ -5,9 +5,10 @@
 #include <string>
 
 #include <robotics/network/stream.hpp>
+#include <robotics/network/iuart.hpp>
 
 namespace robotics::network {
-class UARTStream : public Stream<uint8_t> {
+class UARTStream : public IUART {
   logger::Logger logger{"uart.nw", "\x1b[1;35m   UART  \x1b[m"};
   mbed::UnbufferedSerial* upper_stream = nullptr;
 
