@@ -22,15 +22,17 @@ class IkakoRobomasNode {
  public:
   robotics::Node<float> velocity;
   MotorController *controller;
-  IkakoM3508 &super;
+  IkakoM3508 *super;
 
  public:
   IkakoRobomasNode(
-      IkakoM3508 &super  // ikakoMDC *mdc_ = nullptr;
+      int index
       // https://github.com/nnctroboticsclub/IkakoRobomasのm3という配列を指すポインタである
-      )
-      : super(super) {
-    m3508 = super.get_motor_params();
+      ) {
+    
+    super = new IkakoM3508(index);
+
+    m3508 = super->get_motor_params();
     m3508->D = 0.0;
     m3508->J = 0.04;
 
@@ -46,13 +48,18 @@ class IkakoRobomasNode {
           controller->set_reference(velo);
         });
   }
-  bool GetReadFlag() { return super.get_read_flag(); }
+
+  IkakoM3508& GetIkakoM3508() {
+    return *super;
+  }
+
+  bool GetReadFlag() { return super->get_read_flag(); }
 
   void Update() {
-    if (super.get_read_flag()) controller->set_response(super.get_vel());
+    if (super->get_read_flag()) controller->set_response(super->get_vel());
     controller->update();
 
-    super.set_ref(controller->get_output());
+    super->set_ref(controller->get_output());
   }
 };
 
