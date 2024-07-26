@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstddef>
-#include <cinttypes>
+#include <stddef.h>
+#include <stdint.h>
 
 namespace robotics::logger::core {
 

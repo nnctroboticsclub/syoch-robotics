@@ -2,8 +2,6 @@
 
 #include "generic_logger.hpp"
 
-#include <cctype>
-
 namespace robotics::logger {
 struct CharLogger {
   GenericLogger logger;

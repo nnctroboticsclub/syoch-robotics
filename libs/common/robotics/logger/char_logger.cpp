@@ -1,8 +1,10 @@
 #include "char_logger.hpp"
 
 #include <cstring>
+#include <cctype>
 
 namespace robotics::logger {
+
 CharLogger::CharLogger(const char* id, const char* tag) : logger(id, tag) {}
 
 void CharLogger::Cache(char c) {
