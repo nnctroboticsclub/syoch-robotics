@@ -11,6 +11,8 @@ class Thread::Impl {
  public:
   Impl() {}
 
+  ~Impl() { thread_ if (thread_) delete thread_; }
+
   void Start(const ThreadFunction& function) {
     struct A {
       ThreadFunction function;
