@@ -16,7 +16,7 @@ class Thread {
   Thread();
 
   void Start(const ThreadFunction& function);
-
+  void SetThreadName(const char* name);
   void SetStackSize(size_t size);
 };
 

@@ -29,9 +29,18 @@ class Thread::Impl {
 
 #include "thread.hpp"
 
+robotics::system::Thread::Thread() {
+  impl_ = new robotics::system::Thread::Impl();
+}
 
-robotics::system::Thread::Thread() { impl_ = new robotics::system::Thread::Impl(); }
+void robotics::system::Thread::Start(
+    const robotics::system::ThreadFunction& function) {
+  impl_->Start(function);
+}
 
-void robotics::system::Thread::Start(const robotics::system::ThreadFunction& function) { impl_->Start(function); }
-
-void robotics::system::Thread::SetStackSize(size_t size) { impl_->SetStackSize(size); }
+void robotics::system::Thread::SetStackSize(size_t size) {
+  impl_->SetStackSize(size);
+}
+void robotics::system::Thread::SetThreadName(const char* name) {
+  impl_->SetThreadName(name);
+}
