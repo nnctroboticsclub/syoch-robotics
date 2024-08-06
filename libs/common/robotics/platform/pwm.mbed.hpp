@@ -10,7 +10,7 @@ class PWM : public PWMBase {
   mbed::PwmOut pwm_;
 
  public:
-  PWM(PinName pin) : pwm_(pin) {}
+  PWM(PinName pin) : pwm_(pin) { pwm_.resume(); }
 
   void pulsewidth_us(int pw) override { pwm_.pulsewidth_us(pw); }
 
