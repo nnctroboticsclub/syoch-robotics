@@ -29,7 +29,7 @@ class IkakoRobomasNode {
       int index
       // https://github.com/nnctroboticsclub/IkakoRobomasのm3という配列を指すポインタである
       ) {
-    
+
     super = new IkakoM3508(index);
 
     m3508 = super->get_motor_params();
@@ -55,6 +55,7 @@ class IkakoRobomasNode {
 
   bool GetReadFlag() { return super->get_read_flag(); }
 
+  // dt = 0.001 (1ms)
   void Update() {
     if (super->get_read_flag()) controller->set_response(super->get_vel());
     controller->update();
