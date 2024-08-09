@@ -9,7 +9,6 @@
 
 namespace robotics::network {
 class UARTStream : public IUART {
-  logger::Logger logger{"uart.nw", "\x1b[1;35m   UART  \x1b[m"};
   mbed::UnbufferedSerial* upper_stream = nullptr;
 
   PinName tx, rx;
