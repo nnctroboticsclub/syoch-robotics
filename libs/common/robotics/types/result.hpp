@@ -2,7 +2,8 @@
 
 #include "../platform/panic.hpp"
 
-namespace robotics::types {
+namespace robotics {
+inline namespace types {
 template <typename T, typename E>
 class Result {
   enum class Tag {
@@ -67,4 +68,5 @@ class Result<void, E> {
   bool IsOk() const { return tag_ == Tag::kOk; }
 };
 
-}  // namespace robotics::types
+}  // namespace types
+}  // namespace robotics
