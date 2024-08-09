@@ -220,8 +220,8 @@ class FEPDriver {
   RawFEP_NoTxRet GetFEP_NoTxRet() { return RawFEP_NoTxRet(fep_); }
 
   void ResetHW() {
-    logger.Info("Resetting FEP Hardware after 10s");
-    robotics::system::SleepFor(10s);
+    logger.Info("Resetting FEP Hardware after 2s");
+    robotics::system::SleepFor(2s);
     logger.Info("Resetting FEP Hardware");
     fep_rst_->Write(false);
     robotics::system::SleepFor(100ms);
