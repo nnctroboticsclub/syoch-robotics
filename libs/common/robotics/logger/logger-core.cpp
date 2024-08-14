@@ -30,7 +30,7 @@ struct LogLine {
   }
 };
 
-using LogQueue = robotics::utils::NoMutexLIFO<LogLine, 200>;
+using LogQueue = robotics::utils::NoMutexLIFO<LogLine, 100>;
 
 LogQueue* log_queue = nullptr;
 
@@ -99,6 +99,9 @@ void Thread() {
 }
 
 void StartLoggerThread() {
+  if (logger_thread) return;
+  if (log_queue) return;
+
   log_queue = new LogQueue();
   while (!log_queue->Full()) {
     log_queue->Push({""});
