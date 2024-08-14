@@ -22,8 +22,5 @@ void ResumeLogger(const char* id) {
   logger->Resume();
 }
 
-void Init() {
-  core::StartLoggerThread();
-  system_logger.Info("Logger Initialized (from Log)");
-}
+void Init() { core::StartLoggerThread(); }
 }  // namespace robotics::logger
