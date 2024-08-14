@@ -1,4 +1,4 @@
-add_library(syoch-robotics STATIC)
+add_library(syoch-robotics OBJECT)
 target_include_directories(syoch-robotics PUBLIC
   .
 )
