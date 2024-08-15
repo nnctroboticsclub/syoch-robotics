@@ -7,30 +7,63 @@
 #include "../platform/thread.hpp"
 #include "../utils/no_mutex_lifo.hpp"
 
+namespace {
+  const size_t kLogRingBufferSize = 0x8000; // 32KB
+  const size_t kLogLineSize = 0x100; // 256 bytes
+  const size_t kMaxLogLines = 200;
+
+  char log_ring_buffer[kLogRingBufferSize];
+  char log_line[kLogLineSize];
+
+  size_t log_head = 0;
+
+  void UseLine(size_t start, size_t length) {
+    memset(log_line, 0, sizeof(log_line));
+    for (size_t offset = 0; offset < length; offset++) {
+      size_t logical_index = start + offset;
+      size_t index = logical_index % kLogRingBufferSize;
+
+      log_line[offset] = log_ring_buffer[index];
+      log_ring_buffer[index] = 0;
+    }
+  }
+
+  size_t PasteToRing(const char* line, size_t length) {
+    size_t start = log_head;
+    for (size_t offset = 0; offset < length; offset++) {
+      size_t logical_index = start + offset;
+      size_t index = logical_index % kLogRingBufferSize;
+
+      log_ring_buffer[index] = line[offset];
+    }
+
+    log_head = (start + length) % kLogRingBufferSize;
+
+    return start;
+  }
+}
+
 namespace robotics::logger::core {
 
 struct LogLine {
+  size_t data_start = 0;
   size_t length = 0;
-  char data[128] = {};
   Level level;
   LogLine(const char* data = nullptr, Level level = Level::kInfo)
       : level(level) {
     if (data) {
-      memset(this->data, 0, sizeof(this->data));
-      memcpy(this->data, data, strlen(data));
-      length = strlen(this->data);
+      data_start = PasteToRing(data, strlen(data));
+      length = strlen(data);
     }
   }
 
-  char* operator=(const char* str) {
-    memset(data, 0, sizeof(data));
-    memcpy(data, str, strlen(str));
-    length = strlen(data);
-    return data;
+  void operator=(const char* str) {
+    data_start = PasteToRing(str, strlen(str));
+    length = strlen(str);
   }
 };
 
-using LogQueue = robotics::utils::NoMutexLIFO<LogLine, 100>;
+using LogQueue = robotics::utils::NoMutexLIFO<LogLine, kMaxLogLines>;
 
 LogQueue* log_queue = nullptr;
 
@@ -45,15 +78,18 @@ void Log(Level level, char* line) {
 }
 
 void LogHex(Level level, const uint8_t* data, size_t length) {
+  static char buffer[kLogLineSize];
   if (!log_queue) return;
 
-  LogLine line{"", level};
+  LogLine line{nullptr, level};
   line.length = 0;
 
   for (size_t i = 0; i < length; i++) {
-    line.length += snprintf(line.data + line.length,
-                            sizeof(line.data) - line.length, "%02X", data[i]);
+    line.length += snprintf(buffer + line.length,
+                            sizeof(buffer) - line.length, "%02X", data[i]);
   }
+
+  line = buffer;
 
   log_queue->Push(line);
 }
@@ -93,7 +129,8 @@ void Thread() {
           break;
       }
 
-      printf("%s %s\n", level_header, line.data);
+      UseLine(line.data_start, line.length);
+      printf("%s %s\n", level_header, log_line);
     }
   }
 }
