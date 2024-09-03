@@ -8,40 +8,40 @@
 #include "../utils/no_mutex_lifo.hpp"
 
 namespace {
-  const size_t kLogRingBufferSize = 0x8000; // 32KB
-  const size_t kLogLineSize = 0x100; // 256 bytes
-  const size_t kMaxLogLines = 200;
+const size_t kLogRingBufferSize = 0x8000;  // 32KB
+const size_t kLogLineSize = 0x200;         // 512 bytes
+const size_t kMaxLogLines = 200;
 
-  char log_ring_buffer[kLogRingBufferSize];
-  char log_line[kLogLineSize];
+char log_ring_buffer[kLogRingBufferSize];
+char log_line[kLogLineSize];
 
-  size_t log_head = 0;
+size_t log_head = 0;
 
-  void UseLine(size_t start, size_t length) {
-    memset(log_line, 0, sizeof(log_line));
-    for (size_t offset = 0; offset < length; offset++) {
-      size_t logical_index = start + offset;
-      size_t index = logical_index % kLogRingBufferSize;
+void UseLine(size_t start, size_t length) {
+  memset(log_line, 0, sizeof(log_line));
+  for (size_t offset = 0; offset < length; offset++) {
+    size_t logical_index = start + offset;
+    size_t index = logical_index % kLogRingBufferSize;
 
-      log_line[offset] = log_ring_buffer[index];
-      log_ring_buffer[index] = 0;
-    }
-  }
-
-  size_t PasteToRing(const char* line, size_t length) {
-    size_t start = log_head;
-    for (size_t offset = 0; offset < length; offset++) {
-      size_t logical_index = start + offset;
-      size_t index = logical_index % kLogRingBufferSize;
-
-      log_ring_buffer[index] = line[offset];
-    }
-
-    log_head = (start + length) % kLogRingBufferSize;
-
-    return start;
+    log_line[offset] = log_ring_buffer[index];
+    log_ring_buffer[index] = 0;
   }
 }
+
+size_t PasteToRing(const char* line, size_t length) {
+  size_t start = log_head;
+  for (size_t offset = 0; offset < length; offset++) {
+    size_t logical_index = start + offset;
+    size_t index = logical_index % kLogRingBufferSize;
+
+    log_ring_buffer[index] = line[offset];
+  }
+
+  log_head = (start + length) % kLogRingBufferSize;
+
+  return start;
+}
+}  // namespace
 
 namespace robotics::logger::core {
 
@@ -85,8 +85,8 @@ void LogHex(Level level, const uint8_t* data, size_t length) {
   line.length = 0;
 
   for (size_t i = 0; i < length; i++) {
-    line.length += snprintf(buffer + line.length,
-                            sizeof(buffer) - line.length, "%02X", data[i]);
+    line.length += snprintf(buffer + line.length, sizeof(buffer) - line.length,
+                            "%02X", data[i]);
   }
 
   line = buffer;
