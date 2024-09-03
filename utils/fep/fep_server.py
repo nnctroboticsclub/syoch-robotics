@@ -39,8 +39,11 @@ class FepServer:
         await self.fep.init()
 
         # await self.fep.set_reg(18, await self.fep.get_reg(18) & 0xFC)
-        await self.fep.set_reg(0, 0x0F)
+        await self.fep.set_reg(0, 20)
         await self.fep.set_reg(1, 0xF0)
+        await self.fep.set_reg(7, 0x22)
+        await self.fep.set_reg(8, 0x2E)
+        await self.fep.set_reg(9, 0x3A)
         await self.fep.reset()
 
     async def handle_client(self, reader: StreamReader, writer: StreamWriter):
