@@ -123,9 +123,7 @@ class Node {
       callback(value);
     }
 
-    for (auto& input : linked_inputs_) {
-      input->SetValue(value);
-    }
+    Propagate();
   }
 
   T GetValue() { return value_; }
@@ -135,6 +133,12 @@ class Node {
     linked_inputs_.push_back(&input);
 
     inspector.Link(input.inspector);
+  }
+
+  void Propagate() {
+    for (auto& input : linked_inputs_) {
+      input->SetValue(value_);
+    }
   }
 
   Node<T>& operator>>(Node<T>& next) {
