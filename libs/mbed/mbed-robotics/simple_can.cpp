@@ -27,7 +27,7 @@ SimpleCAN::SimpleCAN(PinName rx, PinName tx, int freqency)
     : can_(rx, tx, freqency), freqency_(freqency) {}
 
 void SimpleCAN::Init() {
-  thread_ = new Thread(osPriorityNormal, 1024 * 4);
+  thread_ = new Thread(osPriorityHigh4, 1024 * 4);
   thread_->start(callback(this, &SimpleCAN::ThreadMain));
 }
 
