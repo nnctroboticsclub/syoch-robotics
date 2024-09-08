@@ -1,7 +1,5 @@
 #include "BD621x.hpp"
 
-#include <mbed.h>
-
 using namespace std::chrono_literals;
 
 namespace robotics::node {
