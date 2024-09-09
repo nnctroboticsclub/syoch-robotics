@@ -9,91 +9,32 @@ namespace robotics {
 namespace node {
 
 template <typename T>
-class NodeEncoder {};
-
-template <>
-class NodeEncoder<void> {
+class NodeEncoder {
  protected:
   NodeInspector inspector;
 
  public:
   NodeEncoder() : inspector(0) {}
 
-  void Link(NodeEncoder<void>& other_encoder) {
+  std::array<uint8_t, 4> Encode(T value);
+  T Decode(std::array<uint8_t, 4> data);
+
+  void Update(T value) { inspector.Update(Encode(value)); }
+
+  void Link(NodeEncoder<T>& other_encoder) {
     inspector.Link(other_encoder.inspector);
   }
 };
 
-template <>
-class NodeEncoder<int> : public NodeEncoder<void> {
+class GenericNode {
  public:
-  NodeEncoder() : NodeEncoder<void>() {}
-  void Update(int value) {
-    std::array<uint8_t, 4> data;
-    data[0] = value >> 24;
-    data[1] = value >> 16;
-    data[2] = value >> 8;
-    data[3] = value;
-    inspector.Update(data);
-  }
-};
-
-template <>
-class NodeEncoder<float> : public NodeEncoder<void> {
- public:
-  NodeEncoder() : NodeEncoder<void>() {}
-  void Update(float value) {
-    union {
-      float value;
-      uint8_t data[4];
-    } data;
-    data.value = value;
-
-    std::array<uint8_t, 4> data_array;
-    for (int i = 0; i < 4; i++) {
-      data_array[i] = data.data[i];
-    }
-
-    inspector.Update(data_array);
-  }
-};
-
-template <>
-class NodeEncoder<double> : public NodeEncoder<void> {
- public:
-  NodeEncoder() : NodeEncoder<void>() {}
-  void Update(double value) {
-    union {
-      float value;
-      uint8_t data[4];
-    } data;
-    data.value = value;
-
-    std::array<uint8_t, 4> data_array;
-    for (int i = 0; i < 4; i++) {
-      data_array[i] = data.data[i];
-    }
-
-    inspector.Update(data_array);
-  }
-};
-
-template <>
-class NodeEncoder<bool> : public NodeEncoder<void> {
- public:
-  NodeEncoder() : NodeEncoder<void>() {}
-  void Update(bool value) {
-    std::array<uint8_t, 4> data;
-    data[0] = 0;
-    data[1] = 0;
-    data[2] = 0;
-    data[3] = value ? 1 : 0;
-    inspector.Update(data);
-  }
+  virtual std::array<uint8_t, 4> Encode() = 0;
+  virtual void LoadFromBytes(std::array<uint8_t, 4> data) = 0;
+  virtual void OnChanged();
 };
 
 template <typename T>
-class Node {
+class Node : public GenericNode {
  private:
   using Self = Node<T>;
   using Callback = std::function<void(T)>;
@@ -129,6 +70,7 @@ class Node {
   T GetValue() { return value_; }
 
   void SetChangeCallback(Callback callback) { callbacks_.push_back(callback); }
+
   void Link(Node<T>& input) {
     linked_inputs_.push_back(&input);
 
@@ -139,6 +81,16 @@ class Node {
     for (auto& input : linked_inputs_) {
       input->SetValue(value_);
     }
+  }
+
+  std::array<uint8_t, 4> Encode() override { return inspector.Encode(value_); }
+
+  void LoadFromBytes(std::array<uint8_t, 4> data) override {
+    SetValue(inspector.Decode(data));
+  }
+
+  void OnChanged() override {
+    this->SetChangeCallback([this](T value) { inspector.Update(value); });
   }
 
   Node<T>& operator>>(Node<T>& next) {

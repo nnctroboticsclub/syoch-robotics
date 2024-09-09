@@ -46,6 +46,7 @@ target_sources(syoch-robotics PRIVATE
   robotics/logger/logger.cpp
   robotics/utils/neopixel_driver.cpp
   robotics/utils/neopixel.cpp
+  robotics/node/node.cpp
   robotics/node/node_inspector.cpp
   robotics/node/BD621x.cpp
   robotics/node/BLDC.cpp
