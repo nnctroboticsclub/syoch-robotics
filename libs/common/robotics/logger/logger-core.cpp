@@ -94,49 +94,51 @@ void LogHex(Level level, const uint8_t* data, size_t length) {
   log_queue->Push(line);
 }
 
-void Thread() {
-  char level_header[12];
+void LoggerProcess() {
+  static char level_header[12];
+  if (!log_queue) {
+    using namespace std::chrono_literals;
+    robotics::system::SleepFor(1ms);
+    return;
+  }
 
-  while (1) {
-    if (!log_queue) {
-      using namespace std::chrono_literals;
-      robotics::system::SleepFor(1ms);
-      continue;
+  for (int i = 0; !log_queue->Empty(); i++) {
+    auto line = log_queue->Pop();
+
+    switch (line.level) {
+      case Level::kError:
+        snprintf(level_header, sizeof(level_header), "\x1b[1;31mE\x1b[m");
+        break;
+      case Level::kInfo:
+        snprintf(level_header, sizeof(level_header), "\x1b[1;32mI\x1b[m");
+        break;
+      case Level::kVerbose:
+        snprintf(level_header, sizeof(level_header), "\x1b[1;34mV\x1b[m");
+        break;
+      case Level::kDebug:
+        snprintf(level_header, sizeof(level_header), "\x1b[1;36mD\x1b[m");
+        break;
+      case Level::kTrace:
+        snprintf(level_header, sizeof(level_header), "\x1b[1;35mT\x1b[m");
+        break;
+
+      default:
+        snprintf(level_header, sizeof(level_header), "\x1b[1;37m?\x1b[m");
+        break;
     }
 
-    for (int i = 0; !log_queue->Empty(); i++) {
-      auto line = log_queue->Pop();
-
-      switch (line.level) {
-        case Level::kError:
-          snprintf(level_header, sizeof(level_header), "\x1b[1;31mE\x1b[m");
-          break;
-        case Level::kInfo:
-          snprintf(level_header, sizeof(level_header), "\x1b[1;32mI\x1b[m");
-          break;
-        case Level::kVerbose:
-          snprintf(level_header, sizeof(level_header), "\x1b[1;34mV\x1b[m");
-          break;
-        case Level::kDebug:
-          snprintf(level_header, sizeof(level_header), "\x1b[1;36mD\x1b[m");
-          break;
-        case Level::kTrace:
-          snprintf(level_header, sizeof(level_header), "\x1b[1;35mT\x1b[m");
-          break;
-
-        default:
-          snprintf(level_header, sizeof(level_header), "\x1b[1;37m?\x1b[m");
-          break;
-      }
-
-      UseLine(line.data_start, line.length);
-      printf("%s %s\n", level_header, log_line);
-    }
+    UseLine(line.data_start, line.length);
+    printf("%s %s\n", level_header, log_line);
   }
 }
 
-void StartLoggerThread() {
-  if (logger_thread) return;
+void Thread() {
+  while (true) {
+    LoggerProcess();
+  }
+}
+
+void Init() {
   if (log_queue) return;
 
   log_queue = new LogQueue();
@@ -147,6 +149,12 @@ void StartLoggerThread() {
   while (!log_queue->Empty()) {
     log_queue->Pop();
   }
+}
+
+void StartLoggerThread() {
+  Init();
+
+  if (logger_thread) return;
 
   logger_thread = new robotics::system::Thread();
   logger_thread->Start(Thread);

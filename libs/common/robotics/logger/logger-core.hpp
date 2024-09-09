@@ -11,4 +11,7 @@ void Log(Level level, char* line);
 void LogHex(Level level, const uint8_t* data, size_t length);
 void StartLoggerThread();
 
+void LoggerProcess();
+void Init();
+
 }  // namespace robotics::logger::core
