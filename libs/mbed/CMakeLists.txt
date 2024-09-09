@@ -35,7 +35,6 @@ target_sources(syoch-robotics PRIVATE
   robotics/network/fep/fep_raw_driver.cpp
   robotics/network/can_module.cpp
   robotics/network/dcan.cpp
-  robotics/network/ssp/ssp.cpp
   robotics/types/angle_joystick_2d.cpp
   robotics/platform/panic.cpp
   robotics/platform/timer.cpp

@@ -86,4 +86,6 @@ template <>
 bool NodeEncoder<bool>::Decode(std::array<uint8_t, 4> value) {
   return value[3] != 0;
 }
+
+GenericNode::~GenericNode() {}
 }  // namespace robotics::node

@@ -28,9 +28,11 @@ class NodeEncoder {
 
 class GenericNode {
  public:
+  ~GenericNode();
+
   virtual std::array<uint8_t, 4> Encode() = 0;
   virtual void LoadFromBytes(std::array<uint8_t, 4> data) = 0;
-  virtual void OnChanged();
+  virtual void OnChanged(std::function<void()> data) = 0;
 };
 
 template <typename T>
@@ -89,8 +91,8 @@ class Node : public GenericNode {
     SetValue(inspector.Decode(data));
   }
 
-  void OnChanged() override {
-    this->SetChangeCallback([this](T value) { inspector.Update(value); });
+  void OnChanged(std::function<void()> cb) override {
+    this->SetChangeCallback([this, cb](T) { cb(); });
   }
 
   Node<T>& operator>>(Node<T>& next) {

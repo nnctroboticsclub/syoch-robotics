@@ -6,11 +6,13 @@
 #include "../stream.hpp"
 
 namespace robotics::network::ssp {
-class IdentitiyService : public robotics::network::ssp::KVService {
+template <typename Context = uint8_t>
+class IdentitiyService : public robotics::network::ssp::KVService<Context> {
  public:
   IdentitiyService(robotics::network::Stream<uint8_t, uint8_t>& stream,
                    const char* device_name)
-      : KVService(stream, 0x00, "id.svc.nw", "\x1b[32mIdentitiyService\x1b[m") {
+      : KVService<Context>(stream, 0x00, "id.svc.nw",
+                           "\x1b[32mIdentitiyService\x1b[m") {
     using robotics::network::ssp::KVPacket;
 
     this->OnKVRequested(0x0000, [device_name]() {

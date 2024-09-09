@@ -155,7 +155,6 @@ void StartLoggerThread() {
   Init();
 
   if (logger_thread) return;
-
   logger_thread = new robotics::system::Thread();
   logger_thread->Start(Thread);
 }

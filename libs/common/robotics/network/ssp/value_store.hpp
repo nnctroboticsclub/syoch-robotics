@@ -11,78 +11,54 @@
 #include <robotics/controller/controller_base.hpp>
 
 namespace robotics::network::ssp {
-class ValueStoreService : public robotics::network::ssp::SSP_Service {
-  struct RxQueue {
-    union {
-      uint8_t raw_data[12];
-
-      struct {
-        uint32_t node_id;
-        uint8_t data[8];
-      };
+template <typename Context = uint8_t>
+class ValueStoreService : public robotics::network::ssp::SSP_Service<Context> {
+  union RxItem {
+    uint8_t raw_data[8];
+    struct {
+      uint32_t id;
+      uint8_t data[4];
     };
-     size_t size;
   };
 
   std::unordered_map<uint32_t, robotics::node::GenericNode*> nodes_;
 
-  robotics::utils::NoMutexLIFO<RxQueue, 4> rx_queue_;
-
-  char rx_buffer[16];
-  char tx_buffer[16];
+  uint8_t tx_buffer[16];
 
  public:
-  ValueStoreService(robotics::network::Stream<uint8_t, uint8_t>& stream)
-      : SSP_Service(stream, 0x23, "vs.svc.nw",
-                    "\x1b[33mValueStoreService\x1b[m") {
-    OnReceive([this](uint8_t addr, uint8_t* data, size_t len) {
+  ValueStoreService(robotics::network::Stream<uint8_t, Context>& stream)
+      : SSP_Service<Context>(stream, 0x23, "vs.svc.nw",
+                             "\x1b[33mValueStoreService\x1b[m") {
+    this->OnReceive([this](Context addr, uint8_t* data, size_t len) {
       if (len == 0) {
         return;
       }
 
-      RxQueue rx;
-      std::memcpy(rx.raw_data, data, len);
-      rx.size = len;
+      RxItem rx;
+      std::memcpy(&rx.raw_data, data, len);
 
-      rx_queue_.Push(rx);
-    });
-  }
-
-  void StartThread() {
-    robotics::system::Thread thread;
-    thread.SetStackSize(1024);
-    thread.Start([this]() {
-      while (1) {
-        Process();
+      if (nodes_.find(rx.id) == nodes_.end()) {
+        return;
       }
+
+      auto node = nodes_[rx.id];
+      node->LoadFromBytes({rx.data[0], rx.data[1], rx.data[2], rx.data[3]});
     });
-  }
-
-  void Process() {
-    if (this->rx_queue_.Empty()) {
-      robotics::system::SleepFor(10ms);
-      return;
-    }
-
-    auto rx = this->rx_queue_.Pop();
-    auto node_id = rx.node_id;
-
-    if (nodes_.find(node_id) == nodes_.end()) {
-      return;
-    }
-
-    auto node = nodes_[node_id];
-    node->Decode({rx.data[0], rx.data[1], rx.data[2], rx.data[3]});
   }
 
   void AddController(uint32_t id, uint8_t remote,
                      robotics::node::GenericNode& node) {
-    node.OnChanged(
-        [this, remote, node]() {
-          auto data = node.Encode();
-          this->Send(remote, data, 4);
-        });
-    nodes_.push_back(&node);
+    node.OnChanged([this, id, remote, &node]() {
+      auto data = node.Encode();
+      tx_buffer[0] = (id >> 24) & 0xff;
+      tx_buffer[1] = (id >> 16) & 0xff;
+      tx_buffer[2] = (id >> 8) & 0xff;
+      tx_buffer[3] = id & 0xff;
+      std::memcpy(&tx_buffer[4], &data.front(), 4);
+
+      this->Send(remote, tx_buffer, 8);
+    });
+    nodes_[id] = &node;
   }
 };
 }  // namespace robotics::network::ssp

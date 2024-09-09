@@ -15,7 +15,8 @@ struct KVPacket {
   size_t len;
 };
 
-class KVService : public robotics::network::ssp::SSP_Service {
+template <typename Context = uint8_t>
+class KVService : public robotics::network::ssp::SSP_Service<Context> {
   using KVCallback = std::function<KVPacket()>;
 
   std::unordered_map<uint8_t, KVCallback> kv_callbacks_;
@@ -50,7 +51,7 @@ class KVService : public robotics::network::ssp::SSP_Service {
   KVService(robotics::network::Stream<uint8_t, uint8_t>& stream,
             uint8_t service_id, const char* logger_tag,
             const char* logger_header)
-      : SSP_Service(stream, service_id, logger_tag, logger_header) {
+      : SSP_Service<Context>(stream, service_id, logger_tag, logger_header) {
     OnReceive([this, &stream](uint8_t addr, uint8_t* data, size_t len) {
       if (len < 1) {
         logger.Error("Invalid Length: %d", len);
