@@ -46,7 +46,7 @@ class ValueStoreService : public robotics::network::ssp::SSP_Service<Context> {
     });
   }
 
-  void AddController(uint32_t id, uint8_t remote,
+  void AddController(uint32_t id, Context remote,
                      robotics::node::GenericNode& node) {
     node.OnChanged([this, id, remote, &node]() {
       auto data = node.Encode();
