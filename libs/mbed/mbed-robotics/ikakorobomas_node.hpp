@@ -11,30 +11,32 @@ struct controller_param {
   float kp = 1.0;
   float ki = 0;
   float kd = 0;
-  float current_limit = 5.0;
+  float current_limit = 10.0;
   float omega = 1 * 2 * M_PI;
 };
 
 class IkakoRobomasNode {
-  static controller_param cprm;
-  static MotorParams *m3508;
+  controller_param cprm;
+  MotorParams *m3508;
 
  public:
   robotics::Node<float> velocity;
   MotorController *controller;
-  IkakoM3508 *super;
+  IkakoMotor *super;
 
  public:
+  template <
+      typename Motor,
+      std::enable_if_t<std::is_base_of<IkakoMotor, Motor>::value, bool> = true>
   IkakoRobomasNode(
-      int index
+      int index, Motor *motor
       // https://github.com/nnctroboticsclub/IkakoRobomasのm3という配列を指すポインタである
-      ) {
-
-    super = new IkakoM3508(index);
+  ) {
+    super = motor;
 
     m3508 = super->get_motor_params();
     m3508->D = 0.0;
-    m3508->J = 0.04;
+    m3508->J = 0.02;
 
     controller =
         new MotorController(ControlType::VELOCITY, m3508, cprm.Ts, cprm.omega);
@@ -49,9 +51,7 @@ class IkakoRobomasNode {
         });
   }
 
-  IkakoM3508& GetIkakoM3508() {
-    return *super;
-  }
+  IkakoMotor *GetMotor() { return super; }
 
   bool GetReadFlag() { return super->get_read_flag(); }
 
@@ -63,6 +63,3 @@ class IkakoRobomasNode {
     super->set_ref(controller->get_output());
   }
 };
-
-controller_param IkakoRobomasNode::cprm;
-MotorParams *IkakoRobomasNode::m3508;
