@@ -80,6 +80,8 @@ std::array<uint8_t, 4> NodeEncoder<bool>::Encode(bool value) {
   data[2] = 0;
   data[3] = value ? 1 : 0;
   inspector.Update(data);
+
+  return data;
 }
 
 template <>
