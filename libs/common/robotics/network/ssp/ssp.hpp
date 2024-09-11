@@ -58,9 +58,10 @@ class SerialServiceProtocol {
             return;
           }
 
-          uint8_t service_id = data[0] << 8;
+          uint8_t service_id = data[0];
 
           if (services_.find(service_id) == services_.end()) {
+            printf("Service not found: %02x\n", service_id);
             return;
           }
           auto service = services_[service_id];
