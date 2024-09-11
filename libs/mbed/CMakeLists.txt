@@ -50,4 +50,5 @@ target_sources(syoch-robotics PRIVATE
   robotics/node/BD621x.cpp
   robotics/node/BLDC.cpp
   robotics/types/pid_gains.cpp
+  robotics/types/joystick_2d.cpp
 )
