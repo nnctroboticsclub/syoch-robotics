@@ -8,12 +8,13 @@
 
 namespace robotics::network {
 namespace ssp {
-template <typename T>
+template <typename T, typename TxRet>
 class SerialServiceProtocol;
 
-template <typename Context = uint8_t>
-class SSP_Service : public Stream<uint8_t, Context> {
-  Stream<uint8_t, Context>& stream_;
+template <typename Context = uint8_t, typename TxRet = void>
+class SSP_Service : public Stream<uint8_t, Context, TxRet> {
+  using StreamType = Stream<uint8_t, Context, TxRet>;
+  StreamType& stream_;
 
   uint8_t service_id_;
 
@@ -21,16 +22,16 @@ class SSP_Service : public Stream<uint8_t, Context> {
   logger::Logger logger;
 
  private:
-  friend class SerialServiceProtocol<Context>;
+  friend class SerialServiceProtocol<Context, TxRet>;
 
  public:
-  SSP_Service(Stream<uint8_t, Context>& stream, uint8_t service_id,
-              const char* logger_tag, const char* logger_header)
-      : logger(logger_tag, logger_header),
-        stream_(stream),
-        service_id_(service_id) {}
+  SSP_Service(StreamType& stream, uint8_t service_id, const char* logger_tag,
+              const char* logger_header)
+      : stream_(stream),
+        service_id_(service_id),
+        logger(logger_tag, logger_header) {}
 
-  void Send(Context address, uint8_t* data, uint32_t length) override {
+  TxRet Send(Context address, uint8_t* data, uint32_t length) override {
     static uint8_t buffer[128] = {};
 
     buffer[0] = service_id_;
@@ -39,20 +40,20 @@ class SSP_Service : public Stream<uint8_t, Context> {
       buffer[1 + i] = data[i];
     }
 
-    stream_.Send(address, buffer, length + 1);
+    return stream_.Send(address, buffer, length + 1);
   }
 
   uint8_t GetServiceId() const { return service_id_; }
 };
 
-template <typename Context>
+template <typename Context, typename TxRet>
 class SerialServiceProtocol {
   logger::Logger logger;
-  Stream<uint8_t, Context>& stream_;
-  std::unordered_map<uint8_t, SSP_Service<Context>*> services_;
+  Stream<uint8_t, Context, TxRet>& stream_;
+  std::unordered_map<uint8_t, SSP_Service<Context, TxRet>*> services_;
 
  public:
-  SerialServiceProtocol(Stream<uint8_t, Context>& stream)
+  SerialServiceProtocol(Stream<uint8_t, Context, TxRet>& stream)
       : logger("ssp.nw.srobo1", "SerialServiceProtocol"), stream_(stream) {
     stream_.OnReceive(
         [this](Context from_addr, uint8_t* data, uint32_t length) {

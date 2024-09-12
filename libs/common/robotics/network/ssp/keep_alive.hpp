@@ -8,20 +8,21 @@
 #include <robotics/node/node.hpp>
 
 namespace robotics::network::ssp {
-template <typename Context>
-class KeepAliveService : public robotics::network::ssp::SSP_Service<Context> {
-  static float constexpr kConnectionLostTime = 1.0; // 10ms
-  static float constexpr kKeepAliveInterval = 0.5; // 20ms
+template <typename Context, typename TxRet = void>
+class KeepAliveService
+    : public robotics::network::ssp::SSP_Service<Context, TxRet> {
+  static float constexpr kConnectionLostTime = 0.4;  // 10ms
 
   float connection_lost_timer = 0;
+  // [target, float timer]
   std::unordered_map<Context, float> connection_keeped_timers;
 
  public:
   Node<bool> connection_available;
 
-  KeepAliveService(robotics::network::Stream<uint8_t, Context>& stream)
-      : SSP_Service<Context>(stream, 0x04, "keep_alive.svc.nw",
-                             "\x1b[32mKeepAliveService\x1b[m") {
+  KeepAliveService(robotics::network::Stream<uint8_t, Context, TxRet>& stream)
+      : SSP_Service<Context, TxRet>(stream, 0x04, "keep_alive.svc.nw",
+                                    "\x1b[32mKeepAliveService\x1b[m") {
     this->OnReceive([this, &stream](Context addr, uint8_t* data, size_t len) {
       connection_available.SetValue(true);
       connection_lost_timer = kConnectionLostTime;
@@ -36,15 +37,16 @@ class KeepAliveService : public robotics::network::ssp::SSP_Service<Context> {
 
     for (auto& [context, timer] : connection_keeped_timers) {
       timer += dt_s;
-      if (timer > kKeepAliveInterval) {
-        this->Send(context, nullptr, 0);
-        timer = 0;
-      }
     }
   }
 
-  void AddTarget(Context to) {
-    connection_keeped_timers[to] = 0;
+  void SendKeepAliveToAll() {
+    for (auto& [context, timer] : connection_keeped_timers) {
+      this->Send(context, nullptr, 0);
+      timer = 0;
+    }
   }
+
+  void AddTarget(Context to) { connection_keeped_timers[to] = 0; }
 };
 }  // namespace robotics::network::ssp

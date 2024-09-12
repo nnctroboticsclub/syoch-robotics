@@ -61,6 +61,8 @@ class Vector {
     return true;
   }
 
+  bool operator!=(Vector const& rhs) const { return !(*this == rhs); }
+
   T& operator[](int i) { return data_[i]; }
 
   T const& operator[](int i) const { return data_[i]; }

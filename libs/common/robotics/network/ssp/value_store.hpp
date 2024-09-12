@@ -11,8 +11,9 @@
 #include <robotics/controller/controller_base.hpp>
 
 namespace robotics::network::ssp {
-template <typename Context = uint8_t>
-class ValueStoreService : public robotics::network::ssp::SSP_Service<Context> {
+template <typename Context = uint8_t, typename TxRet = void>
+class ValueStoreService
+    : public robotics::network::ssp::SSP_Service<Context, TxRet> {
   union RxItem {
     uint8_t raw_data[8];
     struct {
@@ -31,9 +32,9 @@ class ValueStoreService : public robotics::network::ssp::SSP_Service<Context> {
   uint8_t tx_buffer[16];
 
  public:
-  ValueStoreService(robotics::network::Stream<uint8_t, Context>& stream)
-      : SSP_Service<Context>(stream, 0x23, "vs.svc.nw",
-                             "\x1b[33mValueStoreService\x1b[m") {
+  ValueStoreService(robotics::network::Stream<uint8_t, Context, TxRet>& stream)
+      : SSP_Service<Context, TxRet>(stream, 0x23, "vs.svc.nw",
+                                    "\x1b[33mValueStoreService\x1b[m") {
     this->OnReceive([this](Context addr, uint8_t* data, size_t len) {
       if (len == 0) {
         return;
