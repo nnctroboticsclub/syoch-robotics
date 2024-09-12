@@ -47,11 +47,13 @@ class SSP_Service : public Stream<uint8_t, Context> {
 
 template <typename Context>
 class SerialServiceProtocol {
+  logger::Logger logger;
   Stream<uint8_t, Context>& stream_;
   std::unordered_map<uint8_t, SSP_Service<Context>*> services_;
 
  public:
-  SerialServiceProtocol(Stream<uint8_t, Context>& stream) : stream_(stream) {
+  SerialServiceProtocol(Stream<uint8_t, Context>& stream)
+      : logger("ssp.nw.srobo1", "SerialServiceProtocol"), stream_(stream) {
     stream_.OnReceive(
         [this](Context from_addr, uint8_t* data, uint32_t length) {
           if (length < 1) {
@@ -61,7 +63,7 @@ class SerialServiceProtocol {
           uint8_t service_id = data[0];
 
           if (services_.find(service_id) == services_.end()) {
-            printf("Service not found: %02x\n", service_id);
+            logger.Error("Unknown service id: %d", service_id);
             return;
           }
           auto service = services_[service_id];
