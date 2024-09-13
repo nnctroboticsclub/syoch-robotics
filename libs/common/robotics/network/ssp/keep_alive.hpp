@@ -14,7 +14,6 @@ class KeepAliveService
   static float constexpr kConnectionLostTime = 0.4;  // 10ms
 
   float connection_lost_timer = 0;
-  // [target, float timer]
   std::unordered_map<Context, float> connection_keeped_timers;
 
  public:
@@ -23,10 +22,8 @@ class KeepAliveService
   KeepAliveService(robotics::network::Stream<uint8_t, Context, TxRet>& stream)
       : SSP_Service<Context, TxRet>(stream, 0x04, "keep_alive.svc.nw",
                                     "\x1b[32mKeepAliveService\x1b[m") {
-    this->OnReceive([this, &stream](Context addr, uint8_t* data, size_t len) {
-      connection_available.SetValue(true);
-      connection_lost_timer = kConnectionLostTime;
-    });
+    this->OnReceive(
+        [this](Context addr, uint8_t* data, size_t len) { TreatKeepAlive(); });
   }
 
   void Update(float dt_s) {
@@ -40,11 +37,21 @@ class KeepAliveService
     }
   }
 
+  void TreatKeepAlive() {
+    connection_available.SetValue(true);
+    connection_lost_timer = kConnectionLostTime;
+  }
+
   void SendKeepAliveToAll() {
     for (auto& [context, timer] : connection_keeped_timers) {
       this->Send(context, nullptr, 0);
       timer = 0;
     }
+  }
+
+  void SendKeepAliveTo(Context to) {
+    connection_keeped_timers[to] = 0;
+    this->Send(to, nullptr, 0);
   }
 
   void AddTarget(Context to) { connection_keeped_timers[to] = 0; }

@@ -29,12 +29,15 @@ class ValueStoreService
 
   std::unordered_map<uint32_t, RegisteredNode> nodes_;
 
+  std::function<void(Context, uint32_t)> on_node_received_;
+
   uint8_t tx_buffer[16];
 
  public:
   ValueStoreService(robotics::network::Stream<uint8_t, Context, TxRet>& stream)
       : SSP_Service<Context, TxRet>(stream, 0x23, "vs.svc.nw",
-                                    "\x1b[33mValueStoreService\x1b[m") {
+                                    "\x1b[33mValueStoreService\x1b[m"),
+        on_node_received_([](Context, uint32_t){}) {
     this->OnReceive([this](Context addr, uint8_t* data, size_t len) {
       if (len == 0) {
         return;
@@ -49,13 +52,20 @@ class ValueStoreService
         return;
       }
 
-      auto& node = nodes_[rx.id];
+      if (on_node_received_) {
+        on_node_received_(addr, rx.id);
+      }
 
+      auto& node = nodes_[rx.id];
       node.receiving = true;
       node.node->LoadFromBytes(
           {rx.data[0], rx.data[1], rx.data[2], rx.data[3]});
       node.receiving = false;
     });
+  }
+
+  void OnNodeReceived(std::function<void(Context, uint32_t)> callback) {
+    on_node_received_ = callback;
   }
 
   void AddController(uint32_t id, Context remote,

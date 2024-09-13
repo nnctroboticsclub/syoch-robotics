@@ -97,8 +97,6 @@ void LogHex(Level level, const uint8_t* data, size_t length) {
 void LoggerProcess() {
   static char level_header[12];
   if (!log_queue) {
-    using namespace std::chrono_literals;
-    robotics::system::SleepFor(1ms);
     return;
   }
 
