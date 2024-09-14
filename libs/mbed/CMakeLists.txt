@@ -48,6 +48,7 @@ target_sources(syoch-robotics PRIVATE
   robotics/node/node.cpp
   robotics/node/node_inspector.cpp
   robotics/node/BD621x.cpp
+  robotics/node/BD621xFull.cpp
   robotics/node/BLDC.cpp
   robotics/types/pid_gains.cpp
   robotics/types/joystick_2d.cpp
