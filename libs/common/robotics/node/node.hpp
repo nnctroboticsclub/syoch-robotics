@@ -43,7 +43,6 @@ class Node : public GenericNode {
   T value_;
   std::vector<Self*> linked_inputs_;
   std::vector<Callback> callbacks_;
-
   NodeEncoder<T> inspector;
 
  public:
@@ -55,18 +54,15 @@ class Node : public GenericNode {
   Node(Node<T>&) = delete;
   Node<T>& operator=(Node<T>&) = delete;
 
-  void SetValue(T value) {
-    if (value_ == value) {
+  void SetValue(T value, bool force_propagate = false) {
+    if (value != value_) {
+      value_ = value;
+      Propagate(force_propagate);
+
       return;
+    } else if (force_propagate) {
+      Propagate(true);
     }
-
-    value_ = value;
-
-    for (auto& callback : callbacks_) {
-      callback(value);
-    }
-
-    Propagate();
   }
 
   T GetValue() { return value_; }
@@ -79,9 +75,13 @@ class Node : public GenericNode {
     inspector.Link(input.inspector);
   }
 
-  void Propagate() {
+  void Propagate(bool force_propagate) {
+    for (auto& callback : callbacks_) {
+      callback(value_);
+    }
+
     for (auto& input : linked_inputs_) {
-      input->SetValue(value_);
+      input->SetValue(value_, force_propagate);
     }
   }
 
