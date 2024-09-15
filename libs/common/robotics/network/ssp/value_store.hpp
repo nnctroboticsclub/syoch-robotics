@@ -37,7 +37,7 @@ class ValueStoreService
   ValueStoreService(robotics::network::Stream<uint8_t, Context, TxRet>& stream)
       : SSP_Service<Context, TxRet>(stream, 0x23, "vs.svc.nw",
                                     "\x1b[33mValueStoreService\x1b[m"),
-        on_node_received_([](Context, uint32_t){}) {
+        on_node_received_([](Context, uint32_t) {}) {
     this->OnReceive([this](Context addr, uint8_t* data, size_t len) {
       if (len == 0) {
         return;
