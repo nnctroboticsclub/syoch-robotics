@@ -36,7 +36,7 @@ class IkakoRobomasNode {
 
     m3508 = super->get_motor_params();
     m3508->D = 0.0;
-    m3508->J = 0.02;
+    m3508->J = 0.04;
 
     controller =
         new MotorController(ControlType::VELOCITY, m3508, cprm.Ts, cprm.omega);
@@ -47,7 +47,7 @@ class IkakoRobomasNode {
     velocity.SetChangeCallback(
         [this](float velo) {  // veloとかは引数の名前で勝手に定義してよい
           // 処理をかけ
-          controller->set_reference(velo);
+          controller->set_reference(velo * 20);
         });
   }
 
