@@ -1,0 +1,7 @@
+add_subdirectory(dcan)
+add_subdirectory(fep)
+add_subdirectory(ssp)
+add_subdirectory(rep)
+add_subdirectory(froute)
+add_subdirectory(mbed-uart)
+add_subdirectory(mbed-simple-can)
