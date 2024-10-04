@@ -1,4 +1,6 @@
-if (${SYOCH_ROBOTICS_TARGET} STREQUAL "Mbed")
+if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
+  # find_package(StaticMbedOS REQUIRED)
+
   add_compile_definitions(
     __MBED__
   )
@@ -7,7 +9,7 @@ if (${SYOCH_ROBOTICS_TARGET} STREQUAL "Mbed")
     "${SYOCH_ROBOTICS_DEPENDENCIES}"
     static-mbed-os
   )
-elseif (${SYOCH_ROBOTICS_TARGET} STREQUAL "ESP")
+elseif ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "ESP")
   add_compile_definitions(
     ESP_PLATFORM
   )
@@ -15,7 +17,7 @@ elseif (${SYOCH_ROBOTICS_TARGET} STREQUAL "ESP")
   set(SYOCH_ROBOTICS_DEPENDENCIES
     "${SYOCH_ROBOTICS_DEPENDENCIES}"
   )
-elseif (${SYOCH_ROBOTICS_TARGET} STREQUAL "STM32 HAL")
+elseif ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "STM32 HAL")
   add_compile_definitions(
     __STM32__
     __HAL__

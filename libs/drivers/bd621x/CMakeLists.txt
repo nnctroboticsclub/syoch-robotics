@@ -10,5 +10,4 @@ target_include_directories(bd621x PUBLIC
 target_link_libraries(bd621x PRIVATE
   syoch-robotics-gpio
   syoch-robotics-common
-  static-mbed-os
 )

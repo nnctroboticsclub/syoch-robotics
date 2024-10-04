@@ -1,7 +1,7 @@
 add_library(syoch-robotics-simple-can STATIC)
 
 target_link_libraries(syoch-robotics-simple-can PRIVATE
-  static-mbed-os
+  StaticMbedOS
 )
 
 target_link_libraries(syoch-robotics-simple-can PUBLIC
