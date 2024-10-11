@@ -10,9 +10,8 @@
 
 namespace robotics::network {
 class SimpleCAN : public CANBase {
- public:
- private:
   CAN can_;
+  bool is_can_extended_ = false;
   int freqency_ = 50E3;
 
   std::vector<RxCallback> rx_callbacks_;
@@ -31,10 +30,16 @@ class SimpleCAN : public CANBase {
     }
 
     CANMessage msg;
+    msg.format =
+        is_can_extended_ ? CANFormat::CANExtended : CANFormat::CANStandard;
     msg.id = id;
     msg.len = data.size();
     std::copy(data.begin(), data.end(), msg.data);
     return can_.write(msg);
+  }
+
+  void SetCANExtended(bool is_can_extended) {
+    is_can_extended_ = is_can_extended;
   }
 
   SimpleCAN(PinName rx, PinName tx, int freqency = 50E3);
