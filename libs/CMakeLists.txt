@@ -16,6 +16,9 @@ elseif ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "ESP")
 
   set(SYOCH_ROBOTICS_DEPENDENCIES
     "${SYOCH_ROBOTICS_DEPENDENCIES}"
+    __idf_driver
+    __idf_freertos
+    __idf_esp_timer
   )
 elseif ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "STM32 HAL")
   add_compile_definitions(

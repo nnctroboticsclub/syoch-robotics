@@ -1,5 +1,7 @@
 #include <bd621x/BD621xFull.hpp>
 
+#include <chrono>
+
 using namespace std::chrono_literals;
 
 namespace robotics::node {

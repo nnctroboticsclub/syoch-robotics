@@ -22,7 +22,7 @@ class Thread::Impl {
 #elif defined(__MBED__)
 #include "thread.mbed.hpp"
 #elif defined(ESP_PLATFORM)
-#include "thread.idf.hpp"
+#error "Not implemented"
 #else
 #error "Not implemented"
 #endif

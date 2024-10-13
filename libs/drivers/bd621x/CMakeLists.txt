@@ -9,5 +9,8 @@ target_include_directories(bd621x PUBLIC
 
 target_link_libraries(bd621x PRIVATE
   syoch-robotics-gpio
+)
+
+target_link_libraries(bd621x PUBLIC
   syoch-robotics-common
 )
