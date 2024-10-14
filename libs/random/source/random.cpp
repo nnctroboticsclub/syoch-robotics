@@ -34,5 +34,5 @@ Random* Random::instance = nullptr;
 #elif defined(__MBED__)
 #include "random.mbed.hpp"
 #elif defined(ESP_PLATFORM)
-#error "Not implemented"
+#include "random.idf.hpp"
 #endif
