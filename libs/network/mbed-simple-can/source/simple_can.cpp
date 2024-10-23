@@ -2,8 +2,14 @@
 
 namespace robotics::network {
 void SimpleCAN::ThreadMain() {
+  this->thread_running_ = true;
   CANMessage msg;
-  while (1) {
+  while (true) {
+    if (this->thread_stop_) {
+      this->thread_running_ = false;
+      return;
+    }
+
     if (can_.rderror() || can_.tderror()) {
       can_.reset();
       ThisThread::sleep_for(10ms);
@@ -26,9 +32,24 @@ void SimpleCAN::ThreadMain() {
 SimpleCAN::SimpleCAN(PinName rx, PinName tx, int freqency)
     : can_(rx, tx, freqency), freqency_(freqency) {}
 
+SimpleCAN::~SimpleCAN() {
+  printf("SimpleCAN::~SimpleCAN()\n");
+  if (thread_) {
+    thread_stop_ = true;
+    while (thread_running_) {
+      ThisThread::sleep_for(1ms);
+    }
+    delete thread_;
+  }
+}
+
 void SimpleCAN::Init() {
-  thread_ = new Thread(osPriorityNormal, 1024 * 4);
-  thread_->start(callback(this, &SimpleCAN::ThreadMain));
+  thread_ = new Thread(osPriorityNormal, 0x800);
+  thread_->start([this] { ThreadMain(); });
+
+  while (!thread_running_) {
+    ThisThread::sleep_for(1ms);
+  }
 }
 
 void SimpleCAN::OnRx(RxCallback cb) { rx_callbacks_.emplace_back(cb); }

@@ -14,6 +14,9 @@ class SimpleCAN : public CANBase {
   bool is_can_extended_ = false;
   int freqency_ = 50E3;
 
+  bool thread_stop_ = false;
+  bool thread_running_ = false;
+
   std::vector<RxCallback> rx_callbacks_;
   std::vector<TxCallback> tx_callbacks_;
   std::vector<IdleCallback> idle_callbacks_;
@@ -43,6 +46,7 @@ class SimpleCAN : public CANBase {
   }
 
   SimpleCAN(PinName rx, PinName tx, int freqency = 50E3);
+  ~SimpleCAN();
 
   void Init() override;
 
