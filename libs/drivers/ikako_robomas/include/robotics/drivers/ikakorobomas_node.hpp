@@ -11,16 +11,17 @@ struct controller_param {
   float kp = 1.0;
   float ki = 0;
   float kd = 0;
-  float current_limit = 10.0;
+  float current_limit = 20.0;
   float omega = 1 * 2 * M_PI;
 };
 
 class IkakoRobomasNode {
   controller_param cprm;
-  MotorParams *m3508;
+  MotorParams *motor_params;
 
  public:
   robotics::Node<float> velocity;
+  robotics::Node<float> factor;
   MotorController *controller;
   IkakoMotor *super;
 
@@ -29,17 +30,22 @@ class IkakoRobomasNode {
       typename Motor,
       std::enable_if_t<std::is_base_of<IkakoMotor, Motor>::value, bool> = true>
   IkakoRobomasNode(
-      int index, Motor *motor
+      int index, Motor *motor, float current_limit = 20.0f
       // https://github.com/nnctroboticsclub/IkakoRobomasのm3という配列を指すポインタである
   ) {
+    factor.SetValue(0.0f);
+    velocity.SetValue(0.0f);
+
     super = motor;
 
-    m3508 = super->get_motor_params();
-    m3508->D = 0.0;
-    m3508->J = 0.04;
+    motor_params = super->get_motor_params();
+    motor_params->D = 0.0;
+    motor_params->J = 0.04;
 
-    controller =
-        new MotorController(ControlType::VELOCITY, m3508, cprm.Ts, cprm.omega);
+    cprm.current_limit = current_limit;
+
+    controller = new MotorController(ControlType::VELOCITY, motor_params,
+                                     cprm.Ts, cprm.omega);
     controller->set_limit(-cprm.current_limit, cprm.current_limit);
     controller->set_pid_gain(cprm.kp, cprm.ki, cprm.kd);
     controller->start();
@@ -47,7 +53,7 @@ class IkakoRobomasNode {
     velocity.SetChangeCallback(
         [this](float velo) {  // veloとかは引数の名前で勝手に定義してよい
           // 処理をかけ
-          controller->set_reference(velo * 20);
+          controller->set_reference(velo * 50 * factor.GetValue());
         });
   }
 
