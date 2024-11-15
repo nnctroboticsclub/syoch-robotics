@@ -30,6 +30,22 @@ class GenericLogger {
 
   void Hex(core::Level level, const uint8_t* data, size_t length);
 
+  inline void HexInfo(const uint8_t* data, size_t length) {
+    Hex(core::Level::kInfo, data, length);
+  }
+  inline void HexError(const uint8_t* data, size_t length) {
+    Hex(core::Level::kError, data, length);
+  }
+  inline void HexDebug(const uint8_t* data, size_t length) {
+    Hex(core::Level::kDebug, data, length);
+  }
+  inline void HexTrace(const uint8_t* data, size_t length) {
+    Hex(core::Level::kTrace, data, length);
+  }
+  inline void HexVerbose(const uint8_t* data, size_t length) {
+    Hex(core::Level::kVerbose, data, length);
+  }
+
   static GenericLogger* GetLogger(const char* id);
 };
 
