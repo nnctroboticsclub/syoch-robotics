@@ -23,6 +23,8 @@ class Thread::Impl {
 #include "thread.mbed.hpp"
 #elif defined(ESP_PLATFORM)
 #error "Not implemented"
+#elif defined(__EMULATION__)
+#include "thread.host.hpp"
 #else
 #error "Not implemented"
 #endif

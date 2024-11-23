@@ -29,6 +29,14 @@ elseif ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "STM32 HAL")
   set(SYOCH_ROBOTICS_DEPENDENCIES
     "${SYOCH_ROBOTICS_DEPENDENCIES}"
   )
+elseif ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Emulation")
+  add_compile_definitions(
+    __EMULATION__
+  )
+
+  set(SYOCH_ROBOTICS_DEPENDENCIES
+    "${SYOCH_ROBOTICS_DEPENDENCIES}"
+  )
 else()
   message(FATAL_ERROR "Unknown SYOCH_ROBOTICS_TARGET: ${SYOCH_ROBOTICS_TARGET}")
 endif()
@@ -38,7 +46,10 @@ endif()
 add_subdirectory(common)
 add_subdirectory(logger)
 add_subdirectory(thread)
-add_subdirectory(drivers)
-add_subdirectory(network)
-add_subdirectory(timer)
-add_subdirectory(random)
+
+if (NOT "${SYOCH_ROBOTICS_TARGET}" STREQUAL "Emulation")
+  add_subdirectory(drivers)
+  add_subdirectory(network)
+  add_subdirectory(timer)
+  add_subdirectory(random)
+endif()
