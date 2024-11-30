@@ -60,6 +60,8 @@ GenericLogger::GenericLogger(const char* id, const char* tag)
   }
 }
 
+void GenericLogger::RenameTag(const char* new_tag) { tag = new_tag; }
+
 void GenericLogger::Supress() { supressed = true; }
 
 void GenericLogger::Resume() { supressed = false; }

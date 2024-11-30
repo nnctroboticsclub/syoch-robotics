@@ -18,6 +18,8 @@ class GenericLogger {
  public:
   GenericLogger(const char* id, const char* tag);
 
+  void RenameTag(const char* new_tag);
+
   void Supress();
   void Resume();
 
