@@ -1,6 +1,7 @@
 #include <robotics/thread/thread.hpp>
 
 #include <thread>
+#include <pthread.h>
 
 namespace robotics::system {
 
@@ -25,6 +26,10 @@ class Thread::Impl {
       args->function();
       delete args;
     });
+
+    if (name_) {
+      pthread_setname_np(thread_->native_handle(), name_);
+    }
   }
 
   void SetStackSize(size_t size) { this->stack_size_ = size; }
