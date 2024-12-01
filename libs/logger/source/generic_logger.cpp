@@ -17,11 +17,9 @@ void GenericLogger::_Log(core::Level level, const char* fmt, va_list args) {
 
   static char line[512] = {};
 
-  char* ptr = line;
-  ptr += snprintf(ptr, sizeof(line), "[%s] ", tag);
-  ptr += vsnprintf(ptr, sizeof(line) - (ptr - line), fmt, args);
+  auto line_len = vsnprintf(line, sizeof(line), fmt, args);
 
-  core::Log(level, line);
+  core::Log(level, tcb::span<const char>(tag, strlen(tag)), line);
 }
 
 void GenericLogger::_LogHex(core::Level level, const uint8_t* buf,
@@ -29,24 +27,27 @@ void GenericLogger::_LogHex(core::Level level, const uint8_t* buf,
   if (supressed) return;
   if (size == 0) return;
 
-  static char buffer[512] = {};
-
   auto lines = size / 16;
   for (size_t line = 0; line <= lines; line++) {
+    static char buffer[512] = {};
+
     char* ptr = buffer;
-    ptr += snprintf(ptr, sizeof(buffer), "[%s] ___| ", tag);
+    strncpy(ptr, "___| ", 5);
 
     for (int i = 0; i < 16 && line * 16 + i < size; i++) {
-      ptr += snprintf(ptr, sizeof(buffer) - (ptr - buffer), "%02X",
-                      buf[line * 16 + i]);
+      auto ch = buf[line * 16 + i];
+      *(ptr++) = "0123456789ABCDEF"[ch >> 4];
+      *(ptr++) = "0123456789ABCDEF"[ch & 0x0F];
+
       if (i % 4 == 3) {
-        ptr += snprintf(ptr, sizeof(buffer) - (ptr - buffer), " ");
+        *(ptr++) = ' ';
       }
     }
 
     *ptr = '\0';
 
-    core::Log(level, buffer);
+    core::Log(level, tcb::span<const char>(tag, strlen(tag)),
+              tcb::span<const char>(buffer, size));
   }
 }
 

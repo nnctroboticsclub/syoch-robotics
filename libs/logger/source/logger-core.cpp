@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdint>
 #include <cstring>
+#include <span>
 
 #ifdef USE_THREAD
 #include <robotics/thread/thread.hpp>
@@ -15,119 +16,115 @@ const size_t kLogRingBufferSize = 0x8000;  // 32KB
 const size_t kLogLineSize = 0x200;         // 512 bytes
 const size_t kMaxLogLines = 200;
 
-char log_ring_buffer[kLogRingBufferSize];
-char log_line[kLogLineSize];
+char log_ring_buffer[kLogRingBufferSize] = {};
 
 size_t log_head = 0;
 
-void UseLine(size_t start, size_t length) {
-  memset(log_line, 0, sizeof(log_line));
-  for (size_t offset = 0; offset < length; offset++) {
-    size_t logical_index = start + offset;
-    size_t index = logical_index % kLogRingBufferSize;
+void UseLine(size_t start, size_t length, char* dest) {
+  size_t offset;
 
-    log_line[offset] = log_ring_buffer[index];
-    log_ring_buffer[index] = 0;
+  for (offset = 0; offset < length; offset++) {
+    size_t index = (start + offset) % kLogRingBufferSize;
+
+    dest[offset] = log_ring_buffer[index];
   }
+
+  dest[offset] = 0;  // null-terminate for c-style strings
 }
 
-size_t PasteToRing(const char* line, size_t length) {
+tcb::span<char> PasteToRing(tcb::span<const char> text) {
   size_t start = log_head;
-  for (size_t offset = 0; offset < length; offset++) {
-    size_t logical_index = start + offset;
-    size_t index = logical_index % kLogRingBufferSize;
+  for (size_t offset = 0; offset < text.size(); offset++) {
+    size_t index = (start + offset) % kLogRingBufferSize;
 
-    log_ring_buffer[index] = line[offset];
+    log_ring_buffer[index] = text[offset];
   }
 
-  log_head = (start + length) % kLogRingBufferSize;
+  log_head = (start + text.size()) % kLogRingBufferSize;
 
-  return start;
+  return {log_ring_buffer + start, text.size()};
 }
 }  // namespace
 
 namespace robotics::logger::core {
 
 struct LogLine {
-  size_t data_start = 0;
-  size_t length = 0;
   Level level;
-  LogLine(const char* data = nullptr, Level level = Level::kInfo)
-      : level(level) {
-    if (data) {
-      data_start = PasteToRing(data, strlen(data));
-      length = strlen(data);
-    }
-  }
+  tcb::span<const char> tag;
+  tcb::span<const char> msg;
 
-  void operator=(const char* str) {
-    data_start = PasteToRing(str, strlen(str));
-    length = strlen(str);
-  }
+  LogLine() = default;
+
+  LogLine(tcb::span<const char> tag, tcb::span<const char> msg,
+          Level level = Level::kInfo)
+      : level(level), tag(PasteToRing(tag)), msg(PasteToRing(msg)) {}
 };
 
 using LogQueue = robotics::utils::NoMutexLIFO<LogLine, kMaxLogLines>;
 
 LogQueue* log_queue = nullptr;
 
-void Log(Level level, char* line) {
+void Log(Level level, tcb::span<const char> tag, tcb::span<const char> msg) {
   if (!log_queue) return;
 
-  LogLine line_{line, level};
-
-  log_queue->Push(line_);
+  log_queue->Push(LogLine(tag, msg, level));
 }
 
-void LogHex(Level level, const uint8_t* data, size_t length) {
+void LogHex(Level level, tcb::span<const char> tag, tcb::span<uint8_t> data) {
   static char buffer[kLogLineSize];
   if (!log_queue) return;
 
-  LogLine line{nullptr, level};
-  line.length = 0;
-
-  for (size_t i = 0; i < length; i++) {
-    line.length += snprintf(buffer + line.length, sizeof(buffer) - line.length,
-                            "%02X", data[i]);
+  auto ptr = buffer;
+  for (auto const& byte : tag) {
+    *(ptr++) = "0123456789ABCDEF"[byte >> 4];
+    *(ptr++) = "0123456789ABCDEF"[byte & 0x0F];
   }
 
-  line = buffer;
-
-  log_queue->Push(line);
+  log_queue->Push(LogLine(tag, {buffer, 2 * data.size()}, level));
 }
 
 void LoggerProcess() {
   static char level_header[12];
+  // '\e'  '['  '1'  ';'  '3'  'X'  'm'  'X'
+  // '\e'  '['  'm' '\0'
+
   if (!log_queue) {
     return;
   }
 
-  for (int i = 0; !log_queue->Empty(); i++) {
+  while (!log_queue->Empty()) {
+
     auto line = log_queue->Pop();
 
     switch (line.level) {
       case Level::kError:
-        snprintf(level_header, sizeof(level_header), "\x1b[1;31mE\x1b[m");
+        strncpy(level_header, "\x1b[1;31mE\x1b[m", sizeof(level_header));
         break;
       case Level::kInfo:
-        snprintf(level_header, sizeof(level_header), "\x1b[1;32mI\x1b[m");
+        strncpy(level_header, "\x1b[1;32mI\x1b[m", sizeof(level_header));
         break;
       case Level::kVerbose:
-        snprintf(level_header, sizeof(level_header), "\x1b[1;34mV\x1b[m");
+        strncpy(level_header, "\x1b[1;34mV\x1b[m", sizeof(level_header));
         break;
       case Level::kDebug:
-        snprintf(level_header, sizeof(level_header), "\x1b[1;36mD\x1b[m");
+        strncpy(level_header, "\x1b[1;36mD\x1b[m", sizeof(level_header));
         break;
       case Level::kTrace:
-        snprintf(level_header, sizeof(level_header), "\x1b[1;35mT\x1b[m");
+        strncpy(level_header, "\x1b[1;35mT\x1b[m", sizeof(level_header));
         break;
 
       default:
-        snprintf(level_header, sizeof(level_header), "\x1b[1;37m?\x1b[m");
+        strncpy(level_header, "\x1b[1;37m?\x1b[m", sizeof(level_header));
         break;
     }
 
-    UseLine(line.data_start, line.length);
-    printf("%s %s\n", level_header, log_line);
+    static char tag_buf[64];
+    static char msg_buf[kLogLineSize];
+
+    UseLine(line.tag.data() - log_ring_buffer, line.tag.size(), tag_buf);
+    UseLine(line.msg.data() - log_ring_buffer, line.msg.size(), msg_buf);
+
+    printf("%s [%s]: %s\n", level_header, tag_buf, msg_buf);
   }
 }
 
@@ -138,11 +135,12 @@ void Thread() {
 }
 
 void Init() {
+  static auto dummy_log_line = LogLine({}, {});
   if (log_queue) return;
 
   log_queue = new LogQueue();
   while (!log_queue->Full()) {
-    log_queue->Push({""});
+    log_queue->Push(dummy_log_line);
   }
 
   while (!log_queue->Empty()) {

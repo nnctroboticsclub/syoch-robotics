@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tcb/span.hpp>
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -7,8 +9,8 @@ namespace robotics::logger::core {
 
 enum class Level { kError, kInfo, kVerbose, kDebug, kTrace };
 
-void Log(Level level, char* line);
-void LogHex(Level level, const uint8_t* data, size_t length);
+void Log(Level level, tcb::span<const char> tag, tcb::span<const char> msg);
+void LogHex(Level level, tcb::span<const char> tag, tcb::span<uint8_t> msg);
 
 #ifdef USE_THREAD
 void StartLoggerThread();
