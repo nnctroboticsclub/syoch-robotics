@@ -11,6 +11,8 @@
 
 #include <robotics/utils/no_mutex_lifo.hpp>
 
+#include <logger/log_sink.hpp>
+
 namespace {
 const size_t kLogRingBufferSize = 0x8000;  // 32KB
 const size_t kLogLineSize = 0x200;         // 512 bytes
@@ -84,39 +86,12 @@ void LogHex(Level level, tcb::span<const char> tag, tcb::span<uint8_t> data) {
 }
 
 void LoggerProcess() {
-  static char level_header[12];
-  // '\e'  '['  '1'  ';'  '3'  'X'  'm'  'X'
-  // '\e'  '['  'm' '\0'
-
   if (!log_queue) {
     return;
   }
 
   while (!log_queue->Empty()) {
-
     auto line = log_queue->Pop();
-
-    switch (line.level) {
-      case Level::kError:
-        strncpy(level_header, "\x1b[1;31mE\x1b[m", sizeof(level_header));
-        break;
-      case Level::kInfo:
-        strncpy(level_header, "\x1b[1;32mI\x1b[m", sizeof(level_header));
-        break;
-      case Level::kVerbose:
-        strncpy(level_header, "\x1b[1;34mV\x1b[m", sizeof(level_header));
-        break;
-      case Level::kDebug:
-        strncpy(level_header, "\x1b[1;36mD\x1b[m", sizeof(level_header));
-        break;
-      case Level::kTrace:
-        strncpy(level_header, "\x1b[1;35mT\x1b[m", sizeof(level_header));
-        break;
-
-      default:
-        strncpy(level_header, "\x1b[1;37m?\x1b[m", sizeof(level_header));
-        break;
-    }
 
     static char tag_buf[64];
     static char msg_buf[kLogLineSize];
@@ -124,7 +99,7 @@ void LoggerProcess() {
     UseLine(line.tag.data() - log_ring_buffer, line.tag.size(), tag_buf);
     UseLine(line.msg.data() - log_ring_buffer, line.msg.size(), msg_buf);
 
-    printf("%s [%s]: %s\n", level_header, tag_buf, msg_buf);
+    global_log_sink->Log(line.level, tag_buf, msg_buf);
   }
 }
 

@@ -9,4 +9,12 @@ class LogSink {
 
   virtual void Log(core::Level level, const char* tag, const char* msg) = 0;
 };
-}
+
+class StdoutSink : public LogSink {
+ public:
+  void Log(core::Level level, const char* tag, const char* msg) override;
+};
+
+extern LogSink* global_log_sink;
+
+}  // namespace robotics::logger
