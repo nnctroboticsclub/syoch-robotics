@@ -6,6 +6,8 @@
 
 #include <robotics/utils/no_mutex_lifo.hpp>
 
+#include <tcb/span.hpp>
+
 namespace robotics::logger {
 
 static GenericLogger* loggers[64] = {
@@ -19,7 +21,7 @@ void GenericLogger::_Log(core::Level level, const char* fmt, va_list args) {
 
   auto line_len = vsnprintf(line, sizeof(line), fmt, args);
 
-  core::Log(level, tcb::span<const char>(tag, strlen(tag)), line);
+  core::Log(level, tag, line);
 }
 
 void GenericLogger::_LogHex(core::Level level, const uint8_t* buf,
@@ -46,8 +48,7 @@ void GenericLogger::_LogHex(core::Level level, const uint8_t* buf,
 
     *ptr = '\0';
 
-    core::Log(level, tcb::span<const char>(tag, strlen(tag)),
-              tcb::span<const char>(buffer, size));
+    core::Log(level, tag, buffer);
   }
 }
 

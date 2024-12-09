@@ -1,4 +1,4 @@
-find_package(tcb_span)
+find_package(tcb_span REQUIRED)
 
 add_library(syoch-robotics-logger STATIC
   source/char_logger.cpp

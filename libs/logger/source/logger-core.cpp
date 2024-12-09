@@ -5,6 +5,8 @@
 #include <cstring>
 #include <span>
 
+#include <tcb/span.hpp>
+
 #ifdef USE_THREAD
 #include <robotics/thread/thread.hpp>
 #endif
@@ -66,23 +68,23 @@ using LogQueue = robotics::utils::NoMutexLIFO<LogLine, kMaxLogLines>;
 
 LogQueue* log_queue = nullptr;
 
-void Log(Level level, tcb::span<const char> tag, tcb::span<const char> msg) {
+void Log(Level level, const char* tag, const char* msg) {
   if (!log_queue) return;
 
-  log_queue->Push(LogLine(tag, msg, level));
+  log_queue->Push(LogLine({tag, strlen(tag)}, {msg, strlen(msg)}, level));
 }
 
-void LogHex(Level level, tcb::span<const char> tag, tcb::span<uint8_t> data) {
+void LogHex(Level level, const char* tag, uint8_t* data, uint32_t length) {
   static char buffer[kLogLineSize];
   if (!log_queue) return;
 
-  auto ptr = buffer;
-  for (auto const& byte : tag) {
-    *(ptr++) = "0123456789ABCDEF"[byte >> 4];
-    *(ptr++) = "0123456789ABCDEF"[byte & 0x0F];
+  auto text_ptr = buffer;
+  for (auto* data_ptr = data; data_ptr < data + length; data_ptr++) {
+    *(text_ptr++) = "0123456789ABCDEF"[*data_ptr >> 4];
+    *(text_ptr++) = "0123456789ABCDEF"[*data_ptr & 0x0F];
   }
 
-  log_queue->Push(LogLine(tag, {buffer, 2 * data.size()}, level));
+  log_queue->Push(LogLine({tag, strlen(tag)}, {buffer, 2 * length}, level));
 }
 
 void LoggerProcess() {
