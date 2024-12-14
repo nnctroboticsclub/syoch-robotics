@@ -9,3 +9,5 @@ add_library(syoch-robotics-common STATIC
 target_include_directories(syoch-robotics-common PUBLIC
   "./include"
 )
+
+set_property(TARGET syoch-robotics-common PROPERTY CXX_STANDARD 20)

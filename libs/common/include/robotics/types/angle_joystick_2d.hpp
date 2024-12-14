@@ -1,4 +1,7 @@
 #pragma once
+
+#include <robotics/node/node.hpp>
+
 namespace robotics {
 inline namespace types {
 
@@ -15,4 +18,11 @@ class AngleStick2D {
 };
 
 }  // namespace types
+
+namespace node {
+template <>
+struct NodeEncoderExistsType<AngleStick2D> {
+  using value = std::true_type;
+};
+}  // namespace node
 }  // namespace robotics

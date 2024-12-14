@@ -2,6 +2,8 @@
 
 #include "vector.hpp"
 
+#include <robotics/node/node.hpp>
+
 namespace robotics {
 inline namespace types {
 
@@ -31,4 +33,11 @@ struct PIDGains {
 };
 
 }  // namespace types
+
+namespace node {
+template <>
+struct NodeEncoderExistsType<PIDGains> {
+  using value = std::true_type;
+};
+}  // namespace node
 }  // namespace robotics

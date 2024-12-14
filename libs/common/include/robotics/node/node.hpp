@@ -17,6 +17,34 @@ class NodeEncoder {
   T Decode(std::array<uint8_t, 4> data);
 };
 
+template <typename T>
+struct NodeEncoderExistsType {
+  using value = std::false_type;
+};
+
+template <>
+struct NodeEncoderExistsType<int> {
+  using value = std::true_type;
+};
+
+template <>
+struct NodeEncoderExistsType<float> {
+  using value = std::true_type;
+};
+
+template <>
+struct NodeEncoderExistsType<double> {
+  using value = std::true_type;
+};
+
+template <typename T>
+using NodeEncoderExists_v = typename NodeEncoderExistsType<T>::value;
+
+template <class T>
+concept NodeEncodeExists = requires(T t) {
+  { NodeEncoderExists_v<T>{} };
+};
+
 class GenericNode {
  public:
   ~GenericNode();
@@ -26,7 +54,7 @@ class GenericNode {
   virtual void OnChanged(std::function<void()> data) = 0;
 };
 
-template <typename T>
+template <NodeEncodeExists T>
 class Node : public GenericNode {
  private:
   using Self = Node<T>;
