@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include <array>
 #include <functional>
 #include <vector>
 
@@ -11,7 +12,7 @@ namespace node {
 template <typename T>
 class NodeEncoder {
  public:
-  NodeEncoder() {}
+  NodeEncoder() = default;
 
   std::array<uint8_t, 4> Encode(T value);
   T Decode(std::array<uint8_t, 4> data);
@@ -42,7 +43,7 @@ using NodeEncoderExists_v = typename NodeEncoderExistsType<T>::value;
 
 template <class T>
 concept NodeEncodeExists = requires(T t) {
-  { NodeEncoderExists_v<T>{} };
+  {NodeEncoderExists_v<T>{}};
 };
 
 class GenericNode {
