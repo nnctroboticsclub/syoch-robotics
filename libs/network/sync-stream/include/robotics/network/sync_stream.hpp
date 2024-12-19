@@ -1,10 +1,13 @@
 #pragma once
 
+#include <chrono>
 #include <coroutine>
 #include <functional>
 #include <optional>
 #include <queue>
 #include <vector>
+
+#include <robotics/thread/thread.hpp>
 
 namespace robotics::network {
 template <typename T>
@@ -61,6 +64,17 @@ class SyncStream {
 
   /// @brief 非同期でデータを受信する
   auto ReceiveAsync() -> RecvAwaiter { return RecvAwaiter(*this); }
+
+  /// @brief 同期でデータを受信する
+  auto ReceiveSync() -> T {
+    using namespace std::chrono_literals;
+    while (true) {
+      if (auto ret = Receive(); ret.has_value()) {
+        return ret.value();
+      }
+      robotics::system::SleepFor(10ms);
+    }
+  }
 
   /// @brief コンパイル時にデータ長さが決まっている配列を受信する
   template <size_t N>
