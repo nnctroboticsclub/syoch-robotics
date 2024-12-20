@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
 
 namespace robotics::network {
 // FNV-1A
@@ -37,7 +38,7 @@ class RD16 {
     return rd16;
   }
 
-  uint16_t Get() const { return current; }
+  [[nodiscard]] uint16_t Get() const { return current; }
 
   void Set(uint16_t x) { current = x; }
 };
