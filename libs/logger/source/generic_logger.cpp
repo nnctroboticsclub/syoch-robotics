@@ -1,7 +1,7 @@
 #include <logger/generic_logger.hpp>
 
-#include <cstdio>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 
 #include <robotics/utils/no_mutex_lifo.hpp>
@@ -15,26 +15,29 @@ static GenericLogger* loggers[64] = {
 };
 
 void GenericLogger::_Log(core::Level level, const char* fmt, va_list args) {
-  if (supressed) return;
+  if (supressed)
+    return;
 
   static char line[512] = {};
 
-  auto line_len = vsnprintf(line, sizeof(line), fmt, args);
+  vsnprintf(line, sizeof(line), fmt, args);
 
   core::Log(level, tag, line);
 }
 
 void GenericLogger::_LogHex(core::Level level, const uint8_t* buf,
                             size_t size) {
-  if (supressed) return;
-  if (size == 0) return;
+  if (supressed)
+    return;
+  if (size == 0)
+    return;
 
   auto lines = size / 16;
   for (size_t line = 0; line <= lines; line++) {
     static char buffer[512] = {};
 
     char* ptr = buffer;
-    strncpy(ptr, "___| ", 5);
+    strncpy(ptr, "___| ", 6);
 
     for (int i = 0; i < 16 && line * 16 + i < size; i++) {
       auto ch = buf[line * 16 + i];
@@ -62,11 +65,17 @@ GenericLogger::GenericLogger(const char* id, const char* tag)
   }
 }
 
-void GenericLogger::RenameTag(const char* new_tag) { tag = new_tag; }
+void GenericLogger::RenameTag(const char* new_tag) {
+  tag = new_tag;
+}
 
-void GenericLogger::Supress() { supressed = true; }
+void GenericLogger::Supress() {
+  supressed = true;
+}
 
-void GenericLogger::Resume() { supressed = false; }
+void GenericLogger::Resume() {
+  supressed = false;
+}
 
 void GenericLogger::Log(core::Level level, const char* fmt, ...) {
   va_list args;
@@ -123,7 +132,8 @@ void GenericLogger::Verbose(const char* fmt, ...) {
 }
 
 void GenericLogger::Hex(core::Level level, const uint8_t* data, size_t length) {
-  if (supressed) return;
+  if (supressed)
+    return;
   _LogHex(level, data, length);
 }
 

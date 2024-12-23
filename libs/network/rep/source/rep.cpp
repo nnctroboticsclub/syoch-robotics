@@ -34,7 +34,7 @@ void ReliableFEPProtocol::_Send(REPTxPacket& packet) {
     *(ptr++) = packet.buffer[i];
   }
 
-  auto tx_state = driver_.Send(packet.addr, tx_buffer_, ptr - tx_buffer_);
+  driver_.Send(packet.addr, tx_buffer_, ptr - tx_buffer_);
 
   /* if (tx_state != fep::TxState::kNoError) {
     rep_logger.Error("Failed to send packet to %d: %d, Pushing queue",
