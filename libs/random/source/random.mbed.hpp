@@ -3,7 +3,9 @@
 #include <robotics/random/random.hpp>
 
 namespace {
-mbed::AnalogIn source_{PC_0};
+mbed::AnalogIn source_{PB_0};
 }
 
-float robotics::system::Random::Entropy() { return source_.read(); }
+float robotics::system::Random::Entropy() {
+  return source_.read();
+}
