@@ -1,22 +1,17 @@
 #pragma once
 
-#include <chrono>
 #include <cmath>
+#include <cstdint>
 
 namespace robotics::system {
-class Random {
-  float value_;
+namespace Random {
 
-  float Entropy();  // implement this function by random.xxx.hpp/cpp
+namespace impl {
+void Init();
+float Entropy();
+}  // namespace impl
 
-  void RandomThread();
-
-  Random();
-  static Random* instance;
-
- public:
-  static Random* GetInstance();
-
-  static uint8_t GetByte();
-};
+void Init();
+uint8_t GetByte();
+};  // namespace Random
 }  // namespace robotics::system

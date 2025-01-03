@@ -5,7 +5,7 @@
 namespace {
 mbed::AnalogIn source_{PB_0};
 }
-
-float robotics::system::Random::Entropy() {
+void robotics::system::Random::impl::Init() {}
+float robotics::system::Random::impl::Entropy() {
   return source_.read();
 }

@@ -2,6 +2,8 @@
 
 #include <robotics/random/random.hpp>
 
-float robotics::system::Random::Entropy() {
+void robotics::system::Random::impl::Init() {}
+
+float robotics::system::Random::impl::Entropy() {
   return esp_random() / 65536 / 65536.0f;
 }
