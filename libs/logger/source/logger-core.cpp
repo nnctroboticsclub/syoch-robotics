@@ -1,24 +1,42 @@
 #include <logger/logger-core.hpp>
 
-#include <cstdio>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <span>
 
-#include <tcb/span.hpp>
+#include <robotics/utils/span.hpp>
 
 #ifdef USE_THREAD
 #include <robotics/thread/thread.hpp>
+#endif
+
+#ifdef LOG_FOR_MBED
+#include <utils/mbed/target_detector.hpp>
 #endif
 
 #include <robotics/utils/no_mutex_lifo.hpp>
 
 #include <logger/log_sink.hpp>
 
+using robotics::utils::Span;
+
 namespace {
-const size_t kLogRingBufferSize = 0x8000;  // 32KB
-const size_t kLogLineSize = 0x200;         // 512 bytes
+#if defined(LOG_FOR_MBED)
+#if UtilsMbed_TargetIs(NUCLEO_F303K8)
+const size_t kLogRingBufferSize = 0x400;
+const size_t kLogLineSize = 0x80;
+const size_t kMaxLogLines = 20;
+#else
+const size_t kLogRingBufferSize = 0x8000;
+const size_t kLogLineSize = 0x100;
 const size_t kMaxLogLines = 200;
+#endif
+#else
+const size_t kLogRingBufferSize = 0x8000;
+const size_t kLogLineSize = 0x100;
+const size_t kMaxLogLines = 200;
+#endif
 
 char log_ring_buffer[kLogRingBufferSize] = {};
 
@@ -36,7 +54,7 @@ void UseLine(size_t start, size_t length, char* dest) {
   dest[offset] = 0;  // null-terminate for c-style strings
 }
 
-tcb::span<char> PasteToRing(tcb::span<const char> text) {
+Span<char> PasteToRing(Span<const char> text) {
   size_t start = log_head;
   for (size_t offset = 0; offset < text.size(); offset++) {
     size_t index = (start + offset) % kLogRingBufferSize;
@@ -54,29 +72,32 @@ namespace robotics::logger::core {
 
 struct LogLine {
   Level level;
-  tcb::span<const char> tag;
-  tcb::span<const char> msg;
+  Span<const char> tag;
+  Span<const char> msg;
 
   LogLine() = default;
 
-  LogLine(tcb::span<const char> tag, tcb::span<const char> msg,
+  LogLine(Span<const char> tag, Span<const char> msg,
           Level level = Level::kInfo)
-      : level(level), tag(PasteToRing(tag)), msg(PasteToRing(msg)) {}
+      : level(level),           //
+        tag(PasteToRing(tag)),  //
+        msg(PasteToRing(msg)) {}
 };
 
 using LogQueue = robotics::utils::NoMutexLIFO<LogLine, kMaxLogLines>;
-
-LogQueue* log_queue = nullptr;
+static LogQueue* log_queue = nullptr;
 
 void Log(Level level, const char* tag, const char* msg) {
-  if (!log_queue) return;
+  if (!log_queue)
+    return;
 
   log_queue->Push(LogLine({tag, strlen(tag)}, {msg, strlen(msg)}, level));
 }
 
 void LogHex(Level level, const char* tag, uint8_t* data, uint32_t length) {
   static char buffer[kLogLineSize];
-  if (!log_queue) return;
+  if (!log_queue)
+    return;
 
   auto text_ptr = buffer;
   for (auto* data_ptr = data; data_ptr < data + length; data_ptr++) {
@@ -92,11 +113,11 @@ void LoggerProcess() {
     return;
   }
 
+  auto tag_buf = new char[64];
+  auto msg_buf = new char[kLogLineSize];
+
   while (!log_queue->Empty()) {
     auto line = log_queue->Pop();
-
-    static char tag_buf[64];
-    static char msg_buf[kLogLineSize];
 
     UseLine(line.tag.data() - log_ring_buffer, line.tag.size(), tag_buf);
     UseLine(line.msg.data() - log_ring_buffer, line.msg.size(), msg_buf);
@@ -112,8 +133,9 @@ void Thread() {
 }
 
 void Init() {
-  static auto dummy_log_line = LogLine({}, {});
-  if (log_queue) return;
+  LogLine dummy_log_line({}, {});
+  if (log_queue)
+    return;
 
   log_queue = new LogQueue();
   while (!log_queue->Full()) {
@@ -136,7 +158,8 @@ robotics::system::Thread* logger_thread;
 void StartLoggerThread() {
   Init();
 
-  if (logger_thread) return;
+  if (logger_thread)
+    return;
   logger_thread = new robotics::system::Thread();
   logger_thread->SetThreadName("Logger");
   logger_thread->Start(Thread);

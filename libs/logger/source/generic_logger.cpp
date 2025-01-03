@@ -6,19 +6,26 @@
 
 #include <robotics/utils/no_mutex_lifo.hpp>
 
-#include <tcb/span.hpp>
-
 namespace robotics::logger {
-
+using robotics::utils::NoMutexLIFO;
 static GenericLogger* loggers[64] = {
     nullptr,
 };
+
+static char* GetBuffer_() {
+  static char* buffer = nullptr;
+  if (!buffer) {
+    buffer = new char[256];
+  }
+
+  return buffer;
+}
 
 void GenericLogger::_Log(core::Level level, const char* fmt, va_list args) {
   if (supressed)
     return;
 
-  static char line[512] = {};
+  char* line = GetBuffer_();
 
   vsnprintf(line, sizeof(line), fmt, args);
 
@@ -34,7 +41,7 @@ void GenericLogger::_LogHex(core::Level level, const uint8_t* buf,
 
   auto lines = size / 16;
   for (size_t line = 0; line <= lines; line++) {
-    static char buffer[512] = {};
+    char* buffer = GetBuffer_();
 
     char* ptr = buffer;
     strncpy(ptr, "___| ", 6);

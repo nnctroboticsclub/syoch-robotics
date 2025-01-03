@@ -1,5 +1,3 @@
-find_package(tcb_span REQUIRED)
-
 add_library(syoch-robotics-logger STATIC
   source/char_logger.cpp
   source/generic_logger.cpp
@@ -12,10 +10,6 @@ target_link_libraries(syoch-robotics-logger PRIVATE
   syoch-robotics-common
 )
 
-target_link_libraries(syoch-robotics-logger PUBLIC
-  tcb_span
-)
-
 # If not non-thread defined, added syoch-robotics-thread library with target_link_libraries
 if(NOT NON_THREAD)
   target_link_libraries(syoch-robotics-logger PRIVATE
@@ -23,6 +17,15 @@ if(NOT NON_THREAD)
   )
   target_compile_definitions(syoch-robotics-logger PRIVATE
     -DUSE_THREAD
+  )
+  endif()
+
+  if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
+  target_link_libraries(syoch-robotics-logger PRIVATE
+    target_detector
+  )
+  target_compile_definitions(syoch-robotics-logger PRIVATE
+    -DLOG_FOR_MBED
   )
 endif()
 
