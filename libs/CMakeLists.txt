@@ -47,6 +47,10 @@ add_subdirectory(common)
 add_subdirectory(logger)
 add_subdirectory(thread)
 
+if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
+  add_subdirectory(mbed)
+endif()
+
 if (NOT "${SYOCH_ROBOTICS_TARGET}" STREQUAL "Emulation")
   add_subdirectory(drivers)
   add_subdirectory(network)
