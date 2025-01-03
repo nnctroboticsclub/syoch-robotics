@@ -24,22 +24,21 @@ using robotics::utils::Span;
 namespace {
 #if defined(LOG_FOR_MBED)
 #if UtilsMbed_TargetIs(NUCLEO_F303K8)
-const size_t kLogRingBufferSize = 0x400;
+const size_t kLogRingBufferSize = 0x200;
 const size_t kLogLineSize = 0x80;
-const size_t kMaxLogLines = 20;
-#else
+const size_t kMaxLogLines = 1;
+#else   // ^ NUCLEO_F303K8 ,v NUCLEO_F446RE
 const size_t kLogRingBufferSize = 0x8000;
 const size_t kLogLineSize = 0x100;
 const size_t kMaxLogLines = 200;
-#endif
-#else
+#endif  // ^ NUCLEO_F303K8
+#else   // ^ LOG_FOR_MBED
 const size_t kLogRingBufferSize = 0x8000;
 const size_t kLogLineSize = 0x100;
 const size_t kMaxLogLines = 200;
 #endif
 
 char log_ring_buffer[kLogRingBufferSize] = {};
-
 size_t log_head = 0;
 
 void UseLine(size_t start, size_t length, char* dest) {
@@ -113,20 +112,20 @@ void LoggerProcess() {
     return;
   }
 
-  auto tag_buf = new char[64];
-  auto msg_buf = new char[kLogLineSize];
+  std::array<char, 64> tag_buf;
+  std::array<char, kLogLineSize> msg_buf;
 
   while (!log_queue->Empty()) {
     auto line = log_queue->Pop();
 
-    UseLine(line.tag.data() - log_ring_buffer, line.tag.size(), tag_buf);
-    UseLine(line.msg.data() - log_ring_buffer, line.msg.size(), msg_buf);
+    UseLine(line.tag.data() - log_ring_buffer, line.tag.size(), tag_buf.data());
+    UseLine(line.msg.data() - log_ring_buffer, line.msg.size(), msg_buf.data());
 
-    global_log_sink->Log(line.level, tag_buf, msg_buf);
+    global_log_sink->Log(line.level, tag_buf.data(), msg_buf.data());
   }
 }
 
-void Thread() {
+[[noreturn]] static void Thread() {
   while (true) {
     LoggerProcess();
   }
@@ -136,6 +135,8 @@ void Init() {
   LogLine dummy_log_line({}, {});
   if (log_queue)
     return;
+
+  printf("Allocating %d bytes for log queue\n", sizeof(LogQueue));
 
   log_queue = new LogQueue();
   while (!log_queue->Full()) {

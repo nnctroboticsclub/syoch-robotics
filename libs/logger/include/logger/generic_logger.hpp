@@ -1,6 +1,8 @@
 #pragma once
 
-#include <stdarg.h>
+#include <cstdarg>
+#include <cstddef>
+
 #include "./logger-core.hpp"
 
 namespace robotics::logger {
