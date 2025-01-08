@@ -44,6 +44,7 @@ endif()
 
 
 add_subdirectory(common)
+add_subdirectory(binary)
 add_subdirectory(logger)
 add_subdirectory(thread)
 
