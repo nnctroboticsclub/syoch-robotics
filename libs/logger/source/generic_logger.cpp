@@ -4,30 +4,22 @@
 #include <cstdio>
 #include <cstring>
 
+#include <robotics/binary/temp_buffer.hpp>
 #include <robotics/utils/no_mutex_lifo.hpp>
 
 namespace robotics::logger {
 using robotics::utils::NoMutexLIFO;
-static GenericLogger* loggers[64] = {
+static GenericLogger* loggers[32] = {
     nullptr,
 };
-
-static char* GetBuffer_() {
-  static char* buffer = nullptr;
-  if (!buffer) {
-    buffer = new char[256];
-  }
-
-  return buffer;
-}
 
 void GenericLogger::_Log(core::Level level, const char* fmt, va_list args) {
   if (supressed)
     return;
 
-  char* line = GetBuffer_();
+  char* line = reinterpret_cast<char*>(robotics::binary::GetTemporaryBuffer());
 
-  vsnprintf(line, sizeof(line), fmt, args);
+  vsnprintf(line, 0x80, fmt, args);
 
   core::Log(level, tag, line);
 }
@@ -41,7 +33,8 @@ void GenericLogger::_LogHex(core::Level level, const uint8_t* buf,
 
   auto lines = size / 16;
   for (size_t line = 0; line <= lines; line++) {
-    char* buffer = GetBuffer_();
+    char* buffer =
+        reinterpret_cast<char*>(robotics::binary::GetTemporaryBuffer());
 
     char* ptr = buffer;
     strncpy(ptr, "___| ", 6);

@@ -11,10 +11,7 @@
 #include <robotics/thread/thread.hpp>
 #endif
 
-#ifdef LOG_FOR_MBED
-#include <utils/mbed/target_detector.hpp>
-#endif
-
+#include <robotics/binary/temp_buffer.hpp>
 #include <robotics/utils/no_mutex_lifo.hpp>
 
 #include <logger/log_sink.hpp>
@@ -23,14 +20,18 @@ using robotics::utils::Span;
 
 namespace {
 #if defined(LOG_FOR_MBED)
-#if UtilsMbed_TargetIs(NUCLEO_F303K8)
-const size_t kLogRingBufferSize = 0x200;
+#if TARGET_NUCLEO_F303K8
+const size_t kLogRingBufferSize = 0x100;
 const size_t kLogLineSize = 0x80;
 const size_t kMaxLogLines = 1;
-#else   // ^ NUCLEO_F303K8 ,v NUCLEO_F446RE
+#elif TARGET_NUCLEO_F446RE
 const size_t kLogRingBufferSize = 0x8000;
 const size_t kLogLineSize = 0x100;
 const size_t kMaxLogLines = 200;
+#else
+const size_t kLogRingBufferSize = 0x100;
+const size_t kLogLineSize = 0x80;
+const size_t kMaxLogLines = 10;
 #endif  // ^ NUCLEO_F303K8
 #else   // ^ LOG_FOR_MBED
 const size_t kLogRingBufferSize = 0x8000;
@@ -94,7 +95,8 @@ void Log(Level level, const char* tag, const char* msg) {
 }
 
 void LogHex(Level level, const char* tag, uint8_t* data, uint32_t length) {
-  static char buffer[kLogLineSize];
+  char* buffer =
+      reinterpret_cast<char*>(robotics::binary::GetTemporaryBuffer());
   if (!log_queue)
     return;
 
@@ -125,12 +127,6 @@ void LoggerProcess() {
   }
 }
 
-[[noreturn]] static void Thread() {
-  while (true) {
-    LoggerProcess();
-  }
-}
-
 void Init() {
   LogLine dummy_log_line({}, {});
   if (log_queue)
@@ -155,6 +151,12 @@ void Init() {
 #ifdef USE_THREAD
 
 robotics::system::Thread* logger_thread;
+
+[[noreturn]] static void Thread() {
+  while (true) {
+    LoggerProcess();
+  }
+}
 
 void StartLoggerThread() {
   Init();

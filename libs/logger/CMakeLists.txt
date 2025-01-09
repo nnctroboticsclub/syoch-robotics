@@ -7,7 +7,7 @@ add_library(syoch-robotics-logger STATIC
 )
 
 target_link_libraries(syoch-robotics-logger PRIVATE
-  syoch-robotics-common
+  syoch-robotics-common syoch-robotics-temp-buffer
 )
 
 # If not non-thread defined, added syoch-robotics-thread library with target_link_libraries
@@ -18,14 +18,11 @@ if(NOT NON_THREAD)
   target_compile_definitions(syoch-robotics-logger PRIVATE
     -DUSE_THREAD
   )
-  endif()
+endif()
 
-  if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
-  target_link_libraries(syoch-robotics-logger PRIVATE
-    target_detector
-  )
+if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
   target_compile_definitions(syoch-robotics-logger PRIVATE
-    -DLOG_FOR_MBED
+    -DLOG_FOR_MBED -DTARGET_${MBED_TARGET}=1
   )
 endif()
 
