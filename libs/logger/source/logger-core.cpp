@@ -22,8 +22,8 @@ namespace {
 #if defined(LOG_FOR_MBED)
 #if TARGET_NUCLEO_F303K8
 const size_t kLogRingBufferSize = 0x100;
-const size_t kLogLineSize = 0x80;
-const size_t kMaxLogLines = 1;
+const size_t kLogLineSize = 0x100;
+const size_t kMaxLogLines = 3;
 #elif TARGET_NUCLEO_F446RE
 const size_t kLogRingBufferSize = 0x8000;
 const size_t kLogLineSize = 0x100;
