@@ -16,9 +16,7 @@ struct Arena {
 
   AllocatedChunk* head;
 
-  [[nodiscard]] bool InHeap(const void* ptr) const {
-    return (heap_start <= ptr) && (ptr < heap_start + heap_size);
-  }
+  [[nodiscard]] bool InHeap(const void* ptr) const;
 };
 
 class LinkedAllocator {

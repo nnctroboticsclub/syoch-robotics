@@ -1,4 +1,7 @@
+#include <stdint.h>
 #include <robotics/binary/linked-allocator.hpp>
+
+#include "./config.h"
 
 namespace robotics::binary::linked_allocator {
 
@@ -56,46 +59,74 @@ struct AllocatedChunk {
   [[nodiscard]] auto Data() { return static_cast<void*>(this + 1); }
 };
 
+bool Arena::InHeap(const void* ptr) const {
+  auto val = reinterpret_cast<uint32_t>(ptr);
+
+  auto begin = reinterpret_cast<uint32_t>(heap_start);
+  auto end = begin + heap_size;
+
+  auto ret = (begin <= val) && (val < end);
+
+  if (!ret) {
+    SR_LA_A_LOG("la/a: %xh~%xh o%xh(%d&%d=%d)\n", begin, end, val, begin <= val,
+                val < end, ret);
+  }
+
+  return ret;
+}
+
 [[nodiscard]] static auto CalculateAlignScoreScore(const AllocatedChunk* chunk,
                                                    uint32_t needed_chk_size) {
   auto remaining_size =
       chunk->Size() - (needed_chk_size + sizeof(AllocatedChunk));
 
   auto score = 0;
-  score += chunk->Size() == needed_chk_size ? 10000 : 0;
-  score += IsPowerOf2(remaining_size) ? 100 : 0;
-  score += std::countr_zero(remaining_size);
+  score += chunk->Size() == needed_chk_size ? 100 : 0;
+  score += IsPowerOf2(remaining_size) ? 1 : 0;
 
   return score;
 }
 
 [[nodiscard]] AllocatedChunk* LinkedAllocator::FindWellAlignedChunk(
     size_t needed_chk_size) const {
-  auto ptr = this->arena_.head;
-
   struct ChunkScore {
     AllocatedChunk* chunk;
-    int score;
+    signed int score;
   };
-  ChunkScore best = {.chunk = ptr, .score = 0};
+  ChunkScore best = {.chunk = this->arena_.head, .score = -1};
 
-  do {
-    if (ptr->IsUsed())
+  SR_LA_LA_LOG("la/fwac#c.sz:%d b%p\n", needed_chk_size, best.chunk);
+  for (auto chunk = this->arena_.head; arena_.InHeap(chunk);
+       chunk = chunk->Next()) {
+    if (chunk->IsUsed()) {
+      SR_LA_LA_LOG("la/fwac#u %p\n", chunk);
       continue;
-    if (ptr->Size() < needed_chk_size)
-      continue;
-    if (ptr->Size() == needed_chk_size)
-      return ptr;
-
-    if (auto score = CalculateAlignScoreScore(ptr, needed_chk_size);
-        score > best.score) {
-      best = {.chunk = ptr, .score = score};
     }
-  } while (arena_.InHeap(ptr = ptr->Next()));
+    if (chunk->Size() < needed_chk_size) {
+      SR_LA_LA_LOG("la/fwac#l %p\n", chunk);
+      continue;
+    }
+    if (chunk->Size() == needed_chk_size) {
+      SR_LA_LA_LOG("la/fwac#= %p\n", chunk);
+      return chunk;
+    }
+
+    auto score = CalculateAlignScoreScore(chunk, needed_chk_size);
+
+    if (best.score > 0 && score <= best.score) {
+      continue;
+    }
+
+    SR_LA_LA_LOG("la/fwac#. %p %d\n", chunk, score);
+    best = {.chunk = chunk, .score = score};
+  }
 
   if (best.chunk->Size() < needed_chk_size) {
+    SR_LA_LA_LOG("la/fwac#nf\n");
     return nullptr;
   }
+
+  SR_LA_LA_LOG("la/fwac#r %p\n", best.chunk);
 
   return best.chunk;
 }
@@ -103,17 +134,17 @@ struct AllocatedChunk {
 void* LinkedAllocator::Allocate(uint32_t bytes) {
   size_t requested_size = RoundUpSize(bytes);
 
-  auto chunk = FindWellAlignedChunk(bytes);
+  auto chunk = FindWellAlignedChunk(requested_size);
   if (!chunk) {
-    printf("We couldnt found %d byte chunk\n", requested_size);
+    SR_LA_LA_LOG("la/a#F0x%x\n", requested_size);
     return nullptr;
   }
 
-  printf("Use Chunk[%p] as %d byte allocated\n", chunk, requested_size);
+  SR_LA_LA_LOG("la/a#c%p:0x%x\n", chunk, requested_size);
 
   chunk->MarkUsed();
 
-  if (chunk->Size() > bytes) {  // split chunk
+  if (chunk->Size() != requested_size) {  // split chunk
     auto remaining_size =
         chunk->Size() - (requested_size + sizeof(AllocatedChunk));
     chunk->Size(requested_size);
@@ -172,7 +203,7 @@ void LinkedAllocator::Init(void* heap_start, size_t heap_size) {
 void LinkedAllocator::Init_(void* heap_start, size_t heap_size) {
   auto head = reinterpret_cast<AllocatedChunk*>(heap_start);
 
-  printf(
+  SR_LA_LA_I_LOG(
       "LinkedAllocator has being initialized with heap_start=%p "
       "heap_size=0x%x\n",
       heap_start, heap_size);
@@ -182,6 +213,8 @@ void LinkedAllocator::Init_(void* heap_start, size_t heap_size) {
   head->MarkFreed();
 
   arena_.head = head;
+  arena_.heap_start = reinterpret_cast<uint8_t*>(heap_start);
+  arena_.heap_size = heap_size;
 }
 
 void* UseLinkedAllocator::operator new(size_t size) noexcept {
