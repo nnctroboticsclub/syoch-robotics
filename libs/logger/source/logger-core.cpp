@@ -3,16 +3,15 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include <span>
-
-#include <robotics/utils/span.hpp>
 
 #ifdef USE_THREAD
 #include <robotics/thread/thread.hpp>
 #endif
 
+#include <robotics/binary/context_detector.hpp>
 #include <robotics/binary/temp_buffer.hpp>
 #include <robotics/utils/no_mutex_lifo.hpp>
+#include <robotics/utils/span.hpp>
 
 #include <logger/log_sink.hpp>
 
@@ -22,7 +21,7 @@ namespace {
 #if defined(LOG_FOR_MBED)
 #if TARGET_NUCLEO_F303K8
 const size_t kLogRingBufferSize = 0x100;
-const size_t kLogLineSize = 0x100;
+const size_t kLogLineSize = 0x80;
 const size_t kMaxLogLines = 3;
 #elif TARGET_NUCLEO_F446RE
 const size_t kLogRingBufferSize = 0x8000;
@@ -84,21 +83,23 @@ struct LogLine {
         msg(PasteToRing(msg)) {}
 };
 
-using LogQueue = robotics::utils::NoMutexLIFO<LogLine, kMaxLogLines>;
-static LogQueue* log_queue = nullptr;
+static robotics::utils::NoMutexLIFO<LogLine, kMaxLogLines> log_queue;
+
+void inline Log(Level level, const char* tag, const char* msg, size_t msg_len) {
+  if (robotics::binary::InNonWaitableContext()) {
+    log_queue.Push(LogLine({tag, strlen(tag)}, {msg, msg_len}, level));
+  } else {
+    global_log_sink->Log(level, tag, msg);
+  }
+}
 
 void Log(Level level, const char* tag, const char* msg) {
-  if (!log_queue)
-    return;
-
-  log_queue->Push(LogLine({tag, strlen(tag)}, {msg, strlen(msg)}, level));
+  Log(level, tag, msg, strlen(msg));
 }
 
 void LogHex(Level level, const char* tag, uint8_t* data, uint32_t length) {
   char* buffer =
       reinterpret_cast<char*>(robotics::binary::GetTemporaryBuffer());
-  if (!log_queue)
-    return;
 
   auto text_ptr = buffer;
   for (auto* data_ptr = data; data_ptr < data + length; data_ptr++) {
@@ -106,19 +107,15 @@ void LogHex(Level level, const char* tag, uint8_t* data, uint32_t length) {
     *(text_ptr++) = "0123456789ABCDEF"[*data_ptr & 0x0F];
   }
 
-  log_queue->Push(LogLine({tag, strlen(tag)}, {buffer, 2 * length}, level));
+  Log(level, tag, buffer, 2 * length);
 }
 
 void LoggerProcess() {
-  if (!log_queue) {
-    return;
-  }
-
   std::array<char, 64> tag_buf;
   std::array<char, kLogLineSize> msg_buf;
 
-  while (!log_queue->Empty()) {
-    auto line = log_queue->Pop();
+  while (!log_queue.Empty()) {
+    auto line = log_queue.Pop();
 
     UseLine(line.tag.data() - log_ring_buffer, line.tag.size(), tag_buf.data());
     UseLine(line.msg.data() - log_ring_buffer, line.msg.size(), msg_buf.data());
@@ -129,18 +126,13 @@ void LoggerProcess() {
 
 void Init() {
   LogLine dummy_log_line({}, {});
-  if (log_queue)
-    return;
 
-  printf("Allocating %d bytes for log queue\n", sizeof(LogQueue));
-
-  log_queue = new LogQueue();
-  while (!log_queue->Full()) {
-    log_queue->Push(dummy_log_line);
+  while (!log_queue.Full()) {
+    log_queue.Push(dummy_log_line);
   }
 
-  while (!log_queue->Empty()) {
-    log_queue->Pop();
+  while (!log_queue.Empty()) {
+    log_queue.Pop();
   }
 
 #ifdef USE_THREAD

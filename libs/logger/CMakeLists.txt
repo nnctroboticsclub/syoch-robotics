@@ -7,7 +7,9 @@ add_library(syoch-robotics-logger STATIC
 )
 
 target_link_libraries(syoch-robotics-logger PRIVATE
-  syoch-robotics-common syoch-robotics-temp-buffer
+  syoch-robotics-common
+  syoch-robotics-temp-buffer
+  syoch-robotics-context-detector
 )
 
 # If not non-thread defined, added syoch-robotics-thread library with target_link_libraries
