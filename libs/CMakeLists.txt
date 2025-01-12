@@ -46,13 +46,16 @@ endif()
 add_subdirectory(common)
 add_subdirectory(binary)
 add_subdirectory(logger)
-add_subdirectory(thread)
+
+if (NOT "${SYOCH_ROBOTICS_TARGET}" STREQUAL "STM32 HAL")
+  add_subdirectory(thread)
+endif()
 
 if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
   add_subdirectory(mbed)
 endif()
 
-if (NOT "${SYOCH_ROBOTICS_TARGET}" STREQUAL "Emulation")
+if (NOT "${SYOCH_ROBOTICS_TARGET}" STREQUAL "Emulation" AND NOT "${SYOCH_ROBOTICS_TARGET}" STREQUAL "STM32 HAL")
   add_subdirectory(drivers)
   add_subdirectory(network)
   add_subdirectory(timer)
