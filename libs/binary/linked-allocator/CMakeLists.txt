@@ -12,11 +12,11 @@ target_include_directories(syoch-robotics-linked-allocator PUBLIC
 add_library(syoch-robotics-use-linked-allocator STATIC
   libc-override/override.cpp
 )
-
 target_link_libraries(syoch-robotics-use-linked-allocator PUBLIC
-  syoch-robotics-linked-allocator StaticMbedOS
+  syoch-robotics-linked-allocator
 )
 
 if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
+
   target_sources(syoch-robotics-use-linked-allocator INTERFACE source/mbed-init.cpp)
 endif()

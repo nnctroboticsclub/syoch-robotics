@@ -93,7 +93,6 @@ void hex_dump(const void* ptr, size_t length) {
 }  // namespace
 
 extern "C" uint8_t* heap_start asm("mbed_heap_start");
-#include <mbed.h>
 extern "C" void* malloc(size_t size) {
   auto ptr = LinkedAllocator::GetInstance().Allocate(size);
 
