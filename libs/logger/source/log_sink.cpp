@@ -5,12 +5,12 @@
 
 #include <robotics/binary/temp_buffer.hpp>
 
-namespace {
-using robotics::logger::core::Level;
+namespace robotics::logger {
 
-const char* LevelToString(Level level) {
-  char* level_header =
-      reinterpret_cast<char*>(robotics::binary::GetTemporaryBuffer());
+void StdoutSink::Log(core::Level level, const char* tag, const char* msg) {
+  using robotics::logger::core::Level;
+
+  char level_header[14];
   // '\e'  '['  '1'  ';'  '3'  'X'  'm'  'X'
   // '\e'  '['  'm' '\0'
 
@@ -36,14 +36,7 @@ const char* LevelToString(Level level) {
       break;
   }
 
-  return level_header;
-}
-}  // namespace
-
-namespace robotics::logger {
-
-void StdoutSink::Log(core::Level level, const char* tag, const char* msg) {
-  std::printf("%s [%s] %s\n", LevelToString(level), tag, msg);
+  std::printf("%s [%s] %s\n", level_header, tag, msg);
 }
 
 LogSink* global_log_sink = new StdoutSink();
