@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdarg>
-#include <cstddef>
+#include <stdarg.h>
+#include <stddef.h>
 
 #include "./logger-core.hpp"
 
