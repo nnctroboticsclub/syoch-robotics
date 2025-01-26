@@ -1,11 +1,11 @@
 #pragma once
 
-#include <vector>
-#include <memory>
-#include <functional>
 #include <chrono>
+#include <functional>
+#include <memory>
+#include <vector>
 
-#include "can_base.hpp"
+#include <robotics/network/can_base.hpp>
 #include <robotics/timer/timer.hpp>
 
 using namespace std::chrono_literals;
@@ -18,7 +18,7 @@ class CANEngine {
  public:
   struct EventCallback {
     using Callback =
-        std::function<void(std::uint32_t id, std::vector<uint8_t> const &data)>;
+        std::function<void(std::uint32_t id, std::vector<uint8_t> const& data)>;
 
     // accepted when can.id & mask == id
     const std::uint32_t mask;
@@ -39,24 +39,24 @@ class CANEngine {
  public:
   CANEngine(uint8_t device_id, std::shared_ptr<CANBase> can);
 
-  CANEngine(const CANEngine &) = delete;
-  CANEngine &operator=(const CANEngine &) = delete;
+  CANEngine(const CANEngine&) = delete;
+  CANEngine& operator=(const CANEngine&) = delete;
 
   void Init();
-  void RegisterModule(CANModule &mod);
+  void RegisterModule(CANModule& mod);
 
-  int Send(uint32_t id, std::vector<uint8_t> const &data);
+  int Send(uint32_t id, std::vector<uint8_t> const& data);
   void OnMessage(std::uint32_t mask, std::uint32_t id,
-                 EventCallback::Callback const &cb);
+                 EventCallback::Callback const& cb);
 
-  void OnIdle(IdleCallback const &cb);
+  void OnIdle(IdleCallback const& cb);
 
   int GetDeviceId() const;
 };
 
 class CANModule {
-  CANModule(const CANModule &) = delete;
-  CANModule &operator=(const CANModule &) = delete;
+  CANModule(const CANModule&) = delete;
+  CANModule& operator=(const CANModule&) = delete;
 
  public:
   CANModule() = default;
@@ -119,7 +119,7 @@ class KeepAlive : public CANModule {
   void OnRegister(std::shared_ptr<CANEngine> engine) override {
     can_ = engine;
     engine->OnMessage(0x7ff, 0x540,
-                      [this](std::uint32_t, std::vector<uint8_t> const &) {
+                      [this](std::uint32_t, std::vector<uint8_t> const&) {
                         keep_alive_timer.Reset();
                       });
 
@@ -127,12 +127,12 @@ class KeepAlive : public CANModule {
       auto timer = keep_alive_timer.ElapsedTime();
       if (keep_alive_available && 300ms < timer) {
         keep_alive_available = false;
-        for (auto const &cb : this->keep_alive_lost_callbacks_) {
+        for (auto const& cb : this->keep_alive_lost_callbacks_) {
           cb();
         }
       } else if (!keep_alive_available && timer < 300ms) {
         keep_alive_available = true;
-        for (auto const &cb : this->keep_alive_recovered_callbacks_) {
+        for (auto const& cb : this->keep_alive_recovered_callbacks_) {
           cb();
         }
       }
@@ -162,14 +162,14 @@ class PingPong : public CANModule {
   void OnRegister(std::shared_ptr<CANEngine> engine) override {
     can_ = engine;
     engine->OnMessage(0x7f0, 0x530,
-                      [this](std::uint32_t, std::vector<uint8_t> const &) {
+                      [this](std::uint32_t, std::vector<uint8_t> const&) {
                         can_->Send(0x81 + can_->GetDeviceId(), {});
                       });
 
     engine->OnMessage(0x7f0, 0x520,
-                      [this](std::uint32_t id, std::vector<uint8_t> const &) {
+                      [this](std::uint32_t id, std::vector<uint8_t> const&) {
                         uint8_t device = id & 0x00f;
-                        for (auto const &cb : pong_listeners_) {
+                        for (auto const& cb : pong_listeners_) {
                           cb(device);
                         }
                       });
