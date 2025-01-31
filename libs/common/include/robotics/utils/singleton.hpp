@@ -9,9 +9,13 @@ class Singleton {
     return instance;
   }
 
- private:
+ protected:
   // Hidden 'Singleton' constructor
   Singleton() = default;
   ~Singleton() = default;
+
+  // Hidden copy constructor
+  Singleton(Singleton const&) = delete;
+  Singleton& operator=(Singleton const&) = delete;
 };
 }  // namespace robotics::utils
