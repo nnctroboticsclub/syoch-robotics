@@ -1,6 +1,5 @@
 add_library(dcan STATIC
   source/dcan.cpp
-  source/can_base.cpp
   source/can_module.cpp
 )
 

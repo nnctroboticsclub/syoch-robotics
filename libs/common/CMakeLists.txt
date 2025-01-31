@@ -4,6 +4,7 @@ add_library(syoch-robotics-common STATIC
   source/types/angle_joystick_2d.cpp
   source/types/joystick_2d.cpp
   source/types/pid_gains.cpp
+  source/network/can_base.cpp
 )
 
 target_include_directories(syoch-robotics-common PUBLIC
