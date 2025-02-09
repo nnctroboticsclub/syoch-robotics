@@ -1,6 +1,5 @@
 #pragma once
 
-#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -26,7 +25,7 @@ class LinkedAllocator {
 
  public:
   void* Allocate(uint32_t bytes);
-  void Deallocate(void* ptr);
+  void Deallocate(void* ptr) const;
   void Dump();
 
   //* Signleton パターン
@@ -36,7 +35,6 @@ class LinkedAllocator {
  private:
   static LinkedAllocator instance;
 
- private:  //* メンバ変数
   Arena arena_;
   LinkedAllocator() = default;
 

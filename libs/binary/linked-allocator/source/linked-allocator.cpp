@@ -158,7 +158,7 @@ void* LinkedAllocator::Allocate(uint32_t bytes) {
   return chunk->Data();
 }
 
-void LinkedAllocator::Deallocate(void* ptr) {
+void LinkedAllocator::Deallocate(void* ptr) const {
   auto ptr_in_bytes = static_cast<uint8_t*>(ptr);
   auto chunk =
       reinterpret_cast<AllocatedChunk*>(ptr_in_bytes - sizeof(AllocatedChunk));
