@@ -43,7 +43,7 @@ void show_dec(uint32_t val) {
 }
 
 void show_ptr(const void* ptr) {
-  auto ptr_val = reinterpret_cast<uint32_t>(ptr);
+  auto ptr_val = reinterpret_cast<uintptr_t>(ptr);
   show_str("0x");
   show_hex(ptr_val, 8, true);
 }
@@ -103,7 +103,6 @@ extern "C" void* malloc(size_t size) {
     show_ch('\n');
 
     show_ch(0xff);
-    asm("bkpt #0");
 
     return nullptr;
   }

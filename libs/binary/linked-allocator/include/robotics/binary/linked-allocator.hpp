@@ -24,7 +24,7 @@ class LinkedAllocator {
       size_t needed_chk_size) const;
 
  public:
-  void* Allocate(uint32_t bytes);
+  void* Allocate(size_t bytes);
   void Deallocate(void* ptr) const;
   void Dump();
 

@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <cstdint>
 #include <robotics/binary/linked-allocator.hpp>
 
 #include "./config.h"
@@ -21,13 +22,13 @@ struct AllocatedChunk {
   /// @brief 前方リンク
   AllocatedChunk* prev;
   /// @brief メタデータ
-  uint32_t manager_data;
+  uintptr_t manager_data;
 
   /// @brief チャンクのサイズを取得する
   [[nodiscard]] auto Size() const { return manager_data & ~0x3; }
 
   /// @brief チャンクのサイズを設定する
-  void Size(uint32_t size) { manager_data = RoundUpSize(size); }
+  void Size(size_t size) { manager_data = RoundUpSize(size); }
 
   /// @brief チャンクが解放済みかどうかを取得する
   [[nodiscard]] auto IsFreed() const { return manager_data & 0x1; }
@@ -60,9 +61,9 @@ struct AllocatedChunk {
 };
 
 bool Arena::InHeap(const void* ptr) const {
-  auto val = reinterpret_cast<uint32_t>(ptr);
+  auto val = reinterpret_cast<uintptr_t>(ptr);
 
-  auto begin = reinterpret_cast<uint32_t>(heap_start);
+  auto begin = reinterpret_cast<uintptr_t>(heap_start);
   auto end = begin + heap_size;
 
   auto ret = (begin <= val) && (val < end);
@@ -76,7 +77,7 @@ bool Arena::InHeap(const void* ptr) const {
 }
 
 [[nodiscard]] static auto CalculateAlignScoreScore(const AllocatedChunk* chunk,
-                                                   uint32_t needed_chk_size) {
+                                                   size_t needed_chk_size) {
   auto remaining_size =
       chunk->Size() - (needed_chk_size + sizeof(AllocatedChunk));
 
@@ -131,7 +132,7 @@ bool Arena::InHeap(const void* ptr) const {
   return best.chunk;
 }
 
-void* LinkedAllocator::Allocate(uint32_t bytes) {
+void* LinkedAllocator::Allocate(size_t bytes) {
   size_t requested_size = RoundUpSize(bytes);
 
   auto chunk = FindWellAlignedChunk(requested_size);
@@ -174,8 +175,8 @@ void LinkedAllocator::Deallocate(void* ptr) const {
     free_chunk_end = next;
   }
 
-  auto free_chunk_size = reinterpret_cast<uint32_t>(free_chunk_end) -
-                         reinterpret_cast<uint32_t>(free_chunk_begin) +
+  auto free_chunk_size = reinterpret_cast<uintptr_t>(free_chunk_end) -
+                         reinterpret_cast<uintptr_t>(free_chunk_begin) +
                          free_chunk_end->Size();
 
   auto free_chunk = reinterpret_cast<AllocatedChunk*>(free_chunk_begin);
