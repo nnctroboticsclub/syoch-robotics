@@ -12,8 +12,8 @@ target_link_libraries(syoch-robotics-logger PRIVATE
   syoch-robotics-context-detector
 )
 
-# If not non-thread defined, added syoch-robotics-thread library with target_link_libraries
-if(NOT NON_THREAD)
+if(NOT ${NON_THREAD})
+  message(STATUS "Using thread (logger) <<< TRACK ME!")
   target_link_libraries(syoch-robotics-logger PRIVATE
     syoch-robotics-thread
   )

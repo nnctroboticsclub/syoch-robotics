@@ -58,12 +58,13 @@ class PWM : public PWMBase {
  public:
   PWM(gpio_num_t pin, ledc_channel_t ledc_channel, ledc_timer_t ledc_timer)
       : ledc_channel_(ledc_channel), ledc_timer_(ledc_timer) {
-    ledc_timer_config_t tconfig = {.speed_mode = LEDC_MODE,
-                                   .duty_resolution = LEDC_TIMER_10_BIT,
-                                   .timer_num = ledc_timer,
-                                   .freq_hz = 1000,
-                                   .clk_cfg = LEDC_AUTO_CLK,
-                                   .deconfigure = false};
+    ledc_timer_config_t tconfig = {
+        .speed_mode = LEDC_MODE,
+        .duty_resolution = LEDC_TIMER_10_BIT,
+        .timer_num = ledc_timer,
+        .freq_hz = 1000,
+        .clk_cfg = LEDC_AUTO_CLK,
+    };
     ledc_timer_config(&tconfig);
     ledc_set_duty_with_hpoint(LEDC_MODE, ledc_channel, 1024, 0);
 
