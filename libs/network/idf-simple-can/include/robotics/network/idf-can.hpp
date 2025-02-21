@@ -1,13 +1,17 @@
 #pragma once
 
 #include <functional>
+#include <queue>
 #include <unordered_map>
 #include <vector>
-#include <queue>
 
 #include <robotics/network/can_base.hpp>
 
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+
 #include <driver/twai.h>
+#include <esp_log.h>
 
 namespace robotics::network {
 class CANDriver : public CANBase {
@@ -17,7 +21,6 @@ class CANDriver : public CANBase {
   using MessageID = uint32_t;
 
  private:
-  twai_handle_t twai_driver_ = nullptr;
   std::vector<Callback> rx_callbacks_;
   std::vector<Callback> tx_callbacks_;
 
@@ -32,19 +35,18 @@ class CANDriver : public CANBase {
   gpio_num_t rx;
 
   void DropTxBuffer() {
-    while (!tx_queue_.empty()) tx_queue_.pop();
+    while (!tx_queue_.empty())
+      tx_queue_.pop();
   }
 
   static void AlertLoop(void* args) {
     static const char* TAG = "AlertWatcher#CANDriver";
 
     auto& self = *static_cast<CANDriver*>(args);
-    auto driver = self.twai_driver_;
 
     while (1) {
       uint32_t alerts;
-      auto status =
-          twai_read_alerts_v2(driver, &alerts, 1000 / portTICK_PERIOD_MS);
+      auto status = twai_read_alerts(&alerts, 1000 / portTICK_PERIOD_MS);
       if (status == ESP_ERR_TIMEOUT) {
         continue;
       }
@@ -63,11 +65,11 @@ class CANDriver : public CANBase {
 
       if (alerts & TWAI_ALERT_BUS_RECOVERED) {
         ESP_LOGI(TAG, "Bus recovered");
-        twai_start_v2(driver);
+        twai_start();
       }
       if (alerts & TWAI_ALERT_BUS_OFF) {
-        ESP_LOGE(TAG, "Recovering Bus...");
-        twai_initiate_recovery_v2(driver);
+        ESP_LOGE(TAG, "Recovering Bus... (not implemented)");
+        twai_initiate_recovery();
       }
     }
   }
@@ -78,8 +80,7 @@ class CANDriver : public CANBase {
 
     while (1) {
       twai_message_t msg;
-      auto status =
-          twai_receive_v2(self.twai_driver_, &msg, 1000 / portTICK_PERIOD_MS);
+      auto status = twai_receive(&msg, 1000 / portTICK_PERIOD_MS);
       if (status == ESP_ERR_TIMEOUT) {
         continue;
       }
@@ -116,7 +117,7 @@ class CANDriver : public CANBase {
       if (!self->bus_locked && self->tx_queue_.size() > 0) {
         while (!self->tx_queue_.empty()) {
           auto [id, data] = self->tx_queue_.front();
-          self->DoSendStd(id, data);
+          self->DoSend(id, data);
 
           self->tx_queue_.pop();
         }
@@ -147,7 +148,7 @@ class CANDriver : public CANBase {
 
   void AddBitSample(int bits) { bits_per_sample_ += bits; }
 
-  bool DoSendStd(uint32_t id, std::vector<uint8_t> const& data) {
+  bool DoSend(uint32_t id, std::vector<uint8_t> const& data) {
     static const char* TAG = "Send#CANDriver";
 
     if (data.size() > 8) {
@@ -161,6 +162,7 @@ class CANDriver : public CANBase {
     }
 
     twai_message_t msg = {
+        .extd = 1,
         .identifier = id,
         .data_length_code = (uint8_t)data.size(),
         .data = {0},
@@ -171,7 +173,7 @@ class CANDriver : public CANBase {
       cb(id, data);
     }
 
-    auto status = twai_transmit_v2(twai_driver_, &msg, pdMS_TO_TICKS(1000));
+    auto status = twai_transmit(&msg, pdMS_TO_TICKS(1000));
     if (status != ESP_OK) {
       ESP_LOGE(TAG, "Failed to transmit TWAI message: %s",
                esp_err_to_name(status));
@@ -187,7 +189,7 @@ class CANDriver : public CANBase {
     static const char* TAG = "Init#CANDriver";
     twai_general_config_t general_config =
         TWAI_GENERAL_CONFIG_DEFAULT(tx, rx, twai_mode_t::TWAI_MODE_NORMAL);
-    twai_timing_config_t timing_config = TWAI_TIMING_CONFIG_1MBITS();
+    twai_timing_config_t timing_config = TWAI_TIMING_CONFIG_100KBITS();
     twai_filter_config_t filter_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
     general_config.rx_queue_len = 50;
@@ -195,8 +197,9 @@ class CANDriver : public CANBase {
     general_config.alerts_enabled =
         TWAI_ALERT_TX_FAILED | TWAI_ALERT_BUS_RECOVERED | TWAI_ALERT_BUS_OFF;
 
-    auto status = twai_driver_install_v2(&general_config, &timing_config,
-                                         &filter_config, &twai_driver_);
+    ESP_LOGI(TAG, "installing twai driver as 100kbps");
+    auto status =
+        twai_driver_install(&general_config, &timing_config, &filter_config);
     if (status != ESP_OK) {
       ESP_LOGE(TAG, "Failed to install TWAI driver: %s",
                esp_err_to_name(status));
@@ -204,7 +207,7 @@ class CANDriver : public CANBase {
     }
     ESP_LOGI(TAG, "install TWAI driver sucessful");
 
-    status = twai_start_v2(twai_driver_);
+    status = twai_start();
     if (status != ESP_OK) {
       ESP_LOGE(TAG, "Failed to start TWAI driver: %s", esp_err_to_name(status));
       return;
@@ -236,7 +239,7 @@ class CANDriver : public CANBase {
       ESP_LOGW("SendStd#CANDriver", "Bus is locked, droped data");
       return 0;
     }
-    return DoSendStd(id, data) ? 1 : 0;
+    return DoSend(id, data) ? 1 : 0;
   }
 
   void OnRx(RxCallback cb) override { rx_callbacks_.emplace_back(cb); }
