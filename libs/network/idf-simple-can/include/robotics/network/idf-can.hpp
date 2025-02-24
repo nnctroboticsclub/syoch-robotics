@@ -66,9 +66,10 @@ class CANDriver : public CANBase {
       if (alerts & TWAI_ALERT_BUS_RECOVERED) {
         ESP_LOGI(TAG, "Bus recovered");
         twai_start();
+        self.bus_locked = false;
       }
       if (alerts & TWAI_ALERT_BUS_OFF) {
-        ESP_LOGE(TAG, "Recovering Bus... (not implemented)");
+        ESP_LOGE(TAG, "Recovering Bus...");
         twai_initiate_recovery();
       }
     }
