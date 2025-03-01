@@ -190,7 +190,7 @@ class CANDriver : public CANBase {
     static const char* TAG = "Init#CANDriver";
     twai_general_config_t general_config =
         TWAI_GENERAL_CONFIG_DEFAULT(tx, rx, twai_mode_t::TWAI_MODE_NORMAL);
-    twai_timing_config_t timing_config = TWAI_TIMING_CONFIG_100KBITS();
+    twai_timing_config_t timing_config = TWAI_TIMING_CONFIG_1MBITS();
     twai_filter_config_t filter_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
     general_config.rx_queue_len = 50;
