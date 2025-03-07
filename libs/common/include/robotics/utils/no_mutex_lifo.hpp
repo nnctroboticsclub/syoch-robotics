@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstddef>
 #include <array>
+#include <cstddef>
 
 namespace robotics::utils {
 template <typename T, size_t N>
@@ -67,7 +67,7 @@ class NoMutexLIFO {
     }
   }
 
-  bool Empty() const { return (N + tail_ - head_ + 1) % N == 0; }
+  bool Empty() const volatile { return (N + tail_ - head_ + 1) % N == 0; }
 
   bool Full() const { return head_ == tail_; }
 
