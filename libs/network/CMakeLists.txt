@@ -12,5 +12,8 @@ endif()
 
 if (NOT ${NON_THREAD})
   add_subdirectory(fep)
+  endif()
+
+if (${SROBO1_RANDOM_PROVIDED})
   add_subdirectory(rep)
 endif()

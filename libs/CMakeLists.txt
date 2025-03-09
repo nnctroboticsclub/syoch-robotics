@@ -34,7 +34,13 @@ endif()
 
 if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
   add_subdirectory(mbed)
+endif()
+
+if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
+  set(SROBO1_RANDOM_PROVIDED ON PARENT_SCOPE)
   add_subdirectory(random)
+else()
+  set(SROBO1_RANDOM_PROVIDED OFF PARENT_SCOPE)
 endif()
 
 if (NOT "${SYOCH_ROBOTICS_TARGET}" STREQUAL "Emulation" AND NOT "${SYOCH_ROBOTICS_TARGET}" STREQUAL "STM32 HAL")
