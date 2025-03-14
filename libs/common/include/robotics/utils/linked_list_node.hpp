@@ -73,6 +73,13 @@ class LinkedList {
   auto begin() { return Iterator(head); }
   auto end() { return Iterator(nullptr); }
 
+  void Clear() {
+    for (auto& node : nodes) {
+      node.InUse(false);
+      node.ResetLinkNode();
+    }
+  }
+
   void Remove(T* node) {
     node->InUse(false);
 
