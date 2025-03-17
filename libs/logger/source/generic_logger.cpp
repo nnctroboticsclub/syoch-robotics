@@ -9,13 +9,8 @@
 
 namespace robotics::logger {
 using robotics::utils::NoMutexLIFO;
-static GenericLogger* loggers[32] = {
-    nullptr,
-};
 
 void GenericLogger::_Log(core::Level level, const char* fmt, va_list args) {
-  if (supressed)
-    return;
 
   char* line = reinterpret_cast<char*>(robotics::binary::GetTemporaryBuffer());
 
@@ -26,8 +21,7 @@ void GenericLogger::_Log(core::Level level, const char* fmt, va_list args) {
 
 void GenericLogger::_LogHex(core::Level level, const uint8_t* buf,
                             size_t size) {
-  if (supressed)
-    return;
+
   if (size == 0)
     return;
 
@@ -56,27 +50,11 @@ void GenericLogger::_LogHex(core::Level level, const uint8_t* buf,
 }
 
 GenericLogger::GenericLogger(const char* id, const char* tag)
-    : id(id), tag(tag) {
-  for (int i = 0; i < 64; i++) {
-    if (!loggers[i]) {
-      loggers[i] = this;
-      break;
-    }
-  }
-}
+    : id(id), tag(tag) {}
 
 void GenericLogger::RenameTag(const char* new_tag) {
   tag = new_tag;
 }
-
-void GenericLogger::Supress() {
-  supressed = true;
-}
-
-void GenericLogger::Resume() {
-  supressed = false;
-}
-
 void GenericLogger::Log(core::Level level, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
@@ -132,18 +110,8 @@ void GenericLogger::Verbose(const char* fmt, ...) {
 }
 
 void GenericLogger::Hex(core::Level level, const uint8_t* data, size_t length) {
-  if (supressed)
-    return;
-  _LogHex(level, data, length);
-}
 
-GenericLogger* GenericLogger::GetLogger(const char* id) {
-  for (int i = 0; i < 64; i++) {
-    if (loggers[i] && strcmp(loggers[i]->id, id) == 0) {
-      return loggers[i];
-    }
-  }
-  return nullptr;
+  _LogHex(level, data, length);
 }
 
 }  // namespace robotics::logger

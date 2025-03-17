@@ -11,8 +11,6 @@ class GenericLogger {
   const char* id;
   const char* tag;
 
-  bool supressed = false;
-
  private:
   void _Log(core::Level level, const char* fmt, va_list args);
   void _LogHex(core::Level level, const uint8_t* buf, size_t size);
@@ -21,9 +19,6 @@ class GenericLogger {
   GenericLogger(const char* id, const char* tag);
 
   void RenameTag(const char* new_tag);
-
-  void Supress();
-  void Resume();
 
   void Log(core::Level level, const char* fmt, ...);
   void Info(const char* fmt, ...);
@@ -49,8 +44,6 @@ class GenericLogger {
   inline void HexVerbose(const uint8_t* data, size_t length) {
     Hex(core::Level::kVerbose, data, length);
   }
-
-  static GenericLogger* GetLogger(const char* id);
 };
 
 }  // namespace robotics::logger
