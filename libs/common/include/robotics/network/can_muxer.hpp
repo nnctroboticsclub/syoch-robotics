@@ -8,7 +8,7 @@
 namespace robotics::network {
 /// @brief 2 つの CAN を 1 つの CAN として扱うやつ
 class CANMix : public robotics::network::CANBase {
-  static inline robotics::logger::Logger logger{"mixer.can.nw", "CANMix"};
+  // static inline robotics::logger::Logger logger{"mixer.can.nw", "CANMix"};
 
  public:
   enum class CANSelection {
@@ -50,12 +50,12 @@ class CANMix : public robotics::network::CANBase {
   void OnRx(RxCallback cb) override { rx_cbs.push_back(cb); }
 
   void OnTx(TxCallback) override {
-    logger.Error("OnTx is not implemented");
+    // logger.Error("OnTx is not implemented");
     // Not implemented
   }
 
   void OnIdle(IdleCallback) override {
-    logger.Error("OnIdle is not implemented");
+    // logger.Error("OnIdle is not implemented");
     // Not implemented
   }
 
