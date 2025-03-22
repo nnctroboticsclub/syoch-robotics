@@ -43,8 +43,9 @@ else()
   set(SROBO1_RANDOM_PROVIDED OFF PARENT_SCOPE)
 endif()
 
+add_subdirectory(drivers)
+
 if (NOT "${SYOCH_ROBOTICS_TARGET}" STREQUAL "Emulation" AND NOT "${SYOCH_ROBOTICS_TARGET}" STREQUAL "STM32 HAL")
-  add_subdirectory(drivers)
   add_subdirectory(network)
   add_subdirectory(timer)
 endif()
