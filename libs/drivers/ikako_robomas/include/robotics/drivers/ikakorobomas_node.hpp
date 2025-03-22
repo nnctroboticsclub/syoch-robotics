@@ -19,21 +19,21 @@ struct controller_param {
 };
 
 class RobomasWrapper {
-  controller_param cprm;
-  MotorParams* motor_params;
+  controller_param cprm{};
+  MotorParams* motor_params = nullptr;
   std::optional<ControlType> mode_ = std::nullopt;
 
-  MotorController* controller;
-  IkakoMotor* super;
+  MotorController* controller = nullptr;
+  IkakoMotor* super = nullptr;
 
   friend class IkakoRobomasNode;
 
  public:
-  template <typename Motor>
+  template <std::derived_from<IkakoMotor> Motor>
   RobomasWrapper(
       Motor* motor, float current_limit = 20.0f
       // https://github.com/nnctroboticsclub/IkakoRobomasのm3という配列を指すポインタである
-      ) requires std::is_base_of<IkakoMotor, Motor>::value {
+  ) {
     super = motor;
 
     motor_params = super->get_motor_params();
@@ -56,11 +56,38 @@ class RobomasWrapper {
     mode_ = type;
   }
 
-  void SetReference(float value) { controller->set_reference(value); }
+  void SetReference(float value) {
+    if (controller == nullptr) {
+      return;
+    }
+    controller->set_reference(value);
+  }
 
   IkakoMotor* GetMotor() { return super; }
 
   bool GetReadFlag() { return super->get_read_flag(); }
+
+  [[nodiscard]] float GetResponse() const {
+    if (mode_ == std::nullopt) {
+      return 0;
+    }
+
+    auto mode = *mode_;
+    switch (mode) {
+      case ControlType::VELOCITY: {
+        return super->get_vel();
+        break;
+      }
+      case ControlType::POSITION: {
+        return super->get_angle();
+        break;
+      }
+      default: {
+        return 0;
+        break;
+      }
+    }
+  }
 
   // dt = 0.001 (1ms)
   void Update() {
@@ -68,23 +95,13 @@ class RobomasWrapper {
       super->set_ref(0);
       return;
     }
-
-    auto mode = *mode_;
+    if (controller == nullptr) {
+      super->set_ref(0);
+      return;
+    }
 
     if (super->get_read_flag()) {
-      switch (mode) {
-        case ControlType::VELOCITY: {
-          controller->set_reference(super->get_vel());
-          break;
-        }
-        case ControlType::POSITION: {
-          controller->set_reference(super->get_angle());
-          break;
-        }
-        default: {
-          break;
-        }
-      }
+      controller->set_response(GetResponse());
     }
 
     controller->update();

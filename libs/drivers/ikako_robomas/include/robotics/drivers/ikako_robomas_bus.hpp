@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ikarashiCAN_mk2.h>
+#include <concepts>
 #include <robotics/drivers/ikakorobomas_node.hpp>
 
 namespace robotics::drivers::ikako_robomas_bus {
@@ -15,18 +16,16 @@ class IkakoRobomasBus {
 
   void Read() { sender.read(); }
 
-  template <typename Motor>
-  RobomasWrapper* NewWrapper(
-      Motor* motor) requires std::is_base_of<IkakoMotor, Motor>::value {
+  template <std::derived_from<IkakoMotor> Motor>
+  RobomasWrapper* NewWrapper(Motor* motor) {
     auto node = new RobomasWrapper(motor);
     sender.set_motors(node->GetMotor()->get_motor());
     nodes.push_back(node);
     return node;
   }
 
-  template <typename Motor>
-  IkakoRobomasNode* NewNode(
-      Motor* motor) requires std::is_base_of<IkakoMotor, Motor>::value {
+  template <std::derived_from<IkakoMotor> Motor>
+  IkakoRobomasNode* NewNode(Motor* motor) {
     auto node = new IkakoRobomasNode(motor);
     sender.set_motors(node->GetMotor()->get_motor());
     nodes.push_back((RobomasWrapper*)node);
