@@ -22,9 +22,14 @@ if(NOT ${NON_THREAD})
   )
 endif()
 
-if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed" OR "${SYOCH_ROBOTICS_TARGET}" STREQUAL "STM32 HAL")
+if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
   target_compile_definitions(syoch-robotics-logger PRIVATE
     -DLOG_FOR_MBED -DTARGET_${MBED_TARGET}=1
+    -DSYNC_PROTECT=1
+  )
+else()
+target_compile_definitions(syoch-robotics-logger PRIVATE
+    -DSYNC_PROTECT=0
   )
 endif()
 

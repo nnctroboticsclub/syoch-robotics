@@ -86,11 +86,15 @@ struct LogLine {
 static robotics::utils::NoMutexLIFO<LogLine, kMaxLogLines> log_queue;
 
 void inline Log(Level level, const char* tag, const char* msg, size_t msg_len) {
+#if SYNC_PROTECT
   if (robotics::binary::InNonWaitableContext()) {
     log_queue.Push(LogLine({tag, strlen(tag)}, {msg, msg_len}, level));
   } else {
     global_log_sink->Log(level, tag, msg);
   }
+#else
+  global_log_sink->Log(level, tag, msg);
+#endif
 }
 
 void Log(Level level, const char* tag, const char* msg) {
