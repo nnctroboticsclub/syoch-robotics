@@ -1,10 +1,7 @@
-#pragma once
-
-#include <robotics/types/pid_gains.hpp>
 #include <robotics/node/node.hpp>
+#include <robotics/types/pid_gains.hpp>
 
-namespace robotics {
-namespace node {
+namespace robotics::node {
 
 template <>
 std::array<uint8_t, 4> NodeEncoder<PIDGains>::Encode(PIDGains value) {
@@ -28,5 +25,4 @@ PIDGains NodeEncoder<PIDGains>::Decode(std::array<uint8_t, 4> value) {
   return PIDGains(g, p, i, d);
 }
 
-}  // namespace node
-}  // namespace robotics
+}  // namespace robotics::node

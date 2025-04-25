@@ -85,7 +85,16 @@ class Node : public GenericNode {
 
   T GetValue() { return value_; }
 
-  void SetChangeCallback(Callback callback) { callbacks_.push_back(callback); }
+  [[deprecated("Node#SetChangeCallback is deprecated")]]
+  void SetChangeCallback(Callback callback) {
+    callbacks_.push_back(callback);
+  }
+
+  void OnChanged(Callback callback) { callbacks_.push_back(callback); }
+
+  void OnChanged(std::function<void()> cb) override {
+    this->OnChanged([this, cb](T) { cb(); });
+  }
 
   void Link(Node<T>& input) { linked_inputs_.push_back(&input); }
 
@@ -103,10 +112,6 @@ class Node : public GenericNode {
 
   void LoadFromBytes(std::array<uint8_t, 4> data) override {
     SetValue(inspector.Decode(data));
-  }
-
-  void OnChanged(std::function<void()> cb) override {
-    this->SetChangeCallback([this, cb](T) { cb(); });
   }
 
   Node<T>& operator>>(Node<T>& next) {

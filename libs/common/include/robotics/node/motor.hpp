@@ -21,8 +21,8 @@ class Motor : public Node<T> {
   Motor() {
     factor.SetValue(1);
 
-    this->SetChangeCallback([this](T) { this->Update(); });
-    factor.SetChangeCallback([this](T) { this->Update(); });
+    this->OnChanged([this](T) { this->Update(); });
+    factor.OnChanged([this](T) { this->Update(); });
   }
 
   T GetSpeed() {
