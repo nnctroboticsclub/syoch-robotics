@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint>
-
 #include <functional>
 #include <vector>
 
@@ -23,6 +21,8 @@ class BlockStream {
   }
 
  public:
+  using DataType = T;
+
   virtual TxRet Send(D ctx, T& data) = 0;
   void OnReceive(OnReceiveCallback cb) {
     this->on_receive_callbacks_.emplace_back(cb);
@@ -43,6 +43,7 @@ class BlockStream<T, void, TxRet> {
   }
 
  public:
+  using DataType = T;
   virtual void Send(T& data) = 0;
 
   void OnReceive(OnReceiveCallback cb) {
