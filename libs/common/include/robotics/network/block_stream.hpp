@@ -22,6 +22,7 @@ class BlockStream {
 
  public:
   using DataType = T;
+  using StreamType = BlockStream<T, D, TxRet>;
 
   virtual TxRet Send(D ctx, T& data) = 0;
   void OnReceive(OnReceiveCallback cb) {
@@ -44,6 +45,8 @@ class BlockStream<T, void, TxRet> {
 
  public:
   using DataType = T;
+  using StreamType = BlockStream<T, void, TxRet>;
+
   virtual void Send(T& data) = 0;
 
   void OnReceive(OnReceiveCallback cb) {
