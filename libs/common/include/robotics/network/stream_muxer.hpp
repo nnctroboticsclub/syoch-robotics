@@ -8,10 +8,7 @@ requires(std::same_as<typename S1::DataType,
                       typename S2::DataType>) class StreamMuxer final
     : public S1::StreamType {
  public:
-  StreamMuxer(S1& stream1, S2& stream2)
-      : stream1_(stream1), stream2_(stream2) {}
-
-  void Init() {
+  StreamMuxer(S1& stream1, S2& stream2) : stream1_(stream1), stream2_(stream2) {
     stream1_.OnReceive(
         [this](S1::DataType& data) { this->DispatchOnReceive(data); });
 
