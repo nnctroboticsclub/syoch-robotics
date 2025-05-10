@@ -44,6 +44,9 @@ requires(std::same_as<typename S1::DataType,
 
   void SelectStream1() { selected_stream2_ = false; }
 
+  auto& GetStream1() { return stream1_; }
+  auto& GetStream2() { return stream2_; }
+
  private:
   std::optional<S1> stream1_;
   std::optional<S2> stream2_;
