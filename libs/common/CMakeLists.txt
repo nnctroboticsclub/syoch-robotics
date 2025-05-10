@@ -1,4 +1,4 @@
-add_library(syoch-robotics-common STATIC
+add_library(common STATIC
   source/node/node.cpp
   source/platform/panic.cpp
   source/types/angle_joystick_2d.cpp
@@ -7,8 +7,6 @@ add_library(syoch-robotics-common STATIC
   source/network/can_base.cpp
 )
 
-target_include_directories(syoch-robotics-common PUBLIC
-  "./include"
-)
+set_property(TARGET common PROPERTY CXX_STANDARD 20)
 
-set_property(TARGET syoch-robotics-common PROPERTY CXX_STANDARD 20)
+srobo1_target(common common)

@@ -1,10 +1,7 @@
-add_library(syoch-robotics-simple-can INTERFACE)
+add_library(simple-can INTERFACE)
+srobo1_target(simple-can network)
 
-target_link_libraries(syoch-robotics-simple-can INTERFACE
+target_link_libraries(simple-can INTERFACE
   dcan
   __idf_driver
-)
-
-target_include_directories(syoch-robotics-simple-can INTERFACE
-  "./include"
 )

@@ -1,10 +1,7 @@
-add_library(syoch-robotics-gpio INTERFACE)
+add_library(gpio INTERFACE)
+srobo1_target(gpio drivers)
 
-target_include_directories(syoch-robotics-gpio INTERFACE
-  "./include"
-)
-
-target_link_libraries(syoch-robotics-gpio INTERFACE ${SYOCH_ROBOTICS_DEPENDENCIES})
+target_link_libraries(gpio INTERFACE ${SYOCH_ROBOTICS_DEPENDENCIES})
 
 if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
   set(SYOCH_ROBOTICS_DRIVER_GPIO ON)

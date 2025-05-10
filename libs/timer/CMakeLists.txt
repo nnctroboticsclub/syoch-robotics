@@ -1,11 +1,6 @@
-add_library(syoch-robotics-timer STATIC
-  source/timer.cpp
-)
+add_library(timer STATIC source/timer.cpp)
+srobo1_target(timer timer)
 
-target_link_libraries(syoch-robotics-timer PUBLIC
+target_link_libraries(timer PUBLIC
   ${SYOCH_ROBOTICS_DEPENDENCIES}
-)
-
-target_include_directories(syoch-robotics-timer PUBLIC
-  "./include"
 )

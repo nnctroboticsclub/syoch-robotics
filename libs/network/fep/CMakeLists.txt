@@ -1,15 +1,12 @@
 add_library(fep STATIC)
+srobo1_target(fep network)
 
 target_link_libraries(fep PUBLIC
-  syoch-robotics-common
-  syoch-robotics-thread
-  syoch-robotics-logger
-  syoch-robotics-timer
-  syoch-robotics-gpio
-)
-
-target_include_directories(fep PUBLIC
-  "./include"
+  common
+  thread
+  logger
+  timer
+  gpio
 )
 
 target_sources(fep PRIVATE

@@ -1,11 +1,6 @@
-add_library(syoch-robotics-random STATIC
-  source/random.cpp
-)
+add_library(random STATIC source/random.cpp)
+srobo1_target(random random)
 
-target_link_libraries(syoch-robotics-random PRIVATE
-  syoch-robotics-thread
-)
-
-target_include_directories(syoch-robotics-random PUBLIC
-  "./include"
+target_link_libraries(random PRIVATE
+  thread
 )

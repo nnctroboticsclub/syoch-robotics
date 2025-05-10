@@ -1,9 +1,4 @@
-add_library(syoch-robotics-sync-stream INTERFACE)
+add_library(sync-stream INTERFACE)
+srobo1_target(sync-stream network)
 
-target_include_directories(syoch-robotics-sync-stream INTERFACE
-  "./include"
-)
-
-target_link_libraries(syoch-robotics-sync-stream INTERFACE
-  syoch-robotics-thread
-)
+target_link_libraries(sync-stream INTERFACE thread)

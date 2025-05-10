@@ -1,11 +1,8 @@
-add_library(syoch-robotics-thread STATIC
+add_library(thread STATIC
   source/thread.cpp
 )
+srobo1_target(thread thread)
 
-target_link_libraries(syoch-robotics-thread PUBLIC
+target_link_libraries(thread PUBLIC
   ${SYOCH_ROBOTICS_DEPENDENCIES}
-)
-
-target_include_directories(syoch-robotics-thread PUBLIC
-  "./include"
 )

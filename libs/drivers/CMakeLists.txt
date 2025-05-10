@@ -6,9 +6,6 @@ if(${SYOCH_ROBOTICS_DRIVER_GPIO})
 endif()
 
 if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed" OR "${SYOCH_ROBOTICS_IKAKO_ROBOMAS}")
-  message(STATUS "Adding ikako_robomas")
-  message(STATUS "  - SYOCH_ROBOTICS_TARGET: ${SYOCH_ROBOTICS_TARGET}")
-  message(STATUS "  - SYOCH_ROBOTICS_IKAKO_ROBOMAS: ${SYOCH_ROBOTICS_IKAKO_ROBOMAS}")
   add_subdirectory(ikako_robomas)
 endif()
 

@@ -1,5 +1,2 @@
 add_library(rd16 INTERFACE)
-
-target_include_directories(rd16 INTERFACE
-  "./include"
-)
+srobo1_target(rd16 binary)

@@ -1,12 +1,9 @@
-add_library(syoch-robotics-temp-buffer STATIC
+add_library(temp-buffer STATIC
   source/temp_buffer.cpp
 )
 
-target_link_libraries(syoch-robotics-temp-buffer PRIVATE
-  syoch-robotics-context-detector
+target_link_libraries(temp-buffer PRIVATE
+  context-detector
 )
 
-target_include_directories(syoch-robotics-temp-buffer PUBLIC
-  include
-)
-
+srobo1_target(temp-buffer binary)
