@@ -13,7 +13,8 @@ class SimpleCAN : public CANBase {
   Impl* impl_;
 
  public:
-  SimpleCAN(PinName rx, PinName tx, int frequency = 50E3);
+  SimpleCAN(PinName rx, PinName tx, int frequency = 50E3,
+            bool is_can_extended = false);
   ~SimpleCAN();
 
   int Send(uint32_t id, std::vector<uint8_t> const& data) override;
