@@ -3,12 +3,12 @@
 #include <vector>
 
 #include <mbed.h>
-#include <rtos.h>
 
 #include <robotics/network/can_base.hpp>
+#include <robotics/utils/non_copyable.hpp>
 
 namespace robotics::network {
-class SimpleCAN : public CANBase {
+class SimpleCAN : public CANBase, public utils::NonCopyable<SimpleCAN> {
   class Impl;
   Impl* impl_;
 
