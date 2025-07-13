@@ -1,11 +1,17 @@
-add_library(syoch-robotics-random STATIC
-  source/random.cpp
-)
+if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
+  set(SROBO1_RANDOM_PROVIDED ON PARENT_SCOPE)
+elseif ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "ESP")
+  set(SROBO1_RANDOM_PROVIDED ON PARENT_SCOPE)
+elseif ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Emulation")
+  set(SROBO1_RANDOM_PROVIDED ON PARENT_SCOPE)
+elseif ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Host")
+  set(SROBO1_RANDOM_PROVIDED ON PARENT_SCOPE)
+else()
+  set(SROBO1_RANDOM_PROVIDED OFF PARENT_SCOPE)
+endif()
 
-target_link_libraries(syoch-robotics-random PRIVATE
-  syoch-robotics-thread
-)
-
-target_include_directories(syoch-robotics-random PUBLIC
-  "./include"
-)
+if (${SROBO1_RANDOM_PROVIDED})
+  add_library(syoch-robotics-random STATIC source/random.cpp)
+  target_link_libraries(syoch-robotics-random PRIVATE syoch-robotics-thread)
+  target_include_directories(syoch-robotics-random PUBLIC "./include")
+endif()
