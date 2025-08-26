@@ -2,8 +2,8 @@
 
 #include <cstring>
 
+#include <robotics/network/stream.hpp>
 #include "kv.hpp"
-#include "../stream.hpp"
 
 namespace robotics::network::ssp {
 template <typename Context = uint8_t>

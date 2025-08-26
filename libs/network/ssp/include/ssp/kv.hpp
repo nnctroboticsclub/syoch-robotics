@@ -1,13 +1,13 @@
 #pragma once
 
-#include <unordered_map>
 #include <functional>
+#include <unordered_map>
 
-#include <robotics/logger/logger.hpp>
+#include <logger/logger.hpp>
 #include <robotics/network/stream.hpp>
-#include <robotics/network/ssp/ssp.hpp>
-#include <robotics/platform/thread.hpp>
 #include <robotics/utils/no_mutex_lifo.hpp>
+#include <ssp/ssp.hpp>
+#include "robotics/thread/thread.hpp"
 
 namespace robotics::network::ssp {
 struct KVPacket {
@@ -30,7 +30,7 @@ class KVService : public robotics::network::ssp::SSP_Service<Context> {
  private:
   void OnReceive_Request(uint8_t from, uint8_t kv_id) {
     if (kv_callbacks_.find(kv_id) == kv_callbacks_.end()) {
-      logger.Error("Unknown Key: %d", kv_id);
+      this->logger.Error("Unknown Key: %d", kv_id);
       return;
     }
 
@@ -52,9 +52,9 @@ class KVService : public robotics::network::ssp::SSP_Service<Context> {
             uint8_t service_id, const char* logger_tag,
             const char* logger_header)
       : SSP_Service<Context>(stream, service_id, logger_tag, logger_header) {
-    OnReceive([this, &stream](uint8_t addr, uint8_t* data, size_t len) {
+    this->OnReceive([this, &stream](uint8_t addr, uint8_t* data, size_t len) {
       if (len < 1) {
-        logger.Error("Invalid Length: %d", len);
+        this->logger.Error("Invalid Length: %d", len);
         return;
       }
       if (len == 1) {

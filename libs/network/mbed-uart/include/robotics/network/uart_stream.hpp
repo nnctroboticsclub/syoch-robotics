@@ -3,7 +3,6 @@
 #include <mbed.h>
 
 #include <cstdint>
-#include <string>
 
 #include <logger/logger.hpp>
 #include <robotics/network/iuart.hpp>
@@ -35,7 +34,7 @@ class UARTStream : public IUART {
 
   void Send(uint8_t* data, uint32_t len) override;
 
-  void Rebaud(int baud);
+  void Rebaud(int baud) override;
 };
 
 }  // namespace robotics::network

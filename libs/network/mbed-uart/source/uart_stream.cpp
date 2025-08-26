@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <robotics/network/uart_stream.hpp>
 #include "robotics/thread/thread.hpp"
 
@@ -29,12 +28,9 @@ UARTStream::UARTStream(PinName tx, PinName rx, int baud) : tx(tx), rx(rx) {
   thread_recv.SetStackSize(8192);
   thread_recv.Start([this]() {
     this->is_running = true;
-    logger.Info("UARTStream is starting");
     while (!upper_stream) {
       robotics::system::SleepFor(10ms);
     }
-
-    logger.Info("UARTStream is running");
 
     while (!stop_token) {
       if (upper_stream->readable()) {
@@ -45,8 +41,6 @@ UARTStream::UARTStream(PinName tx, PinName rx, int baud) : tx(tx), rx(rx) {
       }
     }
 
-    logger.Info("UARTStream is stopping");
-
     this->is_running = false;
   });
 
@@ -54,16 +48,11 @@ UARTStream::UARTStream(PinName tx, PinName rx, int baud) : tx(tx), rx(rx) {
   thread_dispatch.SetStackSize(8192);
   thread_dispatch.Start([this]() {
     this->is_running = true;
-    logger.Info("UARTStream is starting");
     while (!upper_stream) {
       robotics::system::SleepFor(10ms);
     }
 
-    logger.Info("UARTStream is running");
-
     while (!stop_token) {
-      // logger.Info("upper_stream.readable() -> %d, buffer.Size() -> %d",
-      //             upper_stream->readable(), buffer.Size());
       if (not buffer.Empty()) {
         static uint8_t buf[128] = {};
         auto len = buffer.Size() < 128 ? buffer.Size() : 128;
@@ -73,8 +62,6 @@ UARTStream::UARTStream(PinName tx, PinName rx, int baud) : tx(tx), rx(rx) {
 
       robotics::system::SleepFor(100ms);
     }
-
-    logger.Info("UARTStream is stopping");
 
     this->is_running = false;
   });

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <unordered_map>
 #include <cstdint>
+#include <unordered_map>
 
-#include <robotics/network/stream.hpp>
 #include <logger/logger.hpp>
+#include <robotics/network/stream.hpp>
 
 namespace robotics::network {
 namespace ssp {
@@ -57,6 +57,7 @@ class SerialServiceProtocol {
       : logger("ssp.nw.srobo1", "SerialServiceProtocol"), stream_(stream) {
     stream_.OnReceive(
         [this](Context from_addr, uint8_t* data, uint32_t length) {
+          logger.Debug("Received %d bytes from %d", length, from_addr);
           if (length < 1) {
             return;
           }
