@@ -58,7 +58,7 @@ class KVService : public robotics::network::ssp::SSP_Service<Context> {
         return;
       }
       if (len == 1) {
-        OnReceive_Request(addr, data[0] << 8);
+        OnReceive_Request(addr, data[0]);
       } else {
         OnReceive_Responce(addr, {data, len});
       }
