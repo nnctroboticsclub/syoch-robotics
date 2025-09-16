@@ -16,7 +16,6 @@ class UARTStream : public IUART {
 
   utils::NoMutexLIFO<uint8_t, 32> buffer;
   mbed::UnbufferedSerial* upper_stream = nullptr;
-  robotics::system::Thread thread_recv;
   robotics::system::Thread thread_dispatch;
   PinName tx, rx;
 

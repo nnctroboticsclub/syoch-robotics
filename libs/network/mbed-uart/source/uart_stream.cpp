@@ -24,24 +24,13 @@ void UARTStream::Deinit() {
 UARTStream::UARTStream(PinName tx, PinName rx, int baud) : tx(tx), rx(rx) {
   Init(baud);
 
-  thread_recv.SetThreadName("UARTStream");
-  thread_recv.SetStackSize(8192);
-  thread_recv.Start([this]() {
-    this->is_running = true;
-    while (!upper_stream) {
-      robotics::system::SleepFor(10ms);
+  upper_stream->attach([this]() {
+    if (upper_stream->readable()) {
+      static uint8_t buf[128] = {};
+      const auto len = upper_stream->read(buf, 128);
+
+      buffer.PushN(buf, len);
     }
-
-    while (!stop_token) {
-      if (upper_stream->readable()) {
-        static uint8_t buf[128] = {};
-        const auto len = upper_stream->read(buf, 128);
-
-        buffer.PushN(buf, len);
-      }
-    }
-
-    this->is_running = false;
   });
 
   thread_dispatch.SetThreadName("UARTStream-Dispatch");
