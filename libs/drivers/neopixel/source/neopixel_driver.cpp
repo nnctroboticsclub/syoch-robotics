@@ -1,4 +1,4 @@
-#include "neopixel_driver.hpp"
+#include <robotics/driver/neopixel_driver.hpp>
 
 namespace robotics::utils {
 void NeoPixelSPIDriver::SetMaxBytes(int bytes) {

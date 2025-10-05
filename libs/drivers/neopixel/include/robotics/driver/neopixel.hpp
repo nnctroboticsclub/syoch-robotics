@@ -1,10 +1,10 @@
 #pragma once
 
-#include <vector>
 #include <memory>
+#include <vector>
 
+#include <robotics/driver/spi.hpp>
 #include "neopixel_driver.hpp"
-#include "../platform/spi.hpp"
 
 namespace robotics::utils {
 class Color {
@@ -16,11 +16,11 @@ class Color {
   Color(float r, float g, float b);
   Color(uint32_t rgb);
 
-  Color operator+(Color const &other);
-  Color operator-(Color const &other);
-  Color operator*(float const &other);
-  Color operator*(int const &other);
-  Color operator/(int const &other);
+  Color operator+(Color const& other);
+  Color operator-(Color const& other);
+  Color operator*(float const& other);
+  Color operator*(int const& other);
+  Color operator/(int const& other);
 
   uint32_t ToRGB();
 

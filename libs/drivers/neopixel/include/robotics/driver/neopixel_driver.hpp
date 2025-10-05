@@ -1,11 +1,11 @@
 #pragma once
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include <cstdint>
 
-#include "../platform/spi.hpp"
+#include <robotics/driver/spi.hpp>
 
 namespace robotics::utils {
 class NeoPixelDriver {

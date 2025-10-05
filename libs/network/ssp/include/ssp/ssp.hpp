@@ -57,7 +57,6 @@ class SerialServiceProtocol {
       : logger("ssp.nw.srobo1", "SerialServiceProtocol"), stream_(stream) {
     stream_.OnReceive(
         [this](Context from_addr, uint8_t* data, uint32_t length) {
-          logger.Debug("Received %d bytes from %d", length, from_addr);
           if (length < 1) {
             return;
           }

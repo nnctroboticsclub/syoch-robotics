@@ -1,7 +1,7 @@
-#include "neopixel.hpp"
+#include <robotics/driver/neopixel.hpp>
 
-#include <cstdio>
 #include <cmath>
+#include <cstdio>
 
 namespace robotics::utils {
 Color::Color(float r, float g, float b) : r(r), g(g), b(b) {}
@@ -9,23 +9,23 @@ Color::Color(float r, float g, float b) : r(r), g(g), b(b) {}
 Color::Color(uint32_t rgb)
     : r((rgb >> 16) & 0xFF), g((rgb >> 8) & 0xFF), b(rgb & 0xFF) {}
 
-Color Color::operator+(Color const &other) {
+Color Color::operator+(Color const& other) {
   return Color(r + other.r, g + other.g, b + other.b);
 }
 
-Color Color::operator-(Color const &other) {
+Color Color::operator-(Color const& other) {
   return Color(r - other.r, g - other.g, b - other.b);
 }
 
-Color Color::operator*(float const &other) {
+Color Color::operator*(float const& other) {
   return Color(r * other, g * other, b * other);
 }
 
-Color Color::operator*(int const &other) {
+Color Color::operator*(int const& other) {
   return Color(r * other, g * other, b * other);
 }
 
-Color Color::operator/(int const &other) {
+Color Color::operator/(int const& other) {
   return Color(r / other, g / other, b / other);
 }
 
@@ -93,6 +93,8 @@ void NeoPixel::Clear() {
   }
 }
 
-void NeoPixel::Write() { driver_->Flush(); }
+void NeoPixel::Write() {
+  driver_->Flush();
+}
 
 }  // namespace robotics::utils
