@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <robotics/driver/neopixel_driver.hpp>
 
 namespace robotics::utils {
@@ -10,12 +11,18 @@ void NeoPixelSPIDriver::SetMaxBytes(int bytes) {
 }
 
 void NeoPixelSPIDriver::Flush() {
-  std::vector<uint8_t> rx(buffer_.size());
+  static std::vector<uint8_t> rx;
+
+  rx.resize(buffer_.size());
   spi_->Transfer(buffer_, rx);
 }
 
 void NeoPixelSPIDriver::SetByte(int position, uint8_t byte) {
   const int byte_index = kResetSize + position * 4;
+
+  if (buffer_.size() <= (unsigned int)(byte_index + 3)) {
+    return;
+  }
 
   buffer_[byte_index + 0] =
       ((byte >> 7) & 1 ? 0xE : 0x8) << 4 | ((byte >> 6) & 1 ? 0xE : 0x8);

@@ -1,5 +1,6 @@
 add_library(syoch-robotics-neopixel STATIC
   source/neopixel.cpp
+  source/neopixel_driver.cpp
 )
 
 target_link_libraries(syoch-robotics-neopixel PUBLIC
