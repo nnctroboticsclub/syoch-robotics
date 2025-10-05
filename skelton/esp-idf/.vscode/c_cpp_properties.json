@@ -1,9 +1,0 @@
-{
-    "configurations": [
-        {
-            "name": "esp32",
-            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
-        }
-    ],
-    "version": 4
-}

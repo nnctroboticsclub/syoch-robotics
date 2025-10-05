@@ -1,8 +1,0 @@
-## IDF Component Manager Manifest File
-dependencies:
-  espressif/esp_websocket_client: "^1.2.2"
-  idf:
-    version: ">=4.1.0"
-
-  # nnctroboticsclub/data-proxy:
-  #   git: ssh://git@github.com/nnctroboticsclub/data-proxy.git
