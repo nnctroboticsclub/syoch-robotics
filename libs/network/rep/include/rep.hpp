@@ -7,14 +7,14 @@
 
 #include <robotics/utils/no_mutex_lifo.hpp>
 
-#include <robotics/network/fep/fep_tx_state.hpp>
 #include <robotics/network/fep/fep_raw_driver.hpp>
+#include <robotics/network/fep/fep_tx_state.hpp>
 
 namespace robotics::network {
 namespace rep {
 struct REPTxPacket {
   uint8_t addr;
-  uint8_t buffer[32];
+  std::array<uint8_t, 32> buffer;
   uint32_t length;
 };
 
@@ -26,14 +26,14 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
 
   bool in_isr = false;
 
-  uint8_t tx_buffer_[32] = {};
+  std::array<uint8_t, 32> tx_buffer_{};
 
   robotics::utils::NoMutexLIFO<REPTxPacket, 4> tx_queue;
 
   void _Send(REPTxPacket& packet);
 
  public:
-  ReliableFEPProtocol(FEP_RawDriver& driver);
+  explicit ReliableFEPProtocol(fep::FEP_RawDriver& driver);
 
   void Send(uint8_t address, uint8_t* data, uint32_t length) override;
 };

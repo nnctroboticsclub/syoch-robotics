@@ -11,7 +11,7 @@
 
 namespace robotics::network::ssp {
 struct KVPacket {
-  uint8_t* data;
+  const uint8_t* data;
   size_t len;
 };
 
@@ -29,7 +29,7 @@ class KVService : public robotics::network::ssp::SSP_Service<Context> {
 
  private:
   void OnReceive_Request(uint8_t from, uint8_t kv_id) {
-    if (kv_callbacks_.find(kv_id) == kv_callbacks_.end()) {
+    if (!kv_callbacks_.contains(kv_id)) {
       this->logger.Error("Unknown Key: %d", kv_id);
       return;
     }
@@ -43,7 +43,7 @@ class KVService : public robotics::network::ssp::SSP_Service<Context> {
 
     this->Send(from, tx_buffer, res.len + 1);
   }
-  void OnReceive_Responce(uint8_t from, KVPacket rx_packet) {
+  void OnReceive_Responce(uint8_t, KVPacket rx_packet) {
     rx_buffer.Push(rx_packet);
   }
 
@@ -89,7 +89,7 @@ class KVService : public robotics::network::ssp::SSP_Service<Context> {
         continue;
       }
 
-      return {res.data + 1, res.len - 1};
+      return {.data = res.data + 1, .len = res.len - 1};
 
       robotics::system::SleepFor(2ms);
     }

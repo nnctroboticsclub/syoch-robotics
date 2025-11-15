@@ -2,16 +2,16 @@
 
 #include <unordered_map>
 
+#include <logger/logger.hpp>
 #include <robotics/driver/dout.hpp>
 #include <robotics/network/iuart.hpp>
-#include <logger/logger.hpp>
 
-#include "fep_raw_driver.hpp"
 #include "fep_notxret.hpp"
+#include "fep_raw_driver.hpp"
 
 namespace robotics::network::fep {
 // FEP Baudrate (Raw value) the value presented FEP's REG20 parameter
-enum class FEPBaudrateValue {
+enum class FEPBaudrateValue: uint8_t {
   k9600 = 0,
   k19200 = 1,
   k38400 = 2,
@@ -22,43 +22,44 @@ class FEPBaudrate {
   FEPBaudrateValue value_;
 
  public:
-  FEPBaudrate(FEPBaudrateValue value) : value_(value) {}
+  explicit FEPBaudrate(FEPBaudrateValue value) : value_(value) {}
 
-  int GetBaudrate() {
+  [[nodiscard]] int GetBaudrate() const {
     switch (value_) {
-      case FEPBaudrateValue::k9600:
+      using enum robotics::network::fep::FEPBaudrateValue;
+      case k9600:
         return 9600;
-      case FEPBaudrateValue::k19200:
+      case k19200:
         return 19200;
-      case FEPBaudrateValue::k38400:
+      case k38400:
         return 38400;
-      case FEPBaudrateValue::k115200:
+      case k115200:
         return 115200;
       default:
         return 9600;
     }
   }
 
-  int GetBits() { return (int)value_; }
+  [[nodiscard]] uint8_t GetBits() const { return static_cast<uint8_t>(value_); }
 };
 
 class FEPDriver {
   static inline robotics::logger::Logger logger{"fep.nw",
                                                 "\x1b[1;4;32mFEPDriver\x1b[m"};
-  robotics::network::IUART *stream_;
+  robotics::network::IUART* stream_;
 
-  robotics::driver::IDout *fep_rst_;
-  robotics::driver::IDout *fep_ini_;
+  robotics::driver::IDout* fep_rst_;
+  robotics::driver::IDout* fep_ini_;
 
   robotics::network::FEP_RawDriver fep_;
 
   std::unordered_map<uint8_t, uint8_t> configured_registers_ = {};
-  FEPBaudrate configured_baudrate_ = FEPBaudrateValue::k115200;
+  FEPBaudrate configured_baudrate_ = FEPBaudrate(FEPBaudrateValue::k115200);
 
   [[nodiscard]]
   robotics::types::Result<bool, robotics::network::fep::DriverError>
   IsRegisterConfigured(uint8_t addr) {
-    if (configured_registers_.find(addr) == configured_registers_.end()) {
+    if (!configured_registers_.contains(addr)) {
       return false;
     }
 
@@ -70,9 +71,8 @@ class FEPDriver {
                    result.UnwrapError().c_str());
       return result.UnwrapError();
     }
-    auto actual = result.Unwrap();
 
-    if (expected != actual) {
+    if (auto actual = result.Unwrap(); expected != actual) {
       return false;
     }
 
@@ -83,7 +83,7 @@ class FEPDriver {
   robotics::types::Result<void, robotics::network::fep::DriverError>
   ConfigureRegisters() {
     bool any_register_changed = false;
-    for (auto &[addr, value] : configured_registers_) {
+    for (auto const& [addr, value] : configured_registers_) {
       bool configured;
       {
         auto result = IsRegisterConfigured(addr);
@@ -101,8 +101,7 @@ class FEPDriver {
 
       any_register_changed = true;
 
-      auto result = fep_.SetRegister(addr, value);
-      if (!result.IsOk()) {
+      if (auto result = fep_.SetRegister(addr, value); !result.IsOk()) {
         logger.Error("Failed to set FEP Register: %s",
                      result.UnwrapError().c_str());
         return result.UnwrapError();
@@ -112,15 +111,19 @@ class FEPDriver {
     }
 
     if (any_register_changed) {
-      fep_.Reset();
+      auto result = fep_.Reset();
+      if (!result.IsOk()) {
+        logger.Error("Failed to reset FEP after register configuration: %s",
+                     result.UnwrapError().c_str());
+        return result.UnwrapError();
+      }
     }
 
-    return robotics::types::Result<void, robotics::network::fep::DriverError>();
+    return {};
   }
 
   bool CheckConnectability() {
-    auto result = this->fep_.Version(100ms);
-    if (!result.IsOk()) {
+    if (auto result = this->fep_.Version(100ms); !result.IsOk()) {
       logger.Error("Failed to get FEP Version: %s",
                    result.UnwrapError().c_str());
 
@@ -136,7 +139,7 @@ class FEPDriver {
       return;
     }
 
-    FEPBaudrate candidates[] = {
+    std::array<FEPBaudrate, 4> candidates = {
         // Fastest baudrate is might be the most used baudrate
         FEPBaudrate(FEPBaudrateValue::k115200),
 
@@ -148,7 +151,7 @@ class FEPDriver {
         FEPBaudrate(FEPBaudrateValue::k19200),
     };
 
-    for (auto &baudrate : candidates) {
+    for (auto const& baudrate : candidates) {
       logger.Info("Trying FEP Baudrate: %d", baudrate.GetBaudrate());
       this->stream_->Rebaud(baudrate.GetBaudrate());
 
@@ -164,7 +167,8 @@ class FEPDriver {
       this->stream_->Rebaud(candidates[0].GetBaudrate());
     } else {
       logger.Error("Failed to detect FEP Baudrate");
-      while (1) robotics::system::SleepFor(1000ms);
+      while (true)
+        robotics::system::SleepFor(1000ms);
     }
   }
 
@@ -182,7 +186,7 @@ class FEPDriver {
     }
 
     // Replace the baudrate bits(LSB 2 bits)
-    auto new_reg20 = (reg20 & 0xFC) | baudrate.GetBits();
+    auto new_reg20 = static_cast<uint8_t>((reg20 & 0xFC) | baudrate.GetBits());
 
     if (new_reg20 == reg20) {
       logger.Info("FEP Baudrate Unchanged: %d", baudrate.GetBaudrate());
@@ -205,8 +209,8 @@ class FEPDriver {
   }
 
  public:
-  FEPDriver(robotics::network::IUART &stream, robotics::driver::IDout &fep_rst,
-            robotics::driver::IDout &fep_ini)
+  FEPDriver(robotics::network::IUART& stream, robotics::driver::IDout& fep_rst,
+            robotics::driver::IDout& fep_ini)
       : stream_(&stream),
         fep_rst_(&fep_rst),
         fep_ini_(&fep_ini),
@@ -215,9 +219,9 @@ class FEPDriver {
     fep_ini_->Write(true);
   }
 
-  robotics::network::fep::FEP_RawDriver &GetFEP() { return fep_; }
+  robotics::network::fep::FEP_RawDriver& GetFEP() { return fep_; }
 
-  RawFEP_NoTxRet GetFEP_NoTxRet() { return RawFEP_NoTxRet(fep_); }
+  RawFEP_NoTxRet GetFEP_NoTxRet() { return {fep_}; }
 
   void ResetHW() {
     logger.Info("Resetting FEP Hardware after 2s");
@@ -250,8 +254,8 @@ class FEPDriver {
     ChangeBaudRate(configured_baudrate_);
     AdjustBaudrateToRemote();
 
-    auto result = ConfigureRegisters();
-    if (!result.IsOk()) return result.UnwrapError();
+    if (auto result = ConfigureRegisters(); !result.IsOk())
+      return result.UnwrapError();
 
     fep_.SetDispatchRX(true);
 

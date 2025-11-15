@@ -16,13 +16,16 @@ class IdentitiyService : public robotics::network::ssp::KVService<Context> {
     using robotics::network::ssp::KVPacket;
 
     this->OnKVRequested(0x0000, [device_name]() {
-      return (KVPacket){(uint8_t*)device_name, std::strlen(device_name)};
+      return (KVPacket){.data = (const uint8_t*)device_name,
+                        .len = std::strlen(device_name)};
     });
     this->OnKVRequested(0x0001, []() {
-      return (KVPacket){(uint8_t*)__DATE__, std::strlen(__DATE__)};
+      return (KVPacket){.data = (const uint8_t*)__DATE__,
+                        .len = std::strlen(__DATE__)};
     });
     this->OnKVRequested(0x0002, []() {
-      return (KVPacket){(uint8_t*)__TIME__, std::strlen(__TIME__)};
+      return (KVPacket){.data = (const uint8_t*)__TIME__,
+                        .len = std::strlen(__TIME__)};
     });
   }
 };

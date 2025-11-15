@@ -1,22 +1,21 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 #include <chrono>
-#include <sstream>
 #include <string>
-#include <iomanip>
 
 #include <robotics/network/stream.hpp>
 
 #include <logger/logger.hpp>
-#include <robotics/utils/no_mutex_lifo.hpp>
-#include <robotics/types/result.hpp>
-#include <robotics/timer/timer.hpp>
 #include <robotics/thread/thread.hpp>
+#include <robotics/timer/timer.hpp>
+#include <robotics/types/result.hpp>
+#include <robotics/utils/no_mutex_lifo.hpp>
 
-#include "fep_tx_state.hpp"
 #include "fep_packet.hpp"
+#include "fep_tx_state.hpp"
 #include "result.hpp"
 
 namespace robotics::network {
@@ -27,11 +26,11 @@ using namespace std::chrono_literals;
 class DriverError : public std::string {
  public:
   DriverError();
-  DriverError(std::string const& message);
+  explicit DriverError(std::string const& message);
 };
 
 struct FEPRawLine {
-  char line[32];
+  std::array<char, 32> line;
 };
 
 enum class State {
@@ -72,7 +71,7 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
       std::chrono::milliseconds timeout = 5000ms);
 
  public:
-  FEP_RawDriver(Stream<uint8_t>& upper_stream);
+  explicit FEP_RawDriver(Stream<uint8_t>& upper_stream);
 
   [[nodiscard]]
   types::Result<uint8_t, DriverError> GetRegister(

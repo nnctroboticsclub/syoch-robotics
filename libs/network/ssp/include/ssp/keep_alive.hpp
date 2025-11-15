@@ -20,11 +20,11 @@ class KeepAliveService
  public:
   Node<bool> connection_available;
 
-  KeepAliveService(robotics::network::Stream<uint8_t, Context, TxRet>& stream)
+  explicit KeepAliveService(
+      robotics::network::Stream<uint8_t, Context, TxRet>& stream)
       : SSP_Service<Context, TxRet>(stream, 0x04, "keep_alive.svc.nw",
                                     "\x1b[32mKeepAliveService\x1b[m") {
-    this->OnReceive(
-        [this](Context addr, uint8_t* data, size_t len) { TreatKeepAlive(); });
+    this->OnReceive([this](Context, uint8_t*, size_t) { TreatKeepAlive(); });
   }
 
   void Update(float dt_s) {

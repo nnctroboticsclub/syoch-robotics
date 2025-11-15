@@ -1,9 +1,10 @@
+#include <array>
 #include <cstddef>
 
 namespace robotics::utils {
 template <typename T, std::size_t N>
 class ManagedList {
-  T pool_[N] = {};
+  std::array<T, N> pool_ = {};
   size_t last_index_ = 0;
 
  public:

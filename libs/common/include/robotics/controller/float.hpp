@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdio>
 #include "packet.hpp"
 #include "controller_base.hpp"
 

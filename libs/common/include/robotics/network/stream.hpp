@@ -32,6 +32,8 @@ class Stream {
   }
 
  public:
+  virtual ~Stream() = default;
+
   virtual TxRet Send(D ctx, T* data, L length) = 0;
   TxRet Send(D ctx, std::vector<T> const& data) {
     return Send(ctx, data.data(), data.size());
@@ -55,6 +57,8 @@ class Stream<T, void, TxRet> {
   }
 
  public:
+  virtual ~Stream() = default;
+
   virtual void Send(T* data, uint32_t length) = 0;
   TxRet Send(std::vector<T> const& data) {
     return Send(data.data(), data.size());

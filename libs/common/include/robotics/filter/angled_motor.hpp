@@ -1,7 +1,7 @@
 #pragma once
 
-#include "pid.hpp"
 #include "../node/node.hpp"
+#include "pid.hpp"
 
 #include "./angle_smoother.hpp"
 
@@ -11,27 +11,27 @@ class AngledMotor {
  public:
   filter::PID<float> pid{1.0f / 360, 2.0f, 0.52f, 0.13f};
 
-  Node<float> feedback;
-  Node<float> goal;
-  Node<float> output;
+  Node<float> feedback = 0;
+  Node<float> goal = 0;
+  Node<float> output = 0;
 
-  Node<float> offset;
+  Node<float> offset = 0;
 
  private:
   AngleNormalizer<float> feedback_normalizer;
   AngleNormalizer<float> goal_normalizer;
 
  public:
-  AngledMotor() : feedback(0), goal(0), output(0) {
-    feedback.Link(feedback_normalizer.input);
-    feedback_normalizer.output.Link(pid.fb_);
+  AngledMotor() {
+    feedback >> feedback_normalizer.input;
+    feedback_normalizer.output >> pid.fb_;
 
-    goal.Link(goal_normalizer.input);
-    goal_normalizer.output.Link(pid.goal_);
+    goal >> goal_normalizer.input;
+    goal_normalizer.output >> pid.goal_;
 
-    pid.output_.Link(output);
+    pid.output_ >> output;
 
-    offset.Link(goal_normalizer.offset);
+    offset >> goal_normalizer.offset;
   }
 
   void Update(float dt) { pid.Update(dt); }
@@ -41,8 +41,8 @@ class AngledMotor {
     goal_normalizer.Reset();
   }
 
-  void AddOffset(float offset) {
-    float new_offset = this->offset.GetValue() + offset;
+  void AddOffset(float rel_offset) {
+    float new_offset = this->offset.GetValue() + rel_offset;
 
     if (new_offset > 180) {
       new_offset -= 360;

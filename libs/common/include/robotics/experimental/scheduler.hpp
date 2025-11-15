@@ -1,7 +1,7 @@
 #include <functional>
-#include "../platform/timer.hpp"
-#include "../platform/thread.hpp"
 #include "../logger/logger.hpp"
+#include "../platform/thread.hpp"
+#include "../platform/timer.hpp"
 
 namespace robotics::experimental::scheduler {
 
@@ -22,8 +22,9 @@ class Task {
 
   std::function<void()> task;
 
-  static Task *Later(const char* task_name, Time scheduled_at, Duration delay, std::function<void()> task) {
-    auto task_obj = new Task ;
+  static Task* Later(const char* task_name, Time scheduled_at, Duration delay,
+                     std::function<void()> task) {
+    auto task_obj = new Task;
     task_obj->type = kLater;
     task_obj->task = task;
     task_obj->task_name = task_name;
@@ -34,9 +35,9 @@ class Task {
     return task_obj;
   }
 
-  static Task *RepeatInterval(const char* task_name, Time scheduled_at, Duration interval,
-                             std::function<void()> task) {
-    auto task_obj = new Task ;
+  static Task* RepeatInterval(const char* task_name, Time scheduled_at,
+                              Duration interval, std::function<void()> task) {
+    auto task_obj = new Task;
     task_obj->type = kRepeatInterval;
     task_obj->task_name = task_name;
     task_obj->task = task;
@@ -47,9 +48,10 @@ class Task {
     return task_obj;
   }
 
-  static Task *RepeatUntil(const char* task_name, Time scheduled_at, Duration interval, int count_max,
-                          std::function<void()> task) {
-    auto task_obj = new Task ;
+  static Task* RepeatUntil(const char* task_name, Time scheduled_at,
+                           Duration interval, int count_max,
+                           std::function<void()> task) {
+    auto task_obj = new Task;
     task_obj->type = kRepeatUntil;
     task_obj->task_name = task_name;
     task_obj->task = task;
@@ -110,9 +112,7 @@ class Task {
     }
   }
 
-  void Dispose() {
-    this->task = nullptr;
-  }
+  void Dispose() { this->task = nullptr; }
 };
 
 template <typename Time, typename Duration>
@@ -120,17 +120,17 @@ class Scheduler {
   system::Timer timer;
   system::Thread main_thread;
 
-
   std::vector<Task<Time, Duration>*> tasks;
 
-
   void Tick() {
-    const Time current_time = (Time)std::chrono::duration_cast<Time>(timer.ElapsedTime());
+    const Time current_time =
+        (Time)std::chrono::duration_cast<Time>(timer.ElapsedTime());
     std::vector<size_t> to_remove;
     int i = 0;
-  logger.Trace("Tick at %d", current_time);
-    for (auto &task : tasks) {
-      logger.Trace("Task %s scheduled at %d", task->task_name, task->scheduled_at);
+    logger.Trace("Tick at %d", current_time);
+    for (auto& task : tasks) {
+      logger.Trace("Task %s scheduled at %d", task->task_name,
+                   task->scheduled_at);
       if (task->NeededToRun(current_time)) {
         logger.Info("Task %s runned", task->task_name);
         task->Run();
@@ -165,12 +165,10 @@ class Scheduler {
     }
   }
 
-  public:
+ public:
   Scheduler() {}
 
-  void AddTask(Task<Time, Duration> *task) {
-    tasks.emplace_back(task);
-  }
+  void AddTask(Task<Time, Duration>* task) { tasks.emplace_back(task); }
 
   void Start() {
     main_thread = system::Thread();

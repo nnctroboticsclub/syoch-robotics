@@ -14,7 +14,7 @@ class Joystick2Angle {
   Node<AngleStick2D> out;
 
   Joystick2Angle() {
-    in.SetChangeCallback([this](JoyStick2D vector) {
+    in >> [this](JoyStick2D vector) {
       AngleStick2D angle_vector;
 
       angle_vector.magnitude = vector.Magnitude();
@@ -25,7 +25,7 @@ class Joystick2Angle {
         angle_vector.angle = std::atan2(vector[1], vector[0]) * 180 / M_PI;
 
       out.SetValue(angle_vector);
-    });
+    };
   }
 };
 }  // namespace robotics::filter

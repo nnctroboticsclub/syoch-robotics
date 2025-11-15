@@ -1,16 +1,15 @@
 #pragma once
 
-#include <memory>
-#include "../node/node.hpp"
-#include "../types/pid_gains.hpp"
+#include <robotics/node/node.hpp>
+#include <robotics/types/pid_gains.hpp>
 
 namespace robotics::filter {
 
 template <typename T>
 class PID {
  private:
-  T integral_;
-  T prev_error_;
+  T integral_ = 0;
+  T prev_error_ = 0;
 
  public:
   Node<PIDGains> gains;
@@ -20,7 +19,7 @@ class PID {
   Node<T> output_;
 
  public:
-  PID(T kG, T kP, T kI, T kD) : integral_(0), prev_error_(0) {
+  PID(T kG, T kP, T kI, T kD)  {
     gains.SetValue(PIDGains(kG, kP, kI, kD));
   }
 

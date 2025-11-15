@@ -1,21 +1,19 @@
 #pragma once
 
-#include "packet.hpp"
 #include "../node/node.hpp"
+#include "packet.hpp"
 
 namespace controller {
 
 struct GenericController {
  public:
-  virtual bool Filter(RawPacket const &packet) = 0;
-  virtual void Parse(RawPacket const &packet) = 0;
+  explicit GenericController(int id) : assigned_id_(id) {};
+  virtual ~GenericController() = default;
 
- public:
-  int assigned_id_;
+  virtual bool Filter(RawPacket const& packet) = 0;
+  virtual void Parse(RawPacket const& packet) = 0;
 
-  GenericController(int id) : assigned_id_(id) {}
-
-  bool Pass(RawPacket const &packet) {
+  bool Pass(RawPacket const& packet) {
     if (!this->Filter(packet)) {
       return false;
     }
@@ -24,6 +22,8 @@ struct GenericController {
 
     return true;
   }
+
+  int assigned_id_;
 };
 template <typename T>
 struct ControllerBase : public GenericController, public robotics::Node<T> {

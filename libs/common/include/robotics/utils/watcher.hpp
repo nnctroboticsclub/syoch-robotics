@@ -8,12 +8,12 @@ template <typename T>
 class Watcher : public robotics::Node<T> {
  private:
   T value_;
-  bool updated_;
+  bool updated_ = false;
   bool invalidated_ = true;
 
  public:
-  Watcher() : value_(0), updated_(false) {}
-  Watcher(T const& value) : value_(value), updated_(false) {}
+  Watcher() : value_(0) {}
+  explicit Watcher(T const& value) : value_(value) {}
 
   bool Update(T const& value) {
     if (invalidated_) {

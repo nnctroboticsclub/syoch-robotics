@@ -17,12 +17,14 @@ struct Action : public ControllerBase<bool> {
 
   void Parse(RawPacket const& packet) override {
     if (packet.element_id & 0x80)
-      for (auto& handler : handlers) {
+      for (auto const& handler : handlers) {
         handler();
       }
   }
 
-  void OnFire(std::function<void()> handler) { handlers.push_back(handler); }
+  void operator>>(std::function<void()> const& handler) {
+    handlers.push_back(handler);
+  }
 };
 
 }  // namespace controller
