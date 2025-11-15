@@ -38,13 +38,12 @@ class SimpleCAN::Impl {
       }
 
       if (!this->idle_callbacks_.empty()) {
-        for (auto cb : this->idle_callbacks_) {
+        for (auto const& cb : this->idle_callbacks_) {
           cb();
         }
       }
 
       if (!this->tx_queue.Empty()) {
-        // logger.Error("Retransmitting CAN message");
         auto [id, data] = this->tx_queue.Pop();
         this->Send(id, data);
       }
