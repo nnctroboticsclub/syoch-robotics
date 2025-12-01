@@ -31,11 +31,11 @@ const size_t kMaxLogLines = 200;
 const size_t kLogRingBufferSize = 0x100;
 const size_t kLogLineSize = 0x80;
 const size_t kMaxLogLines = 10;
-#endif  // ^ NUCLEO_F303K8
-#else   // ^ LOG_FOR_MBED
-const size_t kLogRingBufferSize = 0x8000;
-const size_t kLogLineSize = 0x100;
-const size_t kMaxLogLines = 200;
+#endif
+#else  // ^ LOG_FOR_MBED
+const size_t kLogRingBufferSize = 0x100;
+const size_t kLogLineSize = 0x80;
+const size_t kMaxLogLines = 3;
 #endif
 
 char log_ring_buffer[kLogRingBufferSize] = {};
