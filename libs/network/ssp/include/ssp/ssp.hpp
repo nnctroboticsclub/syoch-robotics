@@ -63,7 +63,7 @@ class SerialServiceProtocol {
 
           uint8_t service_id = data[0];
 
-          if (services_.find(service_id) == services_.end()) {
+          if (!services_.contains(service_id)) {
             logger.Error("Unknown service id: %d", service_id);
             return;
           }

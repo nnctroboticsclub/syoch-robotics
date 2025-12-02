@@ -6,10 +6,10 @@ namespace robotics::network {
 CANEngine::CANEngine(uint8_t device_id, std::shared_ptr<CANBase> can)
     : can_(can), device_id_(device_id) {}
 
-void CANEngine::Init() {
+void CANEngine::Init() const {
   can_->Init();
-  can_->OnRx([this](std::uint32_t id, std::vector<uint8_t> const &data) {
-    for (auto const &cb : callbacks_) {
+  can_->OnRx([this](std::uint32_t id, std::vector<uint8_t> const& data) {
+    for (auto const& cb : callbacks_) {
       if (cb.Acceptable(id)) {
         cb.cb(id, data);
       }
@@ -17,21 +17,25 @@ void CANEngine::Init() {
   });
 }
 
-void CANEngine::RegisterModule(CANModule &mod) {
+void CANEngine::RegisterModule(CANModule& mod) {
   mod.OnRegister(std::shared_ptr<CANEngine>(this));
 }
 
-int CANEngine::Send(uint32_t id, std::vector<uint8_t> const &data) {
+int CANEngine::Send(uint32_t id, std::vector<uint8_t> const& data) const {
   return can_->Send(id, data);
 }
 
 void CANEngine::OnMessage(std::uint32_t mask, std::uint32_t id,
-                          EventCallback::Callback const &cb) {
-  callbacks_.emplace_back(EventCallback{mask, id, cb});
+                          EventCallback::Callback const& cb) {
+  callbacks_.emplace_back(EventCallback{.mask = mask, .id = id, .cb = cb});
 }
 
-void CANEngine::OnIdle(IdleCallback const &cb) { can_->OnIdle(cb); }
+void CANEngine::OnIdle(IdleCallback const& cb) const {
+  can_->OnIdle(cb);
+}
 
-int CANEngine::GetDeviceId() const { return device_id_; }
+int CANEngine::GetDeviceId() const {
+  return device_id_;
+}
 
 }  // namespace robotics::network

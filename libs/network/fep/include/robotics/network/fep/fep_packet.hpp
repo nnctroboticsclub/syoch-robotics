@@ -1,11 +1,12 @@
 #pragma once
 
-#include <cinttypes>
+#include <array>
+#include <cstdint>
 
 namespace robotics::network::fep {
 struct FEPPacket {
-  uint8_t from;
+  std::uint8_t from;
   uint8_t length;
-  uint8_t data[64];
+  std::array<uint8_t, 64> data;
 };
 }  // namespace robotics::network::fep

@@ -1,12 +1,9 @@
 #pragma once
 
-#include <math.h>
-#include <memory>
-
-#include "../../types/vector.hpp"
+#include <cmath>
 #include "../../filter/angled_motor.hpp"
 #include "../../filter/joystick2angle.hpp"
-#include "../../node/motor.hpp"
+#include "../../types/vector.hpp"
 
 namespace robotics::component::swerve {
 
@@ -15,7 +12,7 @@ class Motor {
   Node<Vector<float, 2>> velocity;  // in: velocity
   Node<float> rotation;             // in: rotation angle
 
-  Node<float> drive_;                 // out: drive power
+  Node<float> drive_{0};              // out: drive power
   filter::AngledMotor<float> steer_;  // out: steer angle
 
   Node<Vector<float, 2>> vector{{0, 0}};  // debug: vector
@@ -34,7 +31,6 @@ class Motor {
         -vel_[0],
     };
 
-    // auto vector_ = vel + normal_vector_ * rot / 90;
     auto vector_ =
         vel * (1 + 1.0f / 3 * rot / 90 *
                        sin(angle_deg * M_PI / 180 + atan2(vel[1], vel[0])));
@@ -42,21 +38,24 @@ class Motor {
   }
 
  public:
-  Motor(float angle_deg) : drive_(0), angle_deg(angle_deg) {
+  explicit Motor(float angle_deg) : angle_deg(angle_deg) {
     normal_vector_[0] = std::cos(angle_deg * M_PI / 180);
     normal_vector_[1] = std::sin(angle_deg * M_PI / 180);
 
-    velocity.SetChangeCallback(
-        [this](Vector<float, 2>) { UpdateAnglePower(); });
+    velocity >> [this](Vector<float, 2>) {
+      UpdateAnglePower();
+    };
 
-    rotation.SetChangeCallback([this](float) { UpdateAnglePower(); });
+    rotation >> [this](float) {
+      UpdateAnglePower();
+    };
 
-    vector.Link(angle_power.in);
+    vector >> (angle_power.in);
 
-    angle_power.out.SetChangeCallback([this](types::AngleStick2D angle_vector) {
+    angle_power.out >> [this](types::AngleStick2D angle_vector) {
       steer_.goal.SetValue(angle_vector.angle);
       drive_.SetValue(angle_vector.magnitude);
-    });
+    };
 
     UpdateAnglePower();
   }
@@ -64,8 +63,8 @@ class Motor {
   Motor(Motor const&) = delete;
   Motor& operator=(Motor const&) = delete;
 
-  Motor(Motor&&) = default;
-  Motor& operator=(Motor&&) = default;
+  Motor(Motor&&) = delete;
+  Motor& operator=(Motor&&) = delete;
 
   void Update(float dt) { this->steer_.Update(dt); }
 

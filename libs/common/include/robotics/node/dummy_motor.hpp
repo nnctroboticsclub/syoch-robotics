@@ -4,8 +4,9 @@
 
 namespace robotics::node {
 class DummyMotor : public Motor<float> {
-  void SetSpeed(float speed) override {}
+  void SetSpeed(float) override {
+    // Do nothing
+  }
 
- public:
 };
 }  // namespace robotics::node

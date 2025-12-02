@@ -8,11 +8,13 @@ class AngleClamper {
   Node<T> output;
 
   AngleClamper() {
-    input.SetChangeCallback([this](T input) {
-      while (input > 360) input -= 360;
-      while (input < 360) input += 360;
+    input >> ([this](T input_) {
+      while (input_ > 360)
+        input_ -= 360;
+      while (input_ < 360)
+        input_ += 360;
 
-      output.SetValue(input);
+      output.SetValue(input_);
     });
   }
 };

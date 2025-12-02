@@ -15,7 +15,7 @@ class EMC {
 
   void UpdateOutput() {
     bool emc = true;
-    for (auto &node : emc_nodes) {
+    for (auto const& node : emc_nodes) {
       emc &= node->GetValue();
     }
 
@@ -23,12 +23,12 @@ class EMC {
   }
 
  public:
-  EMC() {}
+  EMC() = default;
 
   std::shared_ptr<EMCNode> AddNode() {
     auto node = std::make_shared<EMCNode>();
     emc_nodes.push_back(node);
-    node->SetChangeCallback([this](bool) { this->UpdateOutput(); });
+    *node >> [this](bool) { this->UpdateOutput(); };
     return node;
   }
 

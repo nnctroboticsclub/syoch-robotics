@@ -11,7 +11,7 @@ class LinkedListNode {
   auto& Next() { return *next; }
   auto Next(T& ptr) { next = &ptr; }
 
-  bool InUse() { return in_use; }
+  bool InUse() const { return in_use; }
   void InUse(bool value) { in_use = value; }
 
   void ResetLinkNode() {
@@ -43,12 +43,11 @@ class LinkedList {
     return nullptr;
   }
 
- public:
   class Iterator {
     T* current;
 
    public:
-    Iterator(T* node) : current(node) {}
+    explicit Iterator(T* node) : current(node) {}
 
     T* operator*() { return current; }
 
@@ -60,7 +59,6 @@ class LinkedList {
     bool operator!=(const Iterator& other) { return current != other.current; }
   };
 
- public:
   LinkedList() {
     for (auto& node : nodes) {
       node.ResetLinkNode();

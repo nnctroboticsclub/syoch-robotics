@@ -1,6 +1,5 @@
 #pragma once
 
-#include <chrono>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -42,14 +41,14 @@ class CANEngine {
   CANEngine(const CANEngine&) = delete;
   CANEngine& operator=(const CANEngine&) = delete;
 
-  void Init();
+  void Init() const;
   void RegisterModule(CANModule& mod);
 
-  int Send(uint32_t id, std::vector<uint8_t> const& data);
+  int Send(uint32_t id, std::vector<uint8_t> const& data) const;
   void OnMessage(std::uint32_t mask, std::uint32_t id,
                  EventCallback::Callback const& cb);
 
-  void OnIdle(IdleCallback const& cb);
+  void OnIdle(IdleCallback const& cb) const;
 
   int GetDeviceId() const;
 };
@@ -79,12 +78,11 @@ class Status : public CANModule {
   };
 
   Status() = default;
-
   ~Status() override = default;
 
   void OnRegister(std::shared_ptr<CANEngine> engine) override { can_ = engine; }
 
-  void SetStatus(Statuses status) {
+  void UpdateStatus(Statuses status) const {
     if (!can_) {
       return;
     }
@@ -139,7 +137,7 @@ class KeepAlive : public CANModule {
     });
   }
 
-  void SendKeepAlive() { can_->Send(0xfc, {}); }
+  void SendKeepAlive() const { can_->Send(0xfc, {}); }
   void OnKeepAliveLost(KeepAliveLostCallback cb) {
     this->keep_alive_lost_callbacks_.emplace_back(cb);
   }
@@ -175,7 +173,7 @@ class PingPong : public CANModule {
                       });
   }
 
-  void Ping() { can_->Send(0x80, {}); }
+  void Ping() const { can_->Send(0x80, {}); }
 
   void OnPong(PongListener cb) { pong_listeners_.emplace_back(cb); }
 };

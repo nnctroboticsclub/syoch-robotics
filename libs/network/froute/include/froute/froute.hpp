@@ -3,10 +3,11 @@
 #include <cstdint>
 #include <cstring>
 
-#include "../stream.hpp"
-#include "../../logger/logger.hpp"
-#include "../../platform/thread.hpp"
-#include "../../utils/no_mutex_lifo.hpp"
+#include <robotics/network/stream.hpp>
+#include <robotics/utils/no_mutex_lifo.hpp>
+#include "logger/logger.hpp"
+
+#include <robotics/system/thread.hpp>
 
 #include "actions.hpp"
 #include "addr_records.hpp"
@@ -139,13 +140,15 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
   bool ProcessFlags(uint8_t from, uint8_t flags, uint8_t* data, uint32_t size) {
     if (flags == kFlagsDetectDevices) {
       for (uint i = 0; i < size; i++) {
-        if (data[i] == self_addr_) return true;
+        if (data[i] == self_addr_)
+          return true;
       }
 
       auto action = Action::AdvertiseSelf(from);
       ProcessAction(action);
     } else if (flags == kFlagsNewDevice) {
-      if (addresses_imcoming_.Recorded(from)) return true;
+      if (addresses_imcoming_.Recorded(from))
+        return true;
       addresses_hop_candidate_.Add(from);
       UpdateNextHop();
     } else {

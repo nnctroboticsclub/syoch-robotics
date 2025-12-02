@@ -21,8 +21,12 @@ class Motor : public Node<T> {
   Motor() {
     factor.SetValue(1);
 
-    this->OnChanged([this](T) { this->Update(); });
-    factor.OnChanged([this](T) { this->Update(); });
+    *this >> [this](T) {
+      this->Update();
+    };
+    factor >> [this](T) {
+      this->Update();
+    };
   }
 
   T GetSpeed() {

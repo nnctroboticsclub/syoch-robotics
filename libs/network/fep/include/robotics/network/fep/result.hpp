@@ -7,6 +7,6 @@ struct DriverResult {
   ResultType type;
   int value;
 
-  bool Failed() const;
+  [[nodiscard]] bool Failed() const;
 };
 }  // namespace robotics::network::fep

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "vector.hpp"
 
 #include <robotics/node/node.hpp>
 
@@ -26,10 +25,7 @@ struct PIDGains {
     d /= x;
   }
 
-  bool operator==(PIDGains const& other) const {
-    return g == other.g && p == other.p && i == other.i && d == other.d;
-  }
-  bool operator!=(PIDGains const& other) const { return !(*this == other); }
+  bool operator==(PIDGains const& other) const = default;
 };
 
 }  // namespace types

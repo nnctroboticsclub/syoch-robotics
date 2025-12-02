@@ -9,8 +9,6 @@
 #include "encoder.hpp"
 #include "action.hpp"
 
-#include "../component/swerve/swerve.hpp"
-
 namespace controller::swerve {
 struct SwerveController {
   struct Config {
@@ -33,9 +31,9 @@ struct SwerveController {
   PID motor_2_pid;
   PID angle_pid;
 
-  AngleJoystick2D angle_out;
+  AngleJoystick2D angle_out{0};
 
-  SwerveController(Config const& config =
+  explicit SwerveController(Config const& config =
                        Config{
                            .joystick_id = 0,
                            .rot_right_45_id = 0,
@@ -53,18 +51,18 @@ struct SwerveController {
         motor_0_pid(config.motor_0_pid_id),
         motor_1_pid(config.motor_1_pid_id),
         motor_2_pid(config.motor_2_pid_id),
-        angle_pid(config.angle_pid_id),
-        angle_out(0) {
-    rot_left_45.OnFire([this] {
+        angle_pid(config.angle_pid_id){
+
+    rot_left_45 >> [this] {
       auto angle = angle_out.GetValue();
       angle.angle -= 45;
       angle_out.SetValue(angle);
-    });
-    rot_right_45.OnFire([this] {
+    };
+    rot_right_45 >> [this] {
       auto angle = angle_out.GetValue();
       angle.angle += 45;
       angle_out.SetValue(angle);
-    });
+    };
   }
 
   SwerveController(SwerveController& other) = delete;
@@ -90,7 +88,7 @@ struct SwerveValueStore {
   Encoder<T> motor_1_encoder;
   Encoder<T> motor_2_encoder;
 
-  SwerveValueStore(Config const& config = {})
+  explicit SwerveValueStore(Config const& config = {})
       : motor_0_encoder(config.motor_0_encoder_id),
         motor_1_encoder(config.motor_1_encoder_id),
         motor_2_encoder(config.motor_2_encoder_id) {}

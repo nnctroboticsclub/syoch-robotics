@@ -121,9 +121,8 @@ class NoMutexLIFO {
     }
 
     auto start = tail_ + 1;
-    auto end = (tail_ + n + 1) % N;
 
-    if (start < end) {
+    if (auto end = (tail_ + n + 1) % N; start < end) {
       std::copy(buffer_.begin() + start, buffer_.begin() + end, data);
     } else {
       auto first_range_lo = start;

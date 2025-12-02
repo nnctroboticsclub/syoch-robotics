@@ -1,6 +1,10 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
+#include "fep_packet.hpp"
+#include "fep_raw_driver.hpp"
+#include "result.hpp"
 
 namespace robotics::network::fep {
 struct RxProcessorPacket {
@@ -37,7 +41,7 @@ struct RxProcessorPacket {
   static RxProcessorPacket Line(char const* line) {
     RxProcessorPacket packet;
     packet.type = Type::kLine;
-    strncpy(packet.line.line, line, 64);
+    strncpy(packet.line.line.data(), line, 32);
     return packet;
   }
 

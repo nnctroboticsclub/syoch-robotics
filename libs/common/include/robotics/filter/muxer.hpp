@@ -22,11 +22,11 @@ struct Muxer {
   void AddInput(Node<T>& input) {
     int i = inputs_.size();
     inputs_.push_back(&input);
-    input.SetChangeCallback([this, i](T value) {
+    input >> [this, i](T value) {
       if (selected_ == i) {
         output_.SetValue(value);
       }
-    });
+    };
   }
 };
 }  // namespace robotics::filter

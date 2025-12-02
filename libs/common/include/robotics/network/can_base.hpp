@@ -18,6 +18,8 @@ class CANBase {
     bool load_measure_available = false;
   };
 
+  virtual ~CANBase() = default;
+
   virtual void Init() = 0;
 
   virtual int Send(std::uint32_t id, std::vector<uint8_t> const& data) = 0;

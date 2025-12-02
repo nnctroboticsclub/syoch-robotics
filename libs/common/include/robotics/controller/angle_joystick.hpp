@@ -22,7 +22,7 @@ struct AngleJoystick2D : public ControllerBase<robotics::AngleStick2D> {
     robotics::AngleStick2D value;
 
     value.magnitude = (float)packet[0] / 0xff;
-    value.angle = (float)packet[1] / 0xff * 360.0;
+    value.angle = (float)packet[1] / 0xff * 360.0f;
 
     this->SetValue(value);
   }

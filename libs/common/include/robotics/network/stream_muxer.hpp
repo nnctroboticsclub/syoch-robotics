@@ -4,10 +4,9 @@
 #include <cstdio>
 #include <functional>
 #include <optional>
-#include <type_traits>
-#include <utility>
 #include "robotics/platform/panic.hpp"
 #include "robotics/utils/non_copyable.hpp"
+
 namespace robotics::network {
 template <typename S1, typename S2>
 requires(std::same_as<typename S1::DataType,
@@ -18,7 +17,7 @@ requires(std::same_as<typename S1::DataType,
   using S2_Storage = std::optional<S2>;
 
  public:
-  StreamMuxer(std::function<void(S1_Storage&, S2_Storage&)> initializer) {
+  explicit StreamMuxer(std::function<void(S1_Storage&, S2_Storage&)> initializer) {
     initializer(stream1_, stream2_);
     if (!stream1_.has_value() || !stream2_.has_value()) {
       printf("Stream initialization failed\n");
@@ -32,7 +31,7 @@ requires(std::same_as<typename S1::DataType,
         [this](S2::DataType& data) { this->DispatchOnReceive(data); });
   }
 
-  virtual void Send(S1::DataType& data) final {
+  void Send(S1::DataType& data) override {
     if (selected_stream2_) {
       stream2_->Send(data);
     } else {

@@ -14,7 +14,6 @@ class AngleStick2D {
   AngleStick2D(float magnitude, float angle);
 
   bool operator==(AngleStick2D const& other) const;
-  bool operator!=(AngleStick2D const& other) const;
 };
 
 }  // namespace types

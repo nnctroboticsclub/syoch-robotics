@@ -3,8 +3,8 @@
 #include <cmath>
 #include <array>
 
-namespace robotics {
-inline namespace types {
+
+namespace robotics::inline types {
 template <typename T, int N>
 class Vector {
   std::array<T, N> data_;
@@ -12,7 +12,7 @@ class Vector {
  public:
   Vector() : data_({}) {}
 
-  Vector(std::array<T, N> data) : data_(data) {}
+  explicit(false) Vector(std::array<T, N> data) : data_(data) {}
 
   Vector(T x, T y) : data_({x, y}) {}
 
@@ -92,6 +92,5 @@ class Vector {
                   data_[0] * rhs.data_[1] - data_[1] * rhs.data_[0]);
   }
 };
-}  // namespace types
+} // namespace robotics::inline types
 
-}  // namespace robotics

@@ -1,14 +1,17 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <cstddef>
 
 namespace robotics::network::froute {
 struct AddrRecords {
-  uint8_t records[32] = {0};
+  static constexpr size_t kMaxRecords = 32;
+
+  std::array<uint8_t, kMaxRecords> records{};
   size_t recorded = 0;
 
-  bool Recorded(uint8_t rec) {
+  bool Recorded(uint8_t rec) const {
     for (size_t i = 0; i < recorded; i++) {
       if (records[i] == rec) {
         return true;
@@ -20,8 +23,10 @@ struct AddrRecords {
 
   void Add(uint8_t rec) {
     if (Recorded(rec)) return;
+    if (recorded >= kMaxRecords) return;
 
-    records[recorded++] = rec;
+    records[recorded] = rec;
+    recorded++;
   }
 
   void Remove(uint8_t rec) {

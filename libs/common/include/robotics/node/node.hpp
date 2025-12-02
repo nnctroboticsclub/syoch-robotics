@@ -48,7 +48,7 @@ concept NodeEncodeExists = requires(T t) {
 
 class GenericNode {
  public:
-  ~GenericNode();
+  virtual ~GenericNode() = default;
 
   virtual std::array<uint8_t, 4> Encode() = 0;
   virtual void LoadFromBytes(std::array<uint8_t, 4> data) = 0;
@@ -67,7 +67,7 @@ class Node : public GenericNode {
 
  public:
   Node() : Node({}) {}
-  Node(T value) : value_(value) {}
+  explicit(false) Node(T value) : value_(value) {}
 
   Node(Node<T>&) = delete;
   Node<T>& operator=(Node<T>&) = delete;
@@ -85,18 +85,29 @@ class Node : public GenericNode {
 
   T GetValue() { return value_; }
 
-  [[deprecated("Node#SetChangeCallback is deprecated")]]
+  [[deprecated("Node#OnChanged is preferred over SetChangeCallback")]]
   void SetChangeCallback(Callback callback) {
-    callbacks_.push_back(callback);
+    *this >> callback;
   }
 
-  void OnChanged(Callback callback) { callbacks_.push_back(callback); }
+  [[deprecated("pipe operator is preferred over SetChangeCallback")]]
+  void OnChanged(Callback callback) {
+    *this >> callback;
+  }
 
+  [[deprecated("Node#OnChanged is preferred over operator>>")]]
   void OnChanged(std::function<void()> cb) override {
-    this->OnChanged([this, cb](T) { cb(); });
+    *this >> cb;
   }
 
+  [[deprecated("Node#Link is preferred over operator>>")]]
   void Link(Node<T>& input) { linked_inputs_.push_back(&input); }
+
+  void operator>>(Callback callback) { callbacks_.push_back(callback); }
+
+  void operator>>(std::function<void()> cb) {
+    *this >> [this, cb](T) { cb(); };
+  }
 
   void Propagate(bool force_propagate) {
     for (auto& callback : callbacks_) {
@@ -115,7 +126,7 @@ class Node : public GenericNode {
   }
 
   Node<T>& operator>>(Node<T>& next) {
-    Link(next);
+    this->linked_inputs_.push_back(&next);
     return next;
   }
 };
