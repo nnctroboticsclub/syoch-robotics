@@ -3,7 +3,9 @@
 #include <cstdint>
 
 #include <array>
+#include <cstdio>
 #include <functional>
+#include <string_view>
 #include <vector>
 
 namespace robotics {
@@ -101,12 +103,16 @@ class Node : public GenericNode {
   }
 
   [[deprecated("Node#Link is preferred over operator>>")]]
-  void Link(Node<T>& input) { linked_inputs_.push_back(&input); }
+  void Link(Node<T>& input) {
+    linked_inputs_.push_back(&input);
+  }
 
   void operator>>(Callback callback) { callbacks_.push_back(callback); }
 
   void operator>>(std::function<void()> cb) {
-    *this >> [this, cb](T) { cb(); };
+    *this >> [cb](T) {
+      cb();
+    };
   }
 
   void Propagate(bool force_propagate) {
@@ -128,6 +134,20 @@ class Node : public GenericNode {
   Node<T>& operator>>(Node<T>& next) {
     this->linked_inputs_.push_back(&next);
     return next;
+  }
+
+  Node<T>& Trace(std::string_view const& name) {
+    this->OnChanged([name, this]() {
+      printf("Node %s changed: ", name.data());
+      if constexpr (std::is_same_v<T, float>) {
+        printf("%f\n", this->GetValue());
+      } else if constexpr (std::is_same_v<T, int>) {
+        printf("%d\n", this->GetValue());
+      } else {
+        printf("unknown type\n");
+      }
+    });
+    return *this;
   }
 };
 }  // namespace node
