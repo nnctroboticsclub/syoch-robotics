@@ -3,10 +3,10 @@
 #include "../node/motor.hpp"
 
 namespace robotics::assembly {
-template <typename T, typename E = T>
+template <typename T, typename E = T, typename MotorT = node::Motor<T>>
 class MotorPair {
  public:
-  virtual node::Motor<T> &GetMotor() = 0;
-  virtual Node<E> &GetEncoder() = 0;
+  virtual MotorT& GetMotor() = 0;
+  virtual Node<E>& GetEncoder() = 0;
 };
 }  // namespace robotics::assembly

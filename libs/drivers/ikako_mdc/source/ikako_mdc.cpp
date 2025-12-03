@@ -3,7 +3,7 @@
 #include <algorithm>
 
 namespace robotics::registry {
-void ikakoMDC::ReportSpeed(robotics::network::DistributedCAN &can, uint8_t id) {
+void ikakoMDC::ReportSpeed(robotics::network::DistributedCAN& can, uint8_t id) {
   std::vector<uint8_t> report(5);
   report.reserve(5);
 
@@ -31,7 +31,7 @@ void ikakoMDC::ReportSpeed(robotics::network::DistributedCAN &can, uint8_t id) {
   }
 }
 
-void ikakoMDC::ReportEncoder(robotics::network::DistributedCAN &can,
+void ikakoMDC::ReportEncoder(robotics::network::DistributedCAN& can,
                              uint8_t id) {
   std::vector<uint8_t> report(5);
   report.reserve(5);
@@ -52,7 +52,7 @@ void ikakoMDC::ReportEncoder(robotics::network::DistributedCAN &can,
   }
 }
 
-ikakoMDC::ikakoMDC(ikarashiCAN_mk2 *can, int mdc_id)
+ikakoMDC::ikakoMDC(ikarashiCAN_mk2* can, int mdc_id)
     : motors_{::ikakoMDC(4 * (mdc_id - 1) + 1, -50, 50, 0.001, 0.0, 2.7, 0,
                          0.000015, 0.01),
               ::ikakoMDC(4 * (mdc_id - 1) + 2, -50, 50, 0.001, 0.0, 2.7, 0,
@@ -73,7 +73,7 @@ void ikakoMDC::Tick() {
   }
 }
 
-void ikakoMDC::ReportTo(robotics::network::DistributedCAN &can, uint8_t id) {
+void ikakoMDC::ReportTo(robotics::network::DistributedCAN& can, uint8_t id) {
   switch (report_counter) {
     case 0:
       ReportSpeed(can, id);
@@ -87,10 +87,11 @@ void ikakoMDC::ReportTo(robotics::network::DistributedCAN &can, uint8_t id) {
 
 int ikakoMDC::Send() {
   auto ret = sender_.send();
+  linked_ican_->write(2);
   return ret;
 }
 
-robotics::assembly::MotorPair<float> &ikakoMDC::GetNode(int index) {
+assembly::ikakoMDCPair<float>& ikakoMDC::GetNode(int index) {
   return motor_nodes_[index];
 }
 }  // namespace robotics::registry
