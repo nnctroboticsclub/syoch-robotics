@@ -1,8 +1,6 @@
 if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
-  find_package(StaticMbedOS REQUIRED)
-
   add_compile_definitions(__MBED__)
-  set(SYOCH_ROBOTICS_DEPENDENCIES StaticMbedOS)
+  set(SYOCH_ROBOTICS_DEPENDENCIES Nano::NanoHW_MbedIF)
   set(NON_THREAD OFF CACHE BOOL "Thread Availability" FORCE)
   set(SROBO_NETWORK_PROVIDED ON CACHE BOOL "Network Availability" FORCE)
   set(SROBO_TIMER_PROVIDED ON CACHE BOOL "Timer Availability" FORCE)

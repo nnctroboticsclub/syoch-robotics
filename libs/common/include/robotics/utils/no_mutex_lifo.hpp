@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstring>
 
 namespace robotics::utils {
 template <typename T, size_t N>
@@ -75,6 +76,8 @@ class NoMutexLIFO {
     head_ = 0;
     tail_ = N - 1;
   }
+
+  void ClearDatas() { memset(buffer_.data(), 0, sizeof(buffer_)); }
 
   bool Push(T const& data) {
     if (Full()) {

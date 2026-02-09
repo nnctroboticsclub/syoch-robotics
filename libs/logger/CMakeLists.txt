@@ -2,7 +2,6 @@ add_library(syoch-robotics-logger STATIC
   source/char_logger.cpp
   source/generic_logger.cpp
   source/logger-core.cpp
-  source/logger.cpp
   source/log_sink.cpp
 )
 
@@ -28,7 +27,7 @@ if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
     -DSYNC_PROTECT=1
   )
 else()
-target_compile_definitions(syoch-robotics-logger PRIVATE
+  target_compile_definitions(syoch-robotics-logger PRIVATE
     -DSYNC_PROTECT=0
   )
 endif()
