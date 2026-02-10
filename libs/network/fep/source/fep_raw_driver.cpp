@@ -1,9 +1,10 @@
+#include <NanoHW/parallel.hpp>
+#include <NanoHW/thread.hpp>
 #include <robotics/network/fep/fep_raw_driver.hpp>
 
 #include <cstring>
 
 #include <robotics/network/block_stream.hpp>
-#include <robotics/thread/thread.hpp>
 
 #include <robotics/network/fep/rx_processor.hpp>
 
@@ -66,12 +67,13 @@ types::Result<DriverResult, DriverError> FEP_RawDriver::ReadResult(
       return DriverError("Timeout");
     }
 
-    system::SleepFor(1ms);
+    nano_hw::parallel::SleepForMS(1ms);
   }
 }
 
 FEP_RawDriver::FEP_RawDriver(Stream<uint8_t>& upper_stream)
-    : upper_stream(upper_stream) {
+    : upper_stream(upper_stream),
+      fep_thread_(ThreadPriorityNormal, 2048, nullptr, "FEP") {
   rx_processor_ = new RxProcessor();
 
   timer_.Reset();
@@ -109,11 +111,11 @@ FEP_RawDriver::FEP_RawDriver(Stream<uint8_t>& upper_stream)
   fep_thread_.Start([this]() {
     while (true) {
       if (!this->rx_enabled) {
-        system::SleepFor(10ms);
+        nano_hw::parallel::SleepForMS(10ms);
         continue;
       }
       if (this->rx_queue_.Empty()) {
-        system::SleepFor(1ms);
+        nano_hw::parallel::SleepForMS(1ms);
         continue;
       }
 
@@ -193,7 +195,7 @@ void FEP_RawDriver::ResetNoResult() {
 
   state_ = kIdle;
 
-  robotics::system::SleepFor(500ms);
+  nano_hw::parallel::SleepForMS(500ms);
   this->FlushQueue();
 }
 

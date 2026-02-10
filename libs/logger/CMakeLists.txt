@@ -9,17 +9,8 @@ target_link_libraries(syoch-robotics-logger PRIVATE
   syoch-robotics-common
   syoch-robotics-temp-buffer
   syoch-robotics-context-detector
+  Nano::NanoHW
 )
-
-if(NOT ${NON_THREAD})
-  message(STATUS "Using thread (logger) <<< TRACK ME!")
-  target_link_libraries(syoch-robotics-logger PRIVATE
-    syoch-robotics-thread
-  )
-  target_compile_definitions(syoch-robotics-logger PRIVATE
-    -DUSE_THREAD
-  )
-endif()
 
 if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
   target_compile_definitions(syoch-robotics-logger PRIVATE

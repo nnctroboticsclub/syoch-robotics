@@ -16,8 +16,8 @@ class ManagedList {
     return &pool_[last_index_++];
   }
 
-  T* begin() { return pool_; }
-  T* end() { return pool_ + N; }
+  T* begin() { return pool_.data(); }
+  T* end() { return pool_.data() + N; }
 };
 
 }  // namespace robotics::utils

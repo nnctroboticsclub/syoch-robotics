@@ -4,8 +4,9 @@
 #include "robotics/utils/no_mutex_lifo.hpp"
 #include "robotics/utils/span.hpp"
 
-#include <robotics/thread/thread.hpp>
+#include <NanoHW/thread.hpp>
 
+#include "./log_line.hpp"
 #include "./log_sink.hpp"
 #include "./logger-core.hpp"
 
@@ -79,11 +80,10 @@ class LoggerBufferImpl {
   }
 };
 
-template <int dummy>
-class LoggerThread {
-  static robotics::system::Thread* logger_thread;
-
-  [[noreturn]] static void Thread() {
+template <nano_hw::thread::Thread Thread>
+class LoggerThreadImpl {
+  static Thread* logger_thread;
+  [[noreturn]] static void Task() {
     while (true) {
       LoggerProcess();
     }
@@ -91,11 +91,8 @@ class LoggerThread {
 
  public:
   friend void StartLoggerThread_Impl_() {
-    if (logger_thread)
-      return;
-    logger_thread = new robotics::system::Thread();
-    logger_thread->SetThreadName("Logger");
-    logger_thread->Start(std::function<void()>(Thread));
+    logger_thread = new Thread(ThreadPriorityNormal, 1024, nullptr, "Logger");
+    logger_thread->Start(std::function<void()>(Task));
   }
 };
 
@@ -115,5 +112,17 @@ void ClearQueue() {
 void LoggerProcess() {
   LoggerProcessImpl();
 }
+
+struct DefaultConfig_F303K8 {
+  static inline constexpr size_t kLogRingBufferSize = 0x100;
+  static inline constexpr size_t kLogLineSize = 0x80;
+  static inline constexpr size_t kMaxLogLines = 3;
+};
+
+struct DefaultConfig_F446RE {
+  static inline constexpr size_t kLogRingBufferSize = 0x8000;
+  static inline constexpr size_t kLogLineSize = 0x100;
+  static inline constexpr size_t kMaxLogLines = 200;
+};
 
 }  // namespace robotics::logger::details

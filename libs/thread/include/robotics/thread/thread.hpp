@@ -1,25 +1,34 @@
 #pragma once
 
+#include <NanoHW/parallel.hpp>
 #include <chrono>
 #include <functional>
+
+#include "NanoHW/thread.hpp"
 
 namespace robotics::system {
 
 using ThreadFunction = std::function<void()>;
 
 class Thread {
-  class Impl;
-
-  Impl* impl_ = nullptr;
+  nano_hw::thread::DynThread* th = nullptr;
+  const char* thread_name_{};
+  int stack_size_ = 4096;
 
  public:
-  Thread();
+  inline Thread() = default;
 
-  void Start(const ThreadFunction& function);
-  void SetThreadName(const char* name);
-  void SetStackSize(size_t size);
+  inline void Start(const ThreadFunction& function) {
+    th = new nano_hw::thread::DynThread(ThreadPriorityNormal, stack_size_,
+                                        nullptr, thread_name_);
+    th->Start(function);
+  }
+  inline void SetThreadName(const char* name) { thread_name_ = name; }
+  inline void SetStackSize(size_t size) { stack_size_ = size; }
 };
 
-void SleepFor(std::chrono::milliseconds duration);
+inline void SleepFor(std::chrono::milliseconds duration) {
+  nano_hw::parallel::SleepForMS(duration);
+}
 
 }  // namespace robotics::system

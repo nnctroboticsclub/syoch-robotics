@@ -11,6 +11,7 @@
 #include <robotics/utils/no_mutex_lifo.hpp>
 #include <robotics/utils/span.hpp>
 
+#include <logger/log_line.hpp>
 #include <logger/log_sink.hpp>
 
 namespace robotics::logger::details {

@@ -9,10 +9,11 @@
 #include <robotics/network/stream.hpp>
 
 #include <logger/logger.hpp>
-#include <robotics/thread/thread.hpp>
 #include <robotics/timer/timer.hpp>
 #include <robotics/types/result.hpp>
 #include <robotics/utils/no_mutex_lifo.hpp>
+
+#include <NanoHW/thread.hpp>
 
 #include "fep_packet.hpp"
 #include "fep_tx_state.hpp"
@@ -54,7 +55,7 @@ class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
   State state_ = State::kIdle;
 
   system::Timer timer_;
-  system::Thread fep_thread_;
+  nano_hw::thread::DynThread fep_thread_;
 
   void Send(std::string const& data);
 

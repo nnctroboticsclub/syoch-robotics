@@ -7,8 +7,5 @@ add_library(syoch-robotics-common STATIC
   source/network/can_base.cpp
 )
 
-target_include_directories(syoch-robotics-common PUBLIC
-  "./include"
-)
-
+target_include_directories(syoch-robotics-common PUBLIC include)
 set_property(TARGET syoch-robotics-common PROPERTY CXX_STANDARD 20)

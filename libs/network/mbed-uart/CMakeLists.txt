@@ -4,10 +4,11 @@ target_link_libraries(syoch-robotics-mbed-uart PUBLIC
   syoch-robotics-common
   syoch-robotics-thread
   syoch-robotics-logger
+  ${SYOCH_ROBOTICS_DEPENDENCIES}
 )
 
 target_include_directories(syoch-robotics-mbed-uart PUBLIC
-  "./include"
+  include
 )
 
 target_sources(syoch-robotics-mbed-uart PRIVATE

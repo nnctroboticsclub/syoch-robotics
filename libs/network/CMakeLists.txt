@@ -10,9 +10,7 @@ elseif ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "ESP")
   add_subdirectory(idf-simple-can)
 endif()
 
-if (NOT ${NON_THREAD})
-  add_subdirectory(fep)
-endif()
+add_subdirectory(fep)
 
 if (${SROBO1_RANDOM_PROVIDED})
   add_subdirectory(rep)
