@@ -52,7 +52,7 @@ class KVService : public robotics::network::ssp::SSP_Service<Context> {
             uint8_t service_id, const char* logger_tag,
             const char* logger_header)
       : SSP_Service<Context>(stream, service_id, logger_tag, logger_header) {
-    this->OnReceive([this, &stream](uint8_t addr, uint8_t* data, size_t len) {
+    this->OnReceive([this](uint8_t addr, uint8_t* data, size_t len) {
       if (len < 1) {
         this->logger.Error("Invalid Length: %d", len);
         return;

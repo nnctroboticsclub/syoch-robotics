@@ -14,7 +14,7 @@ namespace robotics::logger::details {
 using core::LogLine;
 using utils::Span;
 
-//* Optionally implemented function
+// 提供する関数の宣言
 void UseLineImpl(size_t start, size_t length, char* dest);
 utils::Span<char> PasteToRingImpl(utils::Span<const char> text);
 void PushLineImpl(LogLine& log);
@@ -22,8 +22,10 @@ void ClearQueueImpl();
 void LoggerProcessImpl();
 void StartLoggerThread_Impl_();
 
-__attribute__((weak)) void StartLoggerThread_Impl_() {}
-
+/// @brief ロガーにバッファ実装を注入するクラス
+/// @details
+///   Friend injection を用いて、リンク時の注入を行っている
+///   利用側は template class LoggerBufferImpl<SomeConfigClass> とすれば良い
 template <typename Config>
 class LoggerBufferImpl {
   static inline char log_ring_buffer[Config::kLogRingBufferSize] = {};
@@ -80,6 +82,13 @@ class LoggerBufferImpl {
   }
 };
 
+// Non-threading 環境用のダミー
+__attribute__((weak)) void StartLoggerThread_Impl_() {}
+
+/// @brief ロガーにスレッド実装を注入するクラス
+/// @details
+///   Friend injection を用いて、リンク時の注入を可能にしてる
+///   利用側は template class LoggerThreadImpl<SomeThreadClass> とすれば良い
 template <nano_hw::thread::Thread Thread>
 class LoggerThreadImpl {
   static Thread* logger_thread;
@@ -96,12 +105,12 @@ class LoggerThreadImpl {
   }
 };
 
-//* Instantiated functions
+//* Template class 内で friend 定義された関数はオブジェクトファイルに含まれないため、通常の関数を挟み実体を残す
 void UseLine(size_t start, size_t length, char* dest) {
   UseLineImpl(start, length, dest);
 }
 utils::Span<char> PasteToRing(utils::Span<const char> text) {
-  PasteToRingImpl(text);
+  return PasteToRingImpl(text);
 }
 void PushLine(LogLine& log) {
   PushLineImpl(log);
@@ -113,12 +122,14 @@ void LoggerProcess() {
   LoggerProcessImpl();
 }
 
+/// @brief F303K8 用のデフォルト設定
 struct DefaultConfig_F303K8 {
   static inline constexpr size_t kLogRingBufferSize = 0x100;
   static inline constexpr size_t kLogLineSize = 0x80;
   static inline constexpr size_t kMaxLogLines = 3;
 };
 
+/// @brief F446RE 用のデフォルト設定
 struct DefaultConfig_F446RE {
   static inline constexpr size_t kLogRingBufferSize = 0x8000;
   static inline constexpr size_t kLogLineSize = 0x100;

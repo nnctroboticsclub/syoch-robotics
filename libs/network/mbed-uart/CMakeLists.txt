@@ -4,7 +4,7 @@ target_link_libraries(syoch-robotics-mbed-uart PUBLIC
   syoch-robotics-common
   syoch-robotics-thread
   syoch-robotics-logger
-  ${SYOCH_ROBOTICS_DEPENDENCIES}
+  Nano::NanoHW_MbedIF
 )
 
 target_include_directories(syoch-robotics-mbed-uart PUBLIC
