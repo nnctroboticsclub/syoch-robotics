@@ -44,13 +44,14 @@ class FEPBaudrate {
   [[nodiscard]] uint8_t GetBits() const { return static_cast<uint8_t>(value_); }
 };
 
+template <nano_hw::DigitalOut RstT, nano_hw::DigitalOut IniT>
 class FEPDriver {
   static inline robotics::logger::Logger logger{"fep.nw",
                                                 "\x1b[1;4;32mFEPDriver\x1b[m"};
   robotics::network::IUART* stream_;
 
-  nano_hw::DynDigitalOut* fep_rst_;
-  nano_hw::DynDigitalOut* fep_ini_;
+  RstT fep_rst_;
+  IniT fep_ini_;
 
   robotics::network::FEP_RawDriver fep_;
 
@@ -210,14 +211,10 @@ class FEPDriver {
   }
 
  public:
-  FEPDriver(robotics::network::IUART& stream, nano_hw::DynDigitalOut& fep_rst,
-            nano_hw::DynDigitalOut& fep_ini)
-      : stream_(&stream),
-        fep_rst_(&fep_rst),
-        fep_ini_(&fep_ini),
-        fep_(*stream_) {
-    fep_rst_->Write(true);
-    fep_ini_->Write(true);
+  FEPDriver(robotics::network::IUART& stream, RstT fep_rst, IniT fep_ini)
+      : stream_(&stream), fep_rst_(fep_rst), fep_ini_(fep_ini), fep_(*stream_) {
+    fep_rst_.Write(true);
+    fep_ini_.Write(true);
   }
 
   robotics::network::fep::FEP_RawDriver& GetFEP() { return fep_; }
@@ -228,21 +225,21 @@ class FEPDriver {
     logger.Info("Resetting FEP Hardware after 2s");
     nano_hw::parallel::SleepForMS(2s);
     logger.Info("Resetting FEP Hardware");
-    fep_rst_->Write(false);
+    fep_rst_.Write(false);
     nano_hw::parallel::SleepForMS(100ms);
 
-    fep_rst_->Write(true);
+    fep_rst_.Write(true);
   }
 
   void ResetRegistersHW() {
     logger.Info("Resetting FEP Registers");
-    fep_ini_->Write(false);
+    fep_ini_.Write(false);
     nano_hw::parallel::SleepForMS(100ms);
 
     ResetHW();
     nano_hw::parallel::SleepForMS(100ms);
 
-    fep_ini_->Write(true);
+    fep_ini_.Write(true);
 
     this->stream_->Rebaud(9600);
   }
