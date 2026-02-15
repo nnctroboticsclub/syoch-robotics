@@ -4,7 +4,7 @@ target_link_libraries(fep PUBLIC
   syoch-robotics-common
   syoch-robotics-logger
   syoch-robotics-timer
-  syoch-robotics-gpio
+  Nano::NanoHW
 )
 
 target_include_directories(fep PUBLIC include)

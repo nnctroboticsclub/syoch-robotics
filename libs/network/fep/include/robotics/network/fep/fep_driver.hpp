@@ -1,9 +1,10 @@
 #pragma once
 
+#include <NanoHW/digital_out.hpp>
+#include <NanoHW/parallel.hpp>
 #include <unordered_map>
 
 #include <logger/logger.hpp>
-#include <robotics/driver/dout.hpp>
 #include <robotics/network/iuart.hpp>
 
 #include "fep_notxret.hpp"
@@ -11,7 +12,7 @@
 
 namespace robotics::network::fep {
 // FEP Baudrate (Raw value) the value presented FEP's REG20 parameter
-enum class FEPBaudrateValue: uint8_t {
+enum class FEPBaudrateValue : uint8_t {
   k9600 = 0,
   k19200 = 1,
   k38400 = 2,
@@ -48,8 +49,8 @@ class FEPDriver {
                                                 "\x1b[1;4;32mFEPDriver\x1b[m"};
   robotics::network::IUART* stream_;
 
-  robotics::driver::IDout* fep_rst_;
-  robotics::driver::IDout* fep_ini_;
+  nano_hw::DynDigitalOut* fep_rst_;
+  nano_hw::DynDigitalOut* fep_ini_;
 
   robotics::network::FEP_RawDriver fep_;
 
@@ -162,13 +163,13 @@ class FEPDriver {
     }
 
     if (allow_failed) {
-      robotics::system::SleepFor(1000ms);
+      nano_hw::parallel::SleepForMS(1000ms);
       ResetRegistersHW();
       this->stream_->Rebaud(candidates[0].GetBaudrate());
     } else {
       logger.Error("Failed to detect FEP Baudrate");
       while (true)
-        robotics::system::SleepFor(1000ms);
+        nano_hw::parallel::SleepForMS(1000ms);
     }
   }
 
@@ -209,8 +210,8 @@ class FEPDriver {
   }
 
  public:
-  FEPDriver(robotics::network::IUART& stream, robotics::driver::IDout& fep_rst,
-            robotics::driver::IDout& fep_ini)
+  FEPDriver(robotics::network::IUART& stream, nano_hw::DynDigitalOut& fep_rst,
+            nano_hw::DynDigitalOut& fep_ini)
       : stream_(&stream),
         fep_rst_(&fep_rst),
         fep_ini_(&fep_ini),
@@ -225,10 +226,10 @@ class FEPDriver {
 
   void ResetHW() {
     logger.Info("Resetting FEP Hardware after 2s");
-    robotics::system::SleepFor(2s);
+    nano_hw::parallel::SleepForMS(2s);
     logger.Info("Resetting FEP Hardware");
     fep_rst_->Write(false);
-    robotics::system::SleepFor(100ms);
+    nano_hw::parallel::SleepForMS(100ms);
 
     fep_rst_->Write(true);
   }
@@ -236,10 +237,10 @@ class FEPDriver {
   void ResetRegistersHW() {
     logger.Info("Resetting FEP Registers");
     fep_ini_->Write(false);
-    robotics::system::SleepFor(100ms);
+    nano_hw::parallel::SleepForMS(100ms);
 
     ResetHW();
-    robotics::system::SleepFor(100ms);
+    nano_hw::parallel::SleepForMS(100ms);
 
     fep_ini_->Write(true);
 

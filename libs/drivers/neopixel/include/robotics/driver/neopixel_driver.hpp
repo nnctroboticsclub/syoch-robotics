@@ -36,7 +36,8 @@ requires nano_hw::spi::SPI<SPI> class NeoPixelSPIDriver {
   std::vector<uint8_t> buffer_;
 
  public:
-  NeoPixelSPIDriver(SPI<NeoPixelSPIHandler> spi) : spi_(spi) {}
+  template <typename... Args>
+  NeoPixelSPIDriver(Args... args) : spi_{args...} {}
 
   void SetMaxBytes(int bytes) {
     buffer_.resize(kResetSize + bytes * 8 / 2);
@@ -49,7 +50,7 @@ requires nano_hw::spi::SPI<SPI> class NeoPixelSPIDriver {
     static std::vector<uint8_t> rx;
 
     rx.resize(buffer_.size());
-    spi_->Transfer(buffer_, rx);
+    spi_.Transfer(buffer_, rx);
   }
   void SetByte(int position, uint8_t byte) {
     const int byte_index = kResetSize + position * 4;
