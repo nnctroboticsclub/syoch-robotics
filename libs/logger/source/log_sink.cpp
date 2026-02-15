@@ -3,8 +3,6 @@
 #include <cstdio>
 #include <cstring>
 
-#include <robotics/binary/temp_buffer.hpp>
-
 namespace robotics::logger {
 
 void StdoutSink::Log(core::Level level, const char* tag, const char* msg) {

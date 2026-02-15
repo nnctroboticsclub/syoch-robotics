@@ -12,6 +12,5 @@ endif()
 
 if (${SROBO1_RANDOM_PROVIDED})
   add_library(syoch-robotics-random STATIC source/random.cpp)
-  target_link_libraries(syoch-robotics-random PRIVATE syoch-robotics-thread)
   target_include_directories(syoch-robotics-random PUBLIC "./include")
 endif()

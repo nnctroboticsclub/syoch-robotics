@@ -1,6 +1,6 @@
 #include <robotics/random/random.hpp>
 
-#include <robotics/thread/thread.hpp>
+#include "NanoHW/thread.hpp"
 
 namespace robotics::system::Random {
 

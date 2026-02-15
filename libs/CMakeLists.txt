@@ -11,7 +11,6 @@ add_subdirectory(binary)
 add_subdirectory(logger)
 add_subdirectory(random)
 add_subdirectory(drivers)
-add_subdirectory(thread)
 
 if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
   add_subdirectory(mbed)

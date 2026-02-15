@@ -1,6 +1,4 @@
-add_subdirectory(gpio)
 add_subdirectory(bldc)
-
 add_subdirectory(bd621x)
 add_subdirectory(neopixel)
 add_subdirectory(ikako_robomas)

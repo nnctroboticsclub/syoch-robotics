@@ -5,8 +5,8 @@
 #include <array>
 #include <robotics/network/block_stream.hpp>
 
+#include <Nano/no_mutex_lifo.hpp>
 #include <logger/logger.hpp>
-#include <robotics/utils/no_mutex_lifo.hpp>
 
 namespace robotics::network::fep {
 class RxProcessor : public BlockStream<RxProcessorPacket> {
@@ -22,7 +22,7 @@ class RxProcessor : public BlockStream<RxProcessorPacket> {
     kResult,
   };
 
-  robotics::utils::NoMutexLIFO<char, 64> rx_queue_;
+  Nano::collection::NoMutexLIFO<char, 64> rx_queue_;
 
   uint8_t rx_data_address_ = 0;
   uint8_t rx_data_length_ = 0;

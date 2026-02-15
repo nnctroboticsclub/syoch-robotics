@@ -1,5 +1,5 @@
 #include <robotics/network/uart_stream.hpp>
-#include "robotics/thread/thread.hpp"
+#include "NanoHW/thread.hpp"
 
 namespace robotics::network {
 void UARTStream::Init(int baudrate) {
@@ -21,7 +21,9 @@ void UARTStream::Deinit() {
   upper_stream = nullptr;
 }
 
-UARTStream::UARTStream(PinName tx, PinName rx, int baud) : tx(tx), rx(rx) {
+UARTStream::UARTStream(PinName tx, PinName rx, int baud)
+
+    : tx(tx), rx(rx) {
   Init(baud);
 
   upper_stream->attach([this]() {
@@ -33,12 +35,10 @@ UARTStream::UARTStream(PinName tx, PinName rx, int baud) : tx(tx), rx(rx) {
     }
   });
 
-  thread_dispatch.SetThreadName("UARTStream-Dispatch");
-  thread_dispatch.SetStackSize(8192);
   thread_dispatch.Start([this]() {
     this->is_running = true;
     while (!upper_stream) {
-      robotics::system::SleepFor(10ms);
+      nano_hw::parallel::SleepForMS(10ms);
     }
 
     while (!stop_token) {
@@ -49,21 +49,21 @@ UARTStream::UARTStream(PinName tx, PinName rx, int baud) : tx(tx), rx(rx) {
         DispatchOnReceive(buf, len);
       }
 
-      robotics::system::SleepFor(100ms);
+      nano_hw::parallel::SleepForMS(100ms);
     }
 
     this->is_running = false;
   });
 
   while (!is_running) {
-    robotics::system::SleepFor(10ms);
+    nano_hw::parallel::SleepForMS(10ms);
   }
 }
 
 UARTStream::~UARTStream() {
   stop_token = true;
   while (is_running) {
-    robotics::system::SleepFor(10ms);
+    nano_hw::parallel::SleepForMS(10ms);
   }
   Deinit();
 }

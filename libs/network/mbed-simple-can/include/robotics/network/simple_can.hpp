@@ -4,11 +4,11 @@
 
 #include <mbed.h>
 
+#include <Nano/non_copyable.hpp>
 #include <robotics/network/can_base.hpp>
-#include <robotics/utils/non_copyable.hpp>
 
 namespace robotics::network {
-class SimpleCAN : public CANBase, public utils::NonCopyable<SimpleCAN> {
+class SimpleCAN : public CANBase, public Nano::utils::NonCopyable<SimpleCAN> {
   class Impl;
   Impl* impl_;
 

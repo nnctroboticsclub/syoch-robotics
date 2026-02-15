@@ -1,23 +1,24 @@
 #pragma once
 
+#include <Nano/non_copyable.hpp>
 #include <concepts>
 #include <cstdio>
 #include <functional>
 #include <optional>
 #include "robotics/platform/panic.hpp"
-#include "robotics/utils/non_copyable.hpp"
 
 namespace robotics::network {
 template <typename S1, typename S2>
 requires(std::same_as<typename S1::DataType,
                       typename S2::DataType>) class StreamMuxer final
     : public S1::StreamType,
-      public utils::NonCopyable<StreamMuxer<S1, S2>> {
+      public Nano::utils::NonCopyable<StreamMuxer<S1, S2>> {
   using S1_Storage = std::optional<S1>;
   using S2_Storage = std::optional<S2>;
 
  public:
-  explicit StreamMuxer(std::function<void(S1_Storage&, S2_Storage&)> initializer) {
+  explicit StreamMuxer(
+      std::function<void(S1_Storage&, S2_Storage&)> initializer) {
     initializer(stream1_, stream2_);
     if (!stream1_.has_value() || !stream2_.has_value()) {
       printf("Stream initialization failed\n");

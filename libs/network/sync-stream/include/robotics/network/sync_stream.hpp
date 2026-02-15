@@ -5,7 +5,7 @@
 #include <functional>
 #include <optional>
 #include <queue>
-#include <robotics/thread/thread.hpp>
+#include "NanoHW/thread.hpp"
 
 namespace robotics::network {
 template <typename T>
@@ -70,7 +70,7 @@ class SyncStream {
       if (auto ret = Receive(); ret.has_value()) {
         return ret.value();
       }
-      robotics::system::SleepFor(10ms);
+      nano_hw::parallel::SleepForMS(10ms);
     }
   }
 

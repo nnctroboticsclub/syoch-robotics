@@ -4,15 +4,16 @@
 #include <cstdio>
 #include <cstring>
 
-#include <robotics/binary/temp_buffer.hpp>
-#include <robotics/utils/no_mutex_lifo.hpp>
+#include <Nano/no_mutex_lifo.hpp>
+#include <Nano/scratch.hpp>
 
 namespace robotics::logger {
-using robotics::utils::NoMutexLIFO;
+using Nano::collection::NoMutexLIFO;
 
 void GenericLogger::_Log(core::Level level, const char* fmt, va_list args) {
 
-  char* line = reinterpret_cast<char*>(robotics::binary::GetTemporaryBuffer());
+  char* line =
+      reinterpret_cast<char*>(Nano::utils::ScratchBuffer::GetAppBuffer());
 
   vsnprintf(line, 0x80, fmt, args);
 
@@ -28,7 +29,7 @@ void GenericLogger::_LogHex(core::Level level, const uint8_t* buf,
   auto lines = size / 16;
   for (size_t line = 0; line <= lines; line++) {
     char* buffer =
-        reinterpret_cast<char*>(robotics::binary::GetTemporaryBuffer());
+        reinterpret_cast<char*>(Nano::utils::ScratchBuffer::GetAppBuffer());
 
     char* ptr = buffer;
     strncpy(ptr, "___| ", 6);

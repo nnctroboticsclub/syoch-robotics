@@ -3,8 +3,8 @@
 #include <cstdint>
 #include <cstring>
 
+#include <Nano/no_mutex_lifo.hpp>
 #include <robotics/network/stream.hpp>
-#include <robotics/utils/no_mutex_lifo.hpp>
 #include "logger/logger.hpp"
 
 #include <robotics/system/thread.hpp>
@@ -32,7 +32,7 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
   AddrRecords addresses_hop_candidate_;
 
   // thread
-  robotics::system::Thread thread;
+  nano_hw::thread::DynThread thread;
 
   // connection state
   robotics::network::Stream<uint8_t, uint8_t>& upper_stream_;
@@ -133,7 +133,7 @@ class ProtoFRoute : public robotics::network::Stream<uint8_t, uint8_t> {
         auto action = Action::FindNewHopTo();
         ProcessAction(action);
       }
-      robotics::system::SleepFor(100ms);
+      nano_hw::parallel::SleepForMS(100ms);
     }
   }
 

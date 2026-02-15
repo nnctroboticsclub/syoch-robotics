@@ -2,7 +2,6 @@ add_library(syoch-robotics-mbed-uart STATIC)
 
 target_link_libraries(syoch-robotics-mbed-uart PUBLIC
   syoch-robotics-common
-  syoch-robotics-thread
   syoch-robotics-logger
   Nano::NanoHW_MbedIF
 )

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstddef>
-#include "robotics/utils/no_mutex_lifo.hpp"
-#include "robotics/utils/span.hpp"
+#include "Nano/no_mutex_lifo.hpp"
+#include "Nano/span.hpp"
 
 #include <NanoHW/thread.hpp>
 
@@ -12,11 +12,12 @@
 
 namespace robotics::logger::details {
 using core::LogLine;
-using utils::Span;
+using Nano::collection::NoMutexLIFO;
+using Nano::collection::Span;
 
 // 提供する関数の宣言
 void UseLineImpl(size_t start, size_t length, char* dest);
-utils::Span<char> PasteToRingImpl(utils::Span<const char> text);
+Span<char> PasteToRingImpl(Span<const char> text);
 void PushLineImpl(LogLine& log);
 void ClearQueueImpl();
 void LoggerProcessImpl();
@@ -30,8 +31,7 @@ template <typename Config>
 class LoggerBufferImpl {
   static inline char log_ring_buffer[Config::kLogRingBufferSize] = {};
   static inline size_t log_head = 0;
-  static inline robotics::utils::NoMutexLIFO<LogLine, Config::kMaxLogLines>
-      log_queue;
+  static inline NoMutexLIFO<LogLine, Config::kMaxLogLines> log_queue;
 
   friend void UseLineImpl(size_t start, size_t length, char* dest) {
     size_t offset;
@@ -45,7 +45,7 @@ class LoggerBufferImpl {
     dest[offset] = 0;
   }
 
-  friend utils::Span<char> PasteToRingImpl(utils::Span<const char> text) {
+  friend Span<char> PasteToRingImpl(Span<const char> text) {
     size_t start = log_head;
     for (size_t offset = 0; offset < text.size(); offset++) {
       size_t index = (start + offset) % Config::kLogRingBufferSize;
@@ -109,7 +109,7 @@ class LoggerThreadImpl {
 void UseLine(size_t start, size_t length, char* dest) {
   UseLineImpl(start, length, dest);
 }
-utils::Span<char> PasteToRing(utils::Span<const char> text) {
+Span<char> PasteToRing(Span<const char> text) {
   return PasteToRingImpl(text);
 }
 void PushLine(LogLine& log) {

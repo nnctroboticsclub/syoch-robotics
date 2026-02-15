@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stddef.h>
-#include "robotics/utils/span.hpp"
+#include <Nano/span.hpp>
 
 #include "level.hpp"
 
@@ -9,12 +9,13 @@ namespace robotics::logger::core {
 
 struct LogLine {
   Level level;
-  utils::Span<const char> tag;
-  utils::Span<const char> msg;
+  Nano::collection::Span<const char> tag;
+  Nano::collection::Span<const char> msg;
 
   LogLine() = default;
 
-  LogLine(utils::Span<const char> tag, utils::Span<const char> msg,
+  LogLine(Nano::collection::Span<const char> tag,
+          Nano::collection::Span<const char> msg,
           core::Level level = core::Level::kInfo);
 };
 

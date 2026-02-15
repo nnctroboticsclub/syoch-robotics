@@ -1,8 +1,8 @@
 #include <can_api.h>
 #include <mbed.h>
+#include <Nano/no_mutex_lifo.hpp>
 #include <cstddef>
 #include <robotics/network/simple_can.hpp>
-#include "robotics/utils/no_mutex_lifo.hpp"
 
 using IdleCallback = robotics::network::CANBase::IdleCallback;
 using RxCallback = robotics::network::CANBase::RxCallback;
@@ -133,7 +133,8 @@ class SimpleCAN::Impl {
   std::vector<TxCallback> tx_callbacks_;
   std::vector<IdleCallback> idle_callbacks_;
 
-  utils::NoMutexLIFO<std::pair<uint32_t, std::vector<uint8_t>>, 16> tx_queue;
+  Nano::collection::NoMutexLIFO<std::pair<uint32_t, std::vector<uint8_t>>, 16>
+      tx_queue;
 
   Thread* thread_ = nullptr;
   std::vector<uint8_t> buffer_ = std::vector<uint8_t>(8);

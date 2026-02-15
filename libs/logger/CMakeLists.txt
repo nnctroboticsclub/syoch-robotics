@@ -7,8 +7,10 @@ add_library(syoch-robotics-logger STATIC
 
 target_link_libraries(syoch-robotics-logger PRIVATE
   syoch-robotics-common
-  syoch-robotics-temp-buffer
   syoch-robotics-context-detector
+)
+target_link_libraries(syoch-robotics-logger PUBLIC
+  Nano::Nano
   Nano::NanoHW
 )
 

@@ -5,7 +5,7 @@
 
 #include "checksum.hpp"
 
-#include <robotics/utils/no_mutex_lifo.hpp>
+#include <Nano/no_mutex_lifo.hpp>
 
 #include <robotics/network/fep/fep_raw_driver.hpp>
 #include <robotics/network/fep/fep_tx_state.hpp>
@@ -28,7 +28,7 @@ class ReliableFEPProtocol : public Stream<uint8_t, uint8_t> {
 
   std::array<uint8_t, 32> tx_buffer_{};
 
-  robotics::utils::NoMutexLIFO<REPTxPacket, 4> tx_queue;
+  Nano::collection::NoMutexLIFO<REPTxPacket, 4> tx_queue;
 
   void _Send(REPTxPacket& packet);
 
