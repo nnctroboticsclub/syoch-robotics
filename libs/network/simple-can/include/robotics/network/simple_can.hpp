@@ -16,12 +16,13 @@ class SimpleCAN : public CANBase, public Nano::utils::NonCopyable<SimpleCAN> {
   struct Context {
     std::vector<RxCallback> rx_callbacks{};
     std::vector<TxCallback> tx_callbacks{};
+    std::vector<uint8_t> rx_data{8};
     void OnCANReceived(nano_hw::can::CANMessage const& msg) {
       auto id = msg.id;
-      std::vector<uint8_t> data(msg.data, msg.data + msg.len);
+      std::copy(msg.data, msg.data + msg.len, rx_data.begin());
 
       for (auto& cb : rx_callbacks) {
-        cb(id, data);
+        cb(id, rx_data);
       }
     }
     void OnCANTransmit(nano_hw::can::CANMessage const& msg) {
