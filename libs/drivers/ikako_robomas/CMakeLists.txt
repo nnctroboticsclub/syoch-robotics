@@ -6,9 +6,9 @@ find_package(IkakoRobomas REQUIRED)
 find_package(MotorController REQUIRED)
 
 target_link_libraries(syoch-robotics-ikako-robomas INTERFACE
-  ikarashiCAN_mk2
-  IkakoRobomas
-  MotorController
+  ikarashiCAN_mk2::ikarashiCAN_mk2
+  IkakoRobomas::IkakoRobomas
+  MotorController::MotorController
   syoch-robotics-common
 )
 

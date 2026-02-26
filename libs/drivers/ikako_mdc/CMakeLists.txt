@@ -3,12 +3,14 @@ add_library(syoch-robotics::ikako-mdc ALIAS syoch-robotics-ikako-mdc)
 
 find_package(ikarashiCAN_mk2 REQUIRED)
 find_package(ikakoMDC REQUIRED)
+find_package(Nano REQUIRED)
 
 target_link_libraries(syoch-robotics-ikako-mdc PUBLIC
   dcan
-  ikarashiCAN_mk2
-  ikakoMDC
+  ikarashiCAN_mk2::ikarashiCAN_mk2
+  ikakoMDC::ikakoMDC
   syoch-robotics-common
+  Nano::NanoHW_MbedIF
 )
 
 target_include_directories(syoch-robotics-ikako-mdc PUBLIC
