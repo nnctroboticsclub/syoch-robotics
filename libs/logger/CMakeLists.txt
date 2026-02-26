@@ -1,9 +1,10 @@
 add_library(syoch-robotics-logger STATIC
-  source/char_logger.cpp
-  source/generic_logger.cpp
-  source/logger-core.cpp
-  source/log_sink.cpp
+  src/char_logger.cpp
+  src/generic_logger.cpp
+  src/logger-core.cpp
+  src/log_sink.cpp
 )
+add_library(syoch-robotics::logger ALIAS syoch-robotics-logger)
 
 target_link_libraries(syoch-robotics-logger PRIVATE
   syoch-robotics-common
@@ -14,17 +15,17 @@ target_link_libraries(syoch-robotics-logger PUBLIC
   Nano::NanoHW
 )
 
-if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
-  target_compile_definitions(syoch-robotics-logger PRIVATE
-    -DLOG_FOR_MBED -DTARGET_${MBED_TARGET}=1
-    -DSYNC_PROTECT=1
-  )
-else()
-  target_compile_definitions(syoch-robotics-logger PRIVATE
-    -DSYNC_PROTECT=0
-  )
-endif()
-
 target_include_directories(syoch-robotics-logger PUBLIC
-  "./include"
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/syoch-robotics/logger>
+)
+
+install(TARGETS syoch-robotics-logger
+  EXPORT sroboTargets
+  INCLUDES DESTINATION include/syoch-robotics/logger
+)
+
+install(DIRECTORY include/
+  DESTINATION include/syoch-robotics/logger
+  FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
 )

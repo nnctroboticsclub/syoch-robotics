@@ -1,19 +1,28 @@
 add_library(syoch-robotics-ikako-robomas INTERFACE)
+add_library(syoch-robotics::ikako-robomas ALIAS syoch-robotics-ikako-robomas)
 
-if(NOT "IkakoRobomas" IN_LIST SYOCH_ROBOTICS_BYPASS_DEPS)
-  find_package(ikarashiCAN_mk2 REQUIRED)
-  find_package(IkakoRobomas REQUIRED)
-  find_package(MotorController REQUIRED)
-endif()
+find_package(ikarashiCAN_mk2 REQUIRED)
+find_package(IkakoRobomas REQUIRED)
+find_package(MotorController REQUIRED)
 
 target_link_libraries(syoch-robotics-ikako-robomas INTERFACE
   ikarashiCAN_mk2
   IkakoRobomas
   MotorController
   syoch-robotics-common
-  ${SYOCH_ROBOTICS_DEPENDENCIES}
 )
 
 target_include_directories(syoch-robotics-ikako-robomas INTERFACE
-  "./include"
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/syoch-robotics/ikako-robomas>
+)
+
+install(TARGETS syoch-robotics-ikako-robomas
+  EXPORT sroboTargets
+  INCLUDES DESTINATION include/syoch-robotics/ikako-robomas
+)
+
+install(DIRECTORY include/
+  DESTINATION include/syoch-robotics/ikako-robomas
+  FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
 )

@@ -2,7 +2,7 @@
 
 #include <ikarashiCAN_mk2.h>
 #include <concepts>
-#include <robotics/drivers/ikakorobomas_node.hpp>
+#include <robotics/drivers/ikako_robomas_node.hpp>
 
 namespace robotics::drivers::ikako_robomas_bus {
 using robotics::drivers::ikako_robomas_node::IkakoRobomasNode;

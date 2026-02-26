@@ -1,0 +1,6 @@
+@PACKAGE_INIT@
+
+# プロジェクト直下の CMakeLists.txt の configure_package_config_file で作成したファイルを指定する
+include("${CMAKE_CURRENT_LIST_DIR}/TheLibraryTargets.cmake")
+
+check_required_components(TheLibrary)
