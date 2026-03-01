@@ -1,0 +1,17 @@
+If:
+  PathMatch: .*
+
+CompileFlags:
+  CompilationDatabase: "build"
+
+Index:
+  StandardLibrary: Yes
+
+Diagnostics:
+  UnusedIncludes: Strict
+
+InlayHints:
+  Enabled: Yes
+  Designators: No
+  DeducedTypes: Yes
+  ParameterNames: Yes

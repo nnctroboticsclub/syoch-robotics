@@ -3,7 +3,6 @@
 #include <memory>
 #include <vector>
 
-#include <robotics/driver/spi.hpp>
 #include "neopixel_driver.hpp"
 
 namespace robotics::utils {
@@ -27,16 +26,31 @@ class Color {
   static Color FromHSV(float h, float s, float v);
 };
 
+template <NeoPixelDriver Drv>
 class NeoPixel {
-  std::shared_ptr<NeoPixelDriver> driver_;
+  std::shared_ptr<Drv> driver_;
   const size_t kLEDs;
 
  public:
-  NeoPixel(std::shared_ptr<NeoPixelDriver> driver, size_t kLEDs);
+  NeoPixel(std::shared_ptr<Drv> driver, size_t kLEDs)
+      : driver_(driver), kLEDs(kLEDs) {
+    driver_->SetMaxBytes(3 * kLEDs);
+  }
+  void PutPixel(size_t index, uint32_t rgb) {
+    uint8_t g = (rgb >> 16) & 0xFF;
+    uint8_t r = (rgb >> 8) & 0xFF;
+    uint8_t b = rgb & 0xFF;
 
-  void PutPixel(size_t index, uint32_t rgb);
+    driver_->SetByte(index * 3 + 0, r);
+    driver_->SetByte(index * 3 + 1, g);
+    driver_->SetByte(index * 3 + 2, b);
+  }
 
-  void Clear();
-  void Write();
+  void Clear() {
+    for (size_t i = 0; i < kLEDs; i++) {
+      PutPixel(i, 0);
+    }
+  }
+  void Write() { driver_->Flush(); }
 };
 }  // namespace robotics::utils

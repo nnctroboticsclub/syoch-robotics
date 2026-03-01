@@ -4,19 +4,20 @@
 
 #include <cstdint>
 
+#include <Nano/no_mutex_lifo.hpp>
 #include <logger/logger.hpp>
 #include <robotics/network/iuart.hpp>
 #include <robotics/network/stream.hpp>
-#include <robotics/thread/thread.hpp>
-#include "robotics/utils/no_mutex_lifo.hpp"
+#include "NanoHW/thread.hpp"
 
 namespace robotics::network {
 class UARTStream : public IUART {
   static robotics::logger::Logger logger;
 
-  utils::NoMutexLIFO<uint8_t, 32> buffer;
+  Nano::collection::NoMutexLIFO<uint8_t, 32> buffer;
   mbed::UnbufferedSerial* upper_stream = nullptr;
-  robotics::system::Thread thread_dispatch;
+  nano_hw::thread::DynThread thread_dispatch{ThreadPriorityNormal, 8192,
+                                             nullptr, "UARTStream-Dispatch"};
   PinName tx, rx;
 
   bool is_running = false;

@@ -1,14 +1,22 @@
-add_library(syoch-robotics-neopixel STATIC
-  source/neopixel.cpp
-  source/neopixel_driver.cpp
-)
+add_library(syoch-robotics-neopixel STATIC source/neopixel.cpp)
+add_library(syoch-robotics::neopixel ALIAS syoch-robotics-neopixel)
 
 target_link_libraries(syoch-robotics-neopixel PUBLIC
-  ${SYOCH_ROBOTICS_DEPENDENCIES}
   syoch-robotics-common
-  syoch-robotics-gpio
+  Nano::NanoHW
 )
 
 target_include_directories(syoch-robotics-neopixel PUBLIC
-  "./include"
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/syoch-robotics/neopixel>
+)
+
+install(TARGETS syoch-robotics-neopixel
+  EXPORT sroboTargets
+  INCLUDES DESTINATION include/syoch-robotics/neopixel
+)
+
+install(DIRECTORY include/
+  DESTINATION include/syoch-robotics/neopixel
+  FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
 )

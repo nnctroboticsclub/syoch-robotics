@@ -3,11 +3,12 @@
 #include <functional>
 #include <unordered_map>
 
+#include <Nano/no_mutex_lifo.hpp>
+#include <NanoHW/parallel.hpp>
 #include <logger/logger.hpp>
 #include <robotics/network/stream.hpp>
-#include <robotics/utils/no_mutex_lifo.hpp>
 #include <ssp/ssp.hpp>
-#include "robotics/thread/thread.hpp"
+#include "NanoHW/thread.hpp"
 
 namespace robotics::network::ssp {
 struct KVPacket {
@@ -22,7 +23,7 @@ class KVService : public robotics::network::ssp::SSP_Service<Context> {
   std::unordered_map<uint8_t, KVCallback> kv_callbacks_;
 
   uint8_t tx_buffer[128] = {};
-  utils::NoMutexLIFO<KVPacket, 128> rx_buffer;
+  Nano::collection::NoMutexLIFO<KVPacket, 128> rx_buffer;
 
  protected:
   void OnKVRequested(uint8_t addr, KVCallback cb) { kv_callbacks_[addr] = cb; }
@@ -52,7 +53,7 @@ class KVService : public robotics::network::ssp::SSP_Service<Context> {
             uint8_t service_id, const char* logger_tag,
             const char* logger_header)
       : SSP_Service<Context>(stream, service_id, logger_tag, logger_header) {
-    this->OnReceive([this, &stream](uint8_t addr, uint8_t* data, size_t len) {
+    this->OnReceive([this](uint8_t addr, uint8_t* data, size_t len) {
       if (len < 1) {
         this->logger.Error("Invalid Length: %d", len);
         return;
@@ -74,7 +75,7 @@ class KVService : public robotics::network::ssp::SSP_Service<Context> {
 
     while (true) {
       while (rx_buffer.Empty()) {
-        robotics::system::SleepFor(5ms);
+        nano_hw::parallel::SleepForMS(5ms);
       }
 
       auto res = rx_buffer.Pop();
@@ -91,7 +92,7 @@ class KVService : public robotics::network::ssp::SSP_Service<Context> {
 
       return {.data = res.data + 1, .len = res.len - 1};
 
-      robotics::system::SleepFor(2ms);
+      nano_hw::parallel::SleepForMS(2ms);
     }
   }
 };

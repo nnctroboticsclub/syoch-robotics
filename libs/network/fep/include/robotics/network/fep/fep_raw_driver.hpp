@@ -8,10 +8,10 @@
 
 #include <robotics/network/stream.hpp>
 
+#include <Nano/no_mutex_lifo.hpp>
 #include <logger/logger.hpp>
 #include <robotics/timer/timer.hpp>
 #include <robotics/types/result.hpp>
-#include <robotics/utils/no_mutex_lifo.hpp>
 
 #include <NanoHW/thread.hpp>
 
@@ -44,9 +44,9 @@ class RxProcessor;  // Defined in the .cpp file
 class FEP_RawDriver : public Stream<uint8_t, uint8_t, TxState> {
   Stream<uint8_t>& upper_stream;
 
-  robotics::utils::NoMutexLIFO<DriverResult, 4> result_queue_;
-  robotics::utils::NoMutexLIFO<FEPPacket, 16> rx_queue_;
-  robotics::utils::NoMutexLIFO<FEPRawLine, 4> line_queue_;
+  Nano::collection::NoMutexLIFO<DriverResult, 4> result_queue_;
+  Nano::collection::NoMutexLIFO<FEPPacket, 16> rx_queue_;
+  Nano::collection::NoMutexLIFO<FEPRawLine, 4> line_queue_;
 
   bool rx_enabled = true;
 
