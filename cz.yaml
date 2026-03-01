@@ -1,18 +1,19 @@
 ---
 commitizen:
   allowed_prefixes:
-  - Feat
-  - Fix
-  - Refactor
-  - Perf
-  - Style
-  - Test
-  - Docs
-  - Build
-  - CI
-  - Chore
-  - Update
-  - merge
+    - Feat
+    - Fix
+    - Refactor
+    - Perf
+    - Style
+    - Test
+    - Docs
+    - Build
+    - CI
+    - Chore
+    - Update
+    - bump
+    - merge
   bump_message: "bump: version $current_version \u2192 $new_version"
   changelog_file: CHANGELOG.md
   changelog_incremental: false
