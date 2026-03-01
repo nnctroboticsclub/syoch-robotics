@@ -6,7 +6,7 @@ add_subdirectory(mbed-uart)
 add_subdirectory(simple-can)
 
 if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "ESP")
-  add_subdirectory(idf-simple-can)
+  # add_subdirectory(idf-simple-can)
 endif()
 
 add_subdirectory(fep)

@@ -1,16 +1,18 @@
-if ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Mbed")
-  set(SROBO1_RANDOM_PROVIDED ON PARENT_SCOPE)
-elseif ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "ESP")
-  set(SROBO1_RANDOM_PROVIDED ON PARENT_SCOPE)
-elseif ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Emulation")
-  set(SROBO1_RANDOM_PROVIDED ON PARENT_SCOPE)
-elseif ("${SYOCH_ROBOTICS_TARGET}" STREQUAL "Host")
-  set(SROBO1_RANDOM_PROVIDED ON PARENT_SCOPE)
-else()
-  set(SROBO1_RANDOM_PROVIDED OFF PARENT_SCOPE)
-endif()
+add_library(syoch-robotics-random STATIC source/random.cpp)
+add_library(syoch-robotics::random ALIAS syoch-robotics-random)
+target_include_directories(syoch-robotics-random PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/syoch-robotics/random>
+)
+target_link_libraries(syoch-robotics-random PUBLIC
+  Nano::NanoHW
+)
 
-if (${SROBO1_RANDOM_PROVIDED})
-  add_library(syoch-robotics-random STATIC source/random.cpp)
-  target_include_directories(syoch-robotics-random PUBLIC "./include")
-endif()
+install(TARGETS syoch-robotics-random
+  EXPORT sroboTargets
+  INCLUDES DESTINATION include/syoch-robotics/random
+)
+install(DIRECTORY include/
+  DESTINATION include/syoch-robotics/random
+  FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+)

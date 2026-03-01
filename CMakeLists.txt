@@ -23,7 +23,7 @@ find_package(Nano REQUIRED)
 find_package(CMSIS5 REQUIRED)
 
 add_subdirectory(src)
-add_subdirectory(lib)
+add_subdirectory(libs)
 
 install(
   EXPORT sroboTargets

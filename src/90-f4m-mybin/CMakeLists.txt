@@ -10,9 +10,6 @@ add_executable(90-f4m-mybin src/main.cpp)
 # 使用するライブラリの指定
 target_link_libraries(90-f4m-mybin PUBLIC
   StaticMbedOS-NUCLEO_F446RE
-
-  # lib/MyLib で作成したライブラリ
-  MyLib
 )
 
 # StaticMbedOS の後処理を行う

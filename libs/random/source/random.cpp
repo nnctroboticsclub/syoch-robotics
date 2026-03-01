@@ -1,5 +1,8 @@
+#include <chrono>
+
 #include <robotics/random/random.hpp>
 
+#include "NanoHW/parallel.hpp"
 #include "NanoHW/thread.hpp"
 
 namespace robotics::system::Random {
@@ -11,13 +14,13 @@ static void RandomThread() {
   while (true) {
     value_ = 2 * value_ + impl::Entropy();
     value_ = std::fmod(value_, 1.0f);
-    SleepFor(1ms);
+    nano_hw::parallel::SleepForMS(1ms);
   }
 }
 void Init() {
   impl::Init();
 
-  auto thread = new Thread();
+  auto thread = new nano_hw::thread::DynThread();
   thread->Start(RandomThread);
 }
 

@@ -3,6 +3,7 @@
 #include <logger/logger.hpp>
 #include <robotics/random/random.hpp>
 
+#include "NanoHW/parallel.hpp"
 #include "NanoHW/thread.hpp"
 
 using namespace std::chrono_literals;
@@ -67,9 +68,8 @@ ReliableFEPProtocol::ReliableFEPProtocol(FEP_RawDriver& driver)
     in_isr = false;
   });
 
-  auto* thread = new nano_hw::thread::DynThread();
-
-  thread->SetStackSize(8192);
+  auto* thread = new nano_hw::thread::DynThread(ThreadPriorityNormal, 8192,
+                                                nullptr, "REP");
   thread->Start([this]() {
     while (true) {
       if (tx_queue.Empty()) {

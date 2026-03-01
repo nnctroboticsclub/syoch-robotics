@@ -2,21 +2,13 @@
   # 開発環境
   inputs.roboenv.url = "git+ssh://git@github.com/nnctroboticsclub/roboenv-nix";
 
-  # roboenv 移行前のライブラリ群
+  # ライブラリ群
   inputs.robopkgs.url = "git+ssh://git@github.com/nnctroboticsclub/robopkgs-nix";
-
-  # Nano ライブラリ
-  inputs.nano.url = "git+ssh://git@github.com/nnctroboticsclub/Nano";
-
-  # f3-baremetal ライブラリ
-  inputs.f3-baremetal.url = "git+ssh://git@github.com/nnctroboticsclub/f3-baremetal";
 
   outputs =
     {
       robopkgs,
       roboenv,
-      nano,
-      f3-baremetal,
       ...
     }:
     let
@@ -29,11 +21,7 @@
     {
       # メインの開発環境 (`default` が識別子)
       devShells.x86_64-linux.default = roboPkgs.roboenv {
-        # 開発環境の名前
-        name = "Robotics Project";
-
-        # 以下よく使う機能の定義
-        # パラメータの詳細: https://github.com/nnctroboticsclub/roboenv-nix/tree/main/pkgs/roboenv
+        name = "syoch-robotics";
 
         rust.enable = true;
         STM32.enable = true;
@@ -45,14 +33,6 @@
           {
             type = "StaticMbedOS";
             mbedTarget = "NUCLEO_F446RE";
-          }
-          {
-            type = "STM32HAL";
-            family = "f4";
-          }
-          {
-            type = "STM32HAL";
-            family = "f3";
           }
         ];
 
@@ -69,8 +49,8 @@
           roboLibs.can_servo
           roboLibs.Futaba_Puropo
           roboLibs.PS4_RX
-          nano.packages.x86_64-linux.default
-          f3-baremetal.packages.x86_64-linux.default
+          roboLibs.nano
+          roboLibs.f3-baremetal
         ];
       };
     };
