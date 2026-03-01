@@ -61,7 +61,7 @@
 
         cmakeInputs = devPkgs;
         buildInputs = [
-          pkgs.git-conventional-commits
+          pkgs.commitizen
         ];
       };
     };
