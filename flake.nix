@@ -1,9 +1,13 @@
 {
+  inputs.nixpkgs.url = "github:nixos/nixpkgs/25.11";
+
   # 開発環境
   inputs.roboenv.url = "git+ssh://git@github.com/nnctroboticsclub/roboenv-nix";
 
   # ライブラリ群
   inputs.robopkgs.url = "git+ssh://git@github.com/nnctroboticsclub/robopkgs-nix";
+  inputs.robopkgs.inputs.nixpkgs.follows = "nixpkgs";
+  inputs.robopkgs.inputs.roboenv.follows = "roboenv";
 
   outputs =
     {
@@ -19,6 +23,23 @@
       roboLibs = robopkgs.legacyPackages.${system};
     in
     {
+      packages.x86_64-linux.default = roboPkgs.rlib.buildCMakeProject {
+        pname = "syoch-robotics";
+        version = "v0.5.2";
+        src = ./.;
+
+        cmakeBuildInputs = [
+          roboPkgs.cmake-libs
+          roboPkgs.clang-toolchain
+          roboPkgs.cmsis5
+          roboLibs.ikarashiCAN_mk2
+          roboLibs.ikakoMDC
+          roboLibs.IkakoRobomas
+          roboLibs.MotorController
+          roboLibs.nano
+        ];
+        nativeBuildInputs = [ ];
+      };
       # メインの開発環境 (`default` が識別子)
       devShells.x86_64-linux.default = roboPkgs.roboenv {
         name = "syoch-robotics";

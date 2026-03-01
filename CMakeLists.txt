@@ -22,7 +22,6 @@ add_compile_options(-Os -ffunction-sections -fdata-sections)
 find_package(Nano REQUIRED)
 find_package(CMSIS5 REQUIRED)
 
-add_subdirectory(src)
 add_subdirectory(libs)
 
 install(
