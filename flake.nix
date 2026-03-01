@@ -11,16 +11,29 @@
 
   outputs =
     {
+      nixpkgs,
       robopkgs,
       roboenv,
       ...
     }:
     let
       system = "x86_64-linux";
-      # roboenv の提供するパッケージ群
+      pkgs = import nixpkgs {
+        inherit system;
+      };
       roboPkgs = roboenv.legacyPackages.${system};
-      # robopkgs の提供するパッケージ群
       roboLibs = robopkgs.legacyPackages.${system};
+
+      devPkgs = [
+        roboPkgs.cmake-libs
+        roboPkgs.clang-toolchain
+        roboPkgs.cmsis5
+        roboLibs.ikarashiCAN_mk2
+        roboLibs.ikakoMDC
+        roboLibs.IkakoRobomas
+        roboLibs.MotorController
+        roboLibs.nano
+      ];
     in
     {
       packages.x86_64-linux.default = roboPkgs.rlib.buildCMakeProject {
@@ -28,19 +41,8 @@
         version = "v1.0.0";
         src = ./.;
 
-        cmakeBuildInputs = [
-          roboPkgs.cmake-libs
-          roboPkgs.clang-toolchain
-          roboPkgs.cmsis5
-          roboLibs.ikarashiCAN_mk2
-          roboLibs.ikakoMDC
-          roboLibs.IkakoRobomas
-          roboLibs.MotorController
-          roboLibs.nano
-        ];
-        nativeBuildInputs = [ ];
+        cmakeBuildInputs = devPkgs;
       };
-      # メインの開発環境 (`default` が識別子)
       devShells.x86_64-linux.default = roboPkgs.roboenv {
         name = "syoch-robotics";
 
@@ -57,21 +59,9 @@
           }
         ];
 
-        cmakeInputs = [
-          roboPkgs.cmake-libs
-          roboLibs.club-legacy-libs
-          roboLibs.srobo_base
-          roboLibs.im920_rs
-          roboLibs.ikarashiCAN_mk2
-          roboLibs.ikakoMDC
-          roboLibs.ikako_rohm_md
-          roboLibs.MotorController
-          roboLibs.IkakoRobomas
-          roboLibs.can_servo
-          roboLibs.Futaba_Puropo
-          roboLibs.PS4_RX
-          roboLibs.nano
-          roboLibs.f3-baremetal
+        cmakeInputs = devPkgs;
+        buildInputs = [
+          pkgs.git-conventional-commits
         ];
       };
     };
