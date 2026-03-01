@@ -1,0 +1,26 @@
+name: commitizen
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    name: Release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: commitizen-tools/commitizen-action@master
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          changelog_increment_filename: body.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          body_path: body.md
+          tag_name: v${{ env.REVISION }}
+          
