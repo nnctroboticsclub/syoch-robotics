@@ -1,17 +1,15 @@
 {
   inputs.nixpkgs.url = "github:nixos/nixpkgs/25.11";
-
-  # 開発環境
   inputs.roboenv.url = "github:nnctroboticsclub/roboenv-nix";
-
-  # ライブラリ群
-  inputs.robopkgs.url = "git+ssh://git@github.com/nnctroboticsclub/robopkgs-nix";
+  inputs.nano.url = "github:nnctroboticsclub/nano";
+  inputs.legacy-pkgs.url = "git+ssh://git@github.com/nnctroboticsclub/robopkgs-nix?dir=legacy";
 
   outputs =
     {
       nixpkgs,
-      robopkgs,
+      legacy-pkgs,
       roboenv,
+      nano,
       ...
     }:
     let
@@ -20,17 +18,17 @@
         inherit system;
       };
       roboPkgs = roboenv.legacyPackages.${system};
-      roboLibs = robopkgs.legacyPackages.${system};
+      legacyPkgs = legacy-pkgs.legacyPackages.${system};
 
       devPkgs = [
         roboPkgs.cmake-libs
         roboPkgs.clang-toolchain
         roboPkgs.cmsis5
-        roboLibs.ikarashiCAN_mk2
-        roboLibs.ikakoMDC
-        roboLibs.IkakoRobomas
-        roboLibs.MotorController
-        roboLibs.nano
+        legacyPkgs.ikarashiCAN_mk2
+        legacyPkgs.ikakoMDC
+        legacyPkgs.IkakoRobomas
+        legacyPkgs.MotorController
+        nano.packages.${system}.default
       ];
     in
     {
