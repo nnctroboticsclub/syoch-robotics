@@ -10,6 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v31
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - uses: cachix/cachix-action@v16
         with:
           name: "${{ secrets.CACHIX_NAME }}"
