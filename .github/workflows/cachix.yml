@@ -21,7 +21,6 @@ jobs:
           mkdir -p ~/.ssh
           echo "$PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 700 ~/.ssh/id_ed25519
-          ssh-add ~/.ssh/id_ed25519
           ssh-keyscan -H github.com >> ~/.ssh/known_hosts
       - name: Build syoch-robotics library
         run: nix build .
