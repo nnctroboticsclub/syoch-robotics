@@ -24,4 +24,4 @@ jobs:
           eval $(ssh-agent -s)
           ssh-add ~/.ssh/id_ed25519
           ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-          run: nix build .
+          nix build .
