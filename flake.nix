@@ -2,12 +2,10 @@
   inputs.nixpkgs.url = "github:nixos/nixpkgs/25.11";
 
   # 開発環境
-  inputs.roboenv.url = "git+ssh://git@github.com/nnctroboticsclub/roboenv-nix";
+  inputs.roboenv.url = "github:nnctroboticsclub/roboenv-nix";
 
   # ライブラリ群
   inputs.robopkgs.url = "git+ssh://git@github.com/nnctroboticsclub/robopkgs-nix";
-  inputs.robopkgs.inputs.nixpkgs.follows = "nixpkgs";
-  inputs.robopkgs.inputs.roboenv.follows = "roboenv";
 
   outputs =
     {
