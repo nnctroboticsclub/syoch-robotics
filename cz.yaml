@@ -19,4 +19,4 @@ commitizen:
   changelog_incremental: false
   tag_format: v$version
   update_changelog_on_bump: true
-  version: 3.0.0
+  version: 4.0.0
