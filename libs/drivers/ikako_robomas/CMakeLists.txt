@@ -1,23 +1,23 @@
-add_library(syoch-robotics-ikako-robomas INTERFACE)
-add_library(syoch-robotics::ikako-robomas ALIAS syoch-robotics-ikako-robomas)
+add_library(ikako-robomas INTERFACE)
+add_library(syoch-robotics::ikako-robomas ALIAS ikako-robomas)
 
 find_package(ikarashiCAN_mk2 REQUIRED)
 find_package(IkakoRobomas REQUIRED)
 find_package(MotorController REQUIRED)
 
-target_link_libraries(syoch-robotics-ikako-robomas INTERFACE
+target_link_libraries(ikako-robomas INTERFACE
   ikarashiCAN_mk2::ikarashiCAN_mk2
   IkakoRobomas::IkakoRobomas
   MotorController::MotorController
-  syoch-robotics-common
+
 )
 
-target_include_directories(syoch-robotics-ikako-robomas INTERFACE
+target_include_directories(ikako-robomas INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/syoch-robotics/ikako-robomas>
 )
 
-install(TARGETS syoch-robotics-ikako-robomas
+install(TARGETS ikako-robomas
   EXPORT sroboTargets
   INCLUDES DESTINATION include/syoch-robotics/ikako-robomas
 )

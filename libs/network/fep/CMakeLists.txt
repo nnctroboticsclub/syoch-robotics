@@ -4,9 +4,9 @@ add_library(fep STATIC
 add_library(syoch-robotics::fep ALIAS fep)
 
 target_link_libraries(fep PUBLIC
-  syoch-robotics-common
-  syoch-robotics-logger
-  syoch-robotics-timer
+  common
+  logger
+  timer
   Nano::NanoHW
 )
 

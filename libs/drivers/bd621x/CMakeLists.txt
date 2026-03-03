@@ -6,7 +6,7 @@ target_include_directories(bd621x INTERFACE
 )
 target_link_libraries(bd621x INTERFACE
   Nano::NanoHW
-  syoch-robotics-common
+  common
 )
 
 install(TARGETS bd621x

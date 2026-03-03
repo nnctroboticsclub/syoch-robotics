@@ -7,8 +7,8 @@ target_include_directories(rep PUBLIC
 )
 
 target_link_libraries(rep PUBLIC
-  syoch-robotics-common
-  syoch-robotics-random
+  common
+  random
   fep
 )
 

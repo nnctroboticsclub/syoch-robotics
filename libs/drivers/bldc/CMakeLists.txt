@@ -1,17 +1,17 @@
-add_library(syoch-robotics-bldc INTERFACE)
-add_library(syoch-robotics::bldc ALIAS syoch-robotics-bldc)
+add_library(bldc INTERFACE)
+add_library(syoch-robotics::bldc ALIAS bldc)
 
-target_link_libraries(syoch-robotics-bldc INTERFACE
+target_link_libraries(bldc INTERFACE
   Nano::NanoHW
-  syoch-robotics-common
+  common
 )
 
-target_include_directories(syoch-robotics-bldc INTERFACE
+target_include_directories(bldc INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/syoch-robotics/bldc>
 )
 
-install(TARGETS syoch-robotics-bldc
+install(TARGETS bldc
   EXPORT sroboTargets
   INCLUDES DESTINATION include/syoch-robotics/bldc
 )

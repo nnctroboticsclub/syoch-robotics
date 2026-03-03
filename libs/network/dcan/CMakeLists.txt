@@ -5,8 +5,8 @@ add_library(dcan STATIC
 add_library(syoch-robotics::dcan ALIAS dcan)
 
 target_link_libraries(dcan PUBLIC
-  syoch-robotics-timer
-  syoch-robotics-common
+  timer
+  common
 )
 
 target_include_directories(dcan PUBLIC

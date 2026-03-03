@@ -1,14 +1,14 @@
-add_library(syoch-robotics-random STATIC source/random.cpp)
-add_library(syoch-robotics::random ALIAS syoch-robotics-random)
-target_include_directories(syoch-robotics-random PUBLIC
+add_library(random STATIC source/random.cpp)
+add_library(syoch-robotics::random ALIAS random)
+target_include_directories(random PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/syoch-robotics/random>
 )
-target_link_libraries(syoch-robotics-random PUBLIC
+target_link_libraries(random PUBLIC
   Nano::NanoHW
 )
 
-install(TARGETS syoch-robotics-random
+install(TARGETS random
   EXPORT sroboTargets
   INCLUDES DESTINATION include/syoch-robotics/random
 )
