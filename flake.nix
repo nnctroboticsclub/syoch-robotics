@@ -43,7 +43,7 @@
     {
       packages.x86_64-linux.default = roboPkgs.rlib.buildCMakeProject {
         pname = "syoch-robotics";
-        version = "v1.0.0";
+        version = "v1.0.1";
         src = ./.;
 
         cmakeBuildInputs = devPkgs;

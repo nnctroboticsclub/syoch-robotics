@@ -5,7 +5,7 @@ set(ROBO_TOOLCHAIN_FILE ClangArmToolchain)
 set(CMAKE_INSTALL_MESSAGE LAZY)
 
 enable_testing()
-project(syoch-robotics VERSION 1.0.0)
+project(syoch-robotics VERSION 1.0.1)
 enable_language(C CXX ASM)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -18,6 +18,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -gfull -fstandalone-debug -gdwarf-5 -gz")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -gfull -fstandalone-debug -gdwarf-5 -gz")
 
 add_compile_options(-Os -ffunction-sections -fdata-sections)
+add_compile_options(-fno-exceptions -fno-rtti -fno-threadsafe-statics -fno-use-cxa-atexit -fno-unwind-tables -fno-asynchronous-unwind-tables)
 
 find_package(Nano REQUIRED)
 find_package(CMSIS5 REQUIRED)
