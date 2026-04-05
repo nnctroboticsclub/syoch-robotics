@@ -238,11 +238,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1772453884,
-        "narHash": "sha256-zqnHgHB5wxjD9b1364uiGO0TIocEsigeMNmjscqC3KA=",
+        "lastModified": 1775355334,
+        "narHash": "sha256-GipsobTszeH4PULwUJWVtZ2siC5LX+2qqixT1JmQhj8=",
         "owner": "nnctroboticsclub",
         "repo": "nano",
-        "rev": "4315e166c27ce79fef366ef56f2ce1247b54ae84",
+        "rev": "f4c6aa2d6e61071374bd41912d8b5ea65777516a",
         "type": "github"
       },
       "original": {

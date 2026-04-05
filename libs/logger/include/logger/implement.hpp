@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstddef>
-#include "Nano/no_mutex_lifo.hpp"
+#include "Nano/queue.hpp"
 #include "Nano/span.hpp"
 
 #include <NanoHW/thread.hpp>
@@ -12,7 +12,7 @@
 
 namespace robotics::logger::details {
 using core::LogLine;
-using Nano::collection::NoMutexLIFO;
+using Nano::collection::Queue;
 using Nano::collection::Span;
 
 // 提供する関数の宣言
@@ -31,7 +31,7 @@ template <typename Config>
 class LoggerBufferImpl {
   static inline char log_ring_buffer[Config::kLogRingBufferSize] = {};
   static inline size_t log_head = 0;
-  static inline NoMutexLIFO<LogLine, Config::kMaxLogLines> log_queue;
+  static inline Queue<LogLine, Config::kMaxLogLines> log_queue;
 
   friend void UseLineImpl(size_t start, size_t length, char* dest) {
     size_t offset;

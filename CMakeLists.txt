@@ -5,7 +5,7 @@ set(ROBO_TOOLCHAIN_FILE ClangArmToolchain)
 set(CMAKE_INSTALL_MESSAGE LAZY)
 
 enable_testing()
-project(syoch-robotics VERSION 1.0.1)
+project(syoch-robotics VERSION 1.0.2)
 enable_language(C CXX ASM)
 
 set(CMAKE_CXX_STANDARD 20)

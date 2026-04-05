@@ -3,7 +3,7 @@
 #include <functional>
 #include <unordered_map>
 
-#include <Nano/no_mutex_lifo.hpp>
+#include <Nano/queue.hpp>
 #include <NanoHW/parallel.hpp>
 #include <logger/logger.hpp>
 #include <robotics/network/stream.hpp>
@@ -23,7 +23,7 @@ class KVService : public robotics::network::ssp::SSP_Service<Context> {
   std::unordered_map<uint8_t, KVCallback> kv_callbacks_;
 
   uint8_t tx_buffer[128] = {};
-  Nano::collection::NoMutexLIFO<KVPacket, 128> rx_buffer;
+  Nano::collection::Queue<KVPacket, 128> rx_buffer;
 
  protected:
   void OnKVRequested(uint8_t addr, KVCallback cb) { kv_callbacks_[addr] = cb; }

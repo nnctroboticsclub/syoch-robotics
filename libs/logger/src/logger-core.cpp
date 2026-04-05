@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include <Nano/no_mutex_lifo.hpp>
+#include <Nano/queue.hpp>
 #include <Nano/scratch.hpp>
 #include <Nano/span.hpp>
 #include <logger/log_line.hpp>

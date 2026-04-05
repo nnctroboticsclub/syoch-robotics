@@ -4,11 +4,11 @@
 #include <cstdio>
 #include <cstring>
 
-#include <Nano/no_mutex_lifo.hpp>
+#include <Nano/queue.hpp>
 #include <Nano/scratch.hpp>
 
 namespace robotics::logger {
-using Nano::collection::NoMutexLIFO;
+using Nano::collection::Queue;
 
 void GenericLogger::_Log(core::Level level, const char* fmt, va_list args) {
 

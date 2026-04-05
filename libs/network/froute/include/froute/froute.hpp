@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include <Nano/no_mutex_lifo.hpp>
+#include <Nano/queue.hpp>
 #include <robotics/network/stream.hpp>
 #include "logger/logger.hpp"
 
