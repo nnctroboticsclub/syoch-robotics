@@ -214,11 +214,11 @@
       },
       "locked": {
         "dir": "legacy",
-        "lastModified": 1772453516,
-        "narHash": "sha256-UBs3bEehY5daXHt/wa1mjA3naBqQ32/Lgp1khVV8B2s=",
+        "lastModified": 1777474115,
+        "narHash": "sha256-ikTgFmmc4bccI0H6UZghoUFQ+uSAI1o8E9FtciuEiyQ=",
         "ref": "refs/heads/main",
-        "rev": "5417661913a3a636f04c2265941172f62150ba3f",
-        "revCount": 14,
+        "rev": "1a48242bd2e5b68f34e549e3e03587ed47d30a1c",
+        "revCount": 27,
         "type": "git",
         "url": "ssh://git@github.com/nnctroboticsclub/robopkgs-nix"
       },
@@ -238,11 +238,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1775355334,
-        "narHash": "sha256-GipsobTszeH4PULwUJWVtZ2siC5LX+2qqixT1JmQhj8=",
+        "lastModified": 1790175470,
+        "narHash": "sha256-g70b5g1K0O2N+bdnspvXt4AKAA0ugeCehSiDuY2Z3+U=",
         "owner": "nnctroboticsclub",
         "repo": "nano",
-        "rev": "f4c6aa2d6e61071374bd41912d8b5ea65777516a",
+        "rev": "5fc452d8eba57bdb276c4bf083601b039d2888fd",
         "type": "github"
       },
       "original": {
@@ -300,11 +300,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1772453767,
-        "narHash": "sha256-SI6ZB7hFCT/HPlG1vPrWwSp4lIdY5J4mqpysGZR1vXU=",
+        "lastModified": 1790174939,
+        "narHash": "sha256-pEj+LUUIRKWsuQkfdJYKvVS9XoiqeMf9jh1qyWxU+GM=",
         "owner": "nnctroboticsclub",
         "repo": "roboenv-nix",
-        "rev": "31caee335944808e001b6ab0217ae76eb072e3b7",
+        "rev": "3276f27844411a20222b240aa1a998500adac2fd",
         "type": "github"
       },
       "original": {
