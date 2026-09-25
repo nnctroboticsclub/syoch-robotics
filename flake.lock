@@ -171,11 +171,11 @@
       },
       "locked": {
         "dir": "legacy",
-        "lastModified": 1790318393,
-        "narHash": "sha256-KDAh9AwbvnE7G/84mmEJBh7uc80tZ/FEvtHsw/Ox/EA=",
+        "lastModified": 1790318595,
+        "narHash": "sha256-fjfN+d7fW0JoDBYJ4QdPYKvh61ojjiFvTiZk3lNvgpI=",
         "owner": "nnctroboticsclub",
         "repo": "robopkgs-nix",
-        "rev": "e8a89e2c93c04622bb3d4232b0f1f573ec7973f7",
+        "rev": "fb80ce4d2e44078b39c8fce2bb8e342aa838756d",
         "type": "github"
       },
       "original": {
