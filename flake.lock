@@ -214,18 +214,18 @@
       },
       "locked": {
         "dir": "legacy",
-        "lastModified": 1777474115,
-        "narHash": "sha256-ikTgFmmc4bccI0H6UZghoUFQ+uSAI1o8E9FtciuEiyQ=",
-        "ref": "refs/heads/main",
-        "rev": "1a48242bd2e5b68f34e549e3e03587ed47d30a1c",
-        "revCount": 27,
-        "type": "git",
-        "url": "ssh://git@github.com/nnctroboticsclub/robopkgs-nix"
+        "lastModified": 1790175558,
+        "narHash": "sha256-DH4v3HNtExGg0SuQppR5xG/QkGDKJ5tlU/P+m60RVr0=",
+        "owner": "nnctroboticsclub",
+        "repo": "robopkgs-nix",
+        "rev": "a575c480a7df1dc9f98f8d1e54630df4b3e28fbc",
+        "type": "github"
       },
       "original": {
         "dir": "legacy",
-        "type": "git",
-        "url": "ssh://git@github.com/nnctroboticsclub/robopkgs-nix"
+        "owner": "nnctroboticsclub",
+        "repo": "robopkgs-nix",
+        "type": "github"
       }
     },
     "nano": {
